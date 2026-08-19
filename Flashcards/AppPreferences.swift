@@ -28,8 +28,6 @@ enum AppPreferences {
     static let hapticsKey = "settings.hapticsEnabled"
     static let celebrationsKey = "settings.celebrationsEnabled"
     static let languageKey = "settings.language"
-    static let accentHexKey = "settings.accentHex"
-    static let defaultAccentHex = "5856D6"
 
     static var hapticsEnabled: Bool {
         get { storedBool(forKey: hapticsKey, defaultValue: true) }
@@ -49,11 +47,6 @@ enum AppPreferences {
             return AppLanguage(rawValue: value) ?? .automatic
         }
         set { UserDefaults.standard.set(newValue.rawValue, forKey: languageKey) }
-    }
-
-    static var accentHex: String {
-        get { UserDefaults.standard.string(forKey: accentHexKey) ?? defaultAccentHex }
-        set { UserDefaults.standard.set(newValue, forKey: accentHexKey) }
     }
 
     private static func storedBool(forKey key: String, defaultValue: Bool) -> Bool {

@@ -3,12 +3,18 @@ import SwiftUI
 struct SettingsView: View {
     @Environment(\.dismiss) private var dismiss
     @Environment(AppSettings.self) private var settings
+    @State private var showingBackup = false
 
     var body: some View {
         @Bindable var settings = settings
 
         NavigationStack {
             Form {
+                Section("settings.study.section") {
+                    Toggle("settings.haptics", isOn: $settings.hapticsEnabled)
+                    Toggle("settings.celebrations", isOn: $settings.celebrationsEnabled)
+                }
+
                 Section("settings.language.section") {
                     Picker("settings.language.label", selection: $settings.language) {
                         ForEach(AppLanguage.allCases) { language in
@@ -17,50 +23,11 @@ struct SettingsView: View {
                     }
                 }
 
-                Section("settings.accent.section") {
-                    HStack(spacing: 12) {
-                        ForEach(FolderAppearance.presetColors, id: \.self) { preset in
-                            Button {
-                                settings.accentHex = preset
-                            } label: {
-                                Circle()
-                                    .fill(Color(folderHex: preset))
-                                    .frame(width: 30, height: 30)
-                                    .overlay {
-                                        if settings.accentHex.caseInsensitiveCompare(preset) == .orderedSame {
-                                            Image(systemName: "checkmark")
-                                                .font(.caption.bold())
-                                                .foregroundStyle(.white)
-                                        }
-                                    }
-                            }
-                            .buttonStyle(.plain)
-                            .accessibilityLabel("settings.accent.preset")
-                            .accessibilityAddTraits(
-                                settings.accentHex.caseInsensitiveCompare(preset) == .orderedSame
-                                    ? .isSelected
-                                    : []
-                            )
-                        }
+                Section("settings.data.section") {
+                    Button("settings.backup", systemImage: "externaldrive") {
+                        showingBackup = true
                     }
-
-                    ColorPicker(
-                        "settings.accent.custom",
-                        selection: Binding(
-                            get: { settings.accentColor },
-                            set: { settings.accentHex = $0.folderHexString }
-                        ),
-                        supportsOpacity: false
-                    )
-
-                    Button("settings.accent.reset", systemImage: "arrow.counterclockwise") {
-                        settings.resetAccent()
-                    }
-                }
-
-                Section("settings.feedback.section") {
-                    Toggle("settings.haptics", isOn: $settings.hapticsEnabled)
-                    Toggle("settings.celebrations", isOn: $settings.celebrationsEnabled)
+                    .foregroundStyle(.white)
                 }
             }
             .navigationTitle("settings.title")
@@ -70,6 +37,9 @@ struct SettingsView: View {
                     Button("common.done") { dismiss() }
                 }
             }
+        }
+        .sheet(isPresented: $showingBackup) {
+            BackupView()
         }
     }
 }
