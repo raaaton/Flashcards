@@ -6,6 +6,7 @@ struct EditCardsView: View {
     let deck: Deck
 
     @State private var showingNewCard = false
+    @State private var showingBulkImport = false
     @State private var cardToEdit: Card?
 
     private var orderedCards: [Card] {
@@ -50,11 +51,19 @@ struct EditCardsView: View {
                 EditButton()
             }
             ToolbarItem(placement: .topBarTrailing) {
-                Button("Ajouter", systemImage: "plus") { showingNewCard = true }
+                Menu {
+                    Button("Ajouter une carte", systemImage: "plus") { showingNewCard = true }
+                    Button("Importer en masse", systemImage: "text.badge.plus") { showingBulkImport = true }
+                } label: {
+                    Label("Ajouter", systemImage: "plus")
+                }
             }
         }
         .sheet(isPresented: $showingNewCard) {
             CardFormView(deck: deck)
+        }
+        .sheet(isPresented: $showingBulkImport) {
+            BulkImportView(deck: deck)
         }
         .sheet(item: $cardToEdit) { card in
             CardFormView(deck: deck, card: card)

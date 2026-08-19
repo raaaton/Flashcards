@@ -9,6 +9,7 @@ struct HomeView: View {
     @State private var searchText = ""
     @State private var showingNewFolder = false
     @State private var showingNewDeck = false
+    @State private var showingBulkImport = false
     @State private var folderToRename: Folder?
     @State private var folderToDelete: Folder?
     @State private var deckToEdit: Deck?
@@ -52,6 +53,10 @@ struct HomeView: View {
                         Button("Nouveau dossier", systemImage: "folder.badge.plus") {
                             showingNewFolder = true
                         }
+                        Divider()
+                        Button("Importer en masse", systemImage: "text.badge.plus") {
+                            showingBulkImport = true
+                        }
                     } label: {
                         Label("Ajouter", systemImage: "plus")
                     }
@@ -64,6 +69,9 @@ struct HomeView: View {
         }
         .sheet(isPresented: $showingNewDeck) {
             DeckFormView()
+        }
+        .sheet(isPresented: $showingBulkImport) {
+            BulkImportView()
         }
         .sheet(item: $folderToRename) { folder in
             FolderFormView(folder: folder)

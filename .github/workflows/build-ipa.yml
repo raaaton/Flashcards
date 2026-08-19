@@ -23,6 +23,16 @@ jobs:
           xcrun --sdk iphoneos --show-sdk-version
           gh --version
 
+      - name: Run Foundation smoke tests
+        run: |
+          set -euxo pipefail
+          xcrun swiftc \
+            -swift-version 6 \
+            Flashcards/Services/BulkImportParser.swift \
+            CITests/BulkImportParserSmoke.swift \
+            -o "$RUNNER_TEMP/bulk-import-smoke"
+          "$RUNNER_TEMP/bulk-import-smoke"
+
       - name: Build app for iPhone
         run: |
           set -euxo pipefail

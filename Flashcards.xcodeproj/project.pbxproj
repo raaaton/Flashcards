@@ -20,6 +20,8 @@
 		B1000000000000000000000B /* CardFormView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C1000000000000000000000C /* CardFormView.swift */; };
 		B1000000000000000000000C /* EditCardsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C1000000000000000000000D /* EditCardsView.swift */; };
 		B1000000000000000000000D /* DeckDetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C1000000000000000000000E /* DeckDetailView.swift */; };
+		B1000000000000000000000E /* BulkImportParser.swift in Sources */ = {isa = PBXBuildFile; fileRef = C1000000000000000000000F /* BulkImportParser.swift */; };
+		B1000000000000000000000F /* BulkImportView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C10000000000000000000010 /* BulkImportView.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -37,6 +39,8 @@
 		C1000000000000000000000C /* CardFormView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CardFormView.swift; sourceTree = "<group>"; };
 		C1000000000000000000000D /* EditCardsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EditCardsView.swift; sourceTree = "<group>"; };
 		C1000000000000000000000E /* DeckDetailView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DeckDetailView.swift; sourceTree = "<group>"; };
+		C1000000000000000000000F /* BulkImportParser.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BulkImportParser.swift; sourceTree = "<group>"; };
+		C10000000000000000000010 /* BulkImportView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BulkImportView.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -64,6 +68,7 @@
 				C10000000000000000000001 /* FlashcardsApp.swift */,
 				C10000000000000000000002 /* Theme.swift */,
 				E10000000000000000000003 /* Models */,
+				E10000000000000000000007 /* Services */,
 				E10000000000000000000004 /* Views */,
 				C10000000000000000000007 /* Assets.xcassets */,
 			);
@@ -85,6 +90,7 @@
 			children = (
 				C10000000000000000000006 /* HomeView.swift */,
 				E10000000000000000000005 /* Library */,
+				E10000000000000000000008 /* Import */,
 			);
 			path = Views;
 			sourceTree = "<group>";
@@ -100,6 +106,22 @@
 				C1000000000000000000000E /* DeckDetailView.swift */,
 			);
 			path = Library;
+			sourceTree = "<group>";
+		};
+		E10000000000000000000007 /* Services */ = {
+			isa = PBXGroup;
+			children = (
+				C1000000000000000000000F /* BulkImportParser.swift */,
+			);
+			path = Services;
+			sourceTree = "<group>";
+		};
+		E10000000000000000000008 /* Import */ = {
+			isa = PBXGroup;
+			children = (
+				C10000000000000000000010 /* BulkImportView.swift */,
+			);
+			path = Import;
 			sourceTree = "<group>";
 		};
 		E10000000000000000000006 /* Products */ = {
@@ -191,6 +213,8 @@
 				B1000000000000000000000B /* CardFormView.swift in Sources */,
 				B1000000000000000000000C /* EditCardsView.swift in Sources */,
 				B1000000000000000000000D /* DeckDetailView.swift in Sources */,
+				B1000000000000000000000E /* BulkImportParser.swift in Sources */,
+				B1000000000000000000000F /* BulkImportView.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
