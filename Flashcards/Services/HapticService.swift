@@ -31,7 +31,28 @@ enum HapticService {
             let generator = UIImpactFeedbackGenerator(style: .rigid)
             generator.impactOccurred(intensity: 0.46)
         case .completion:
-            UINotificationFeedbackGenerator().notificationOccurred(.success)
+            playCompletionSequence()
+        }
+    }
+
+    private static func playCompletionSequence() {
+        let notification = UINotificationFeedbackGenerator()
+        let rigidImpact = UIImpactFeedbackGenerator(style: .rigid)
+        let heavyImpact = UIImpactFeedbackGenerator(style: .heavy)
+
+        notification.prepare()
+        rigidImpact.prepare()
+        heavyImpact.prepare()
+        notification.notificationOccurred(.success)
+
+        Task { @MainActor in
+            try? await Task.sleep(for: .milliseconds(90))
+            guard AppPreferences.hapticsEnabled else { return }
+            rigidImpact.impactOccurred(intensity: 1)
+
+            try? await Task.sleep(for: .milliseconds(105))
+            guard AppPreferences.hapticsEnabled else { return }
+            heavyImpact.impactOccurred(intensity: 1)
         }
     }
 }
