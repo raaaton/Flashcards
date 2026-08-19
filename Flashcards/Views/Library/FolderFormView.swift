@@ -49,7 +49,7 @@ struct FolderFormView: View {
                             } label: {
                                 Image(systemName: symbol)
                                     .font(.title3)
-                                    .foregroundStyle(.white.opacity(iconName == symbol ? 1 : 0.72))
+                                    .foregroundStyle(.white)
                                     .frame(maxWidth: .infinity, minHeight: 44)
                                     .background(
                                         iconName == symbol ? Color(folderHex: colorHex) : .clear,
