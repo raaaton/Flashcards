@@ -11,6 +11,7 @@ struct StudyView: View {
 
     @State private var session: StudySessionState
     @State private var isFlipped = false
+    @State private var isFlipAnimating = false
     @State private var flipAngle = 0.0
     @State private var dragOffset: CGSize = .zero
     @State private var activeOpacity = 1.0
@@ -136,13 +137,13 @@ struct StudyView: View {
                 card(entry.element, isActive: isActive, exitDistance: exitDistance)
                     .id(entry.element.id)
                     .scaleEffect(
-                        isActive || isCommitting ? 1 : StudyAnimationMetrics.stackScale
+                        stackScale(isActive: isActive)
                     )
                     .offset(
-                        y: isActive || isCommitting ? 0 : StudyAnimationMetrics.stackOffset
+                        y: stackOffset(isActive: isActive)
                     )
                     .opacity(
-                        isActive ? activeOpacity : (isCommitting ? 1 : StudyAnimationMetrics.stackOpacity)
+                        stackOpacity(isActive: isActive)
                     )
                     .zIndex(isActive ? 1 : 0)
                     .allowsHitTesting(isActive && !isCommitting)
@@ -157,6 +158,34 @@ struct StudyView: View {
                 ),
             value: isCommitting
         )
+        .animation(
+            reduceMotion
+                ? nil
+                : .easeInOut(duration: StudyAnimationMetrics.flipDuration * 0.55),
+            value: isFlipAnimating
+        )
+    }
+
+    private func stackScale(isActive: Bool) -> CGFloat {
+        guard !isActive, !isCommitting else { return 1 }
+        return isFlipAnimating
+            ? StudyAnimationMetrics.flippingStackScale
+            : StudyAnimationMetrics.stackScale
+    }
+
+    private func stackOffset(isActive: Bool) -> CGFloat {
+        guard !isActive, !isCommitting else { return 0 }
+        return isFlipAnimating
+            ? StudyAnimationMetrics.flippingStackOffset
+            : StudyAnimationMetrics.stackOffset
+    }
+
+    private func stackOpacity(isActive: Bool) -> Double {
+        if isActive { return activeOpacity }
+        if isCommitting { return 1 }
+        return isFlipAnimating
+            ? StudyAnimationMetrics.flippingStackOpacity
+            : StudyAnimationMetrics.stackOpacity
     }
 
     private func card(
@@ -165,18 +194,19 @@ struct StudyView: View {
         exitDistance: CGFloat
     ) -> some View {
         ZStack {
-            RoundedRectangle(cornerRadius: 28, style: .continuous)
-                .fill(Theme.cardBackground)
-                .shadow(color: .black.opacity(0.25), radius: 20, y: 10)
-
             if reduceMotion {
-                Text(isActive && isFlipped ? item.back : item.front)
-                    .font(.title2.weight(.semibold))
-                    .multilineTextAlignment(.center)
-                    .minimumScaleFactor(0.72)
-                    .padding(30)
-                    .frame(maxWidth: .infinity, maxHeight: .infinity)
-                    .contentTransition(.opacity)
+                ZStack {
+                    RoundedRectangle(cornerRadius: 28, style: .continuous)
+                        .fill(Theme.cardBackground)
+                        .shadow(color: .black.opacity(0.25), radius: 20, y: 10)
+                    Text(isActive && isFlipped ? item.back : item.front)
+                        .font(.title2.weight(.semibold))
+                        .multilineTextAlignment(.center)
+                        .minimumScaleFactor(0.72)
+                        .padding(30)
+                        .frame(maxWidth: .infinity, maxHeight: .infinity)
+                        .contentTransition(.opacity)
+                }
             } else {
                 StudyCardFace(
                     front: item.front,
@@ -390,8 +420,9 @@ struct StudyView: View {
     }
 
     private func flipCard() {
-        guard !isCommitting else { return }
+        guard !isCommitting, !isFlipAnimating else { return }
         HapticService.play(.flip)
+        isFlipAnimating = !reduceMotion
         isFlipped.toggle()
         let targetAngle = isFlipped ? 180.0 : 0.0
 
@@ -401,6 +432,14 @@ struct StudyView: View {
                 : .easeInOut(duration: StudyAnimationMetrics.flipDuration)
         ) {
             flipAngle = targetAngle
+        }
+
+        guard !reduceMotion else { return }
+        Task { @MainActor in
+            try? await Task.sleep(
+                for: .milliseconds(Int(StudyAnimationMetrics.flipDuration * 1_000))
+            )
+            isFlipAnimating = false
         }
     }
 
@@ -465,6 +504,7 @@ struct StudyView: View {
         transaction.disablesAnimations = true
         withTransaction(transaction) {
             isFlipped = false
+            isFlipAnimating = false
             flipAngle = 0
             dragOffset = .zero
             activeOpacity = 1

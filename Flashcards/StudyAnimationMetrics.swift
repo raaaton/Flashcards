@@ -12,5 +12,9 @@ enum StudyAnimationMetrics {
     static let transitionResponse: Double = 0.24
     static let transitionDamping: Double = 0.9
     static let commitMilliseconds = 210
-    static let flipDuration: Double = 0.34
+    static let flipDuration: Double = 0.4
+    static let flipPerspective: CGFloat = 0.48
+    static let flippingStackScale: CGFloat = 0.945
+    static let flippingStackOffset: CGFloat = 19
+    static let flippingStackOpacity: Double = 0.42
 }

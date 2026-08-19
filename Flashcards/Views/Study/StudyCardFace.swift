@@ -12,30 +12,36 @@ struct StudyCardFace: View, Animatable {
 
     var body: some View {
         ZStack {
-            cardText(front)
+            cardFace(front)
                 .opacity(normalizedAngle < 90 ? 1 : 0)
 
-            cardText(back)
+            cardFace(back)
                 .rotation3DEffect(.degrees(180), axis: (x: 0, y: 1, z: 0))
                 .opacity(normalizedAngle >= 90 ? 1 : 0)
         }
         .rotation3DEffect(
             .degrees(angle),
             axis: (x: 0, y: 1, z: 0),
-            perspective: 0.68
+            perspective: StudyAnimationMetrics.flipPerspective
         )
+        .shadow(color: .black.opacity(0.25), radius: 20, y: 10)
     }
 
     private var normalizedAngle: Double {
         angle.truncatingRemainder(dividingBy: 360)
     }
 
-    private func cardText(_ value: String) -> some View {
-        Text(value)
-            .font(.title2.weight(.semibold))
-            .multilineTextAlignment(.center)
-            .minimumScaleFactor(0.72)
-            .padding(30)
-            .frame(maxWidth: .infinity, maxHeight: .infinity)
+    private func cardFace(_ value: String) -> some View {
+        ZStack {
+            RoundedRectangle(cornerRadius: 28, style: .continuous)
+                .fill(Theme.cardBackground)
+
+            Text(value)
+                .font(.title2.weight(.semibold))
+                .multilineTextAlignment(.center)
+                .minimumScaleFactor(0.72)
+                .padding(30)
+                .frame(maxWidth: .infinity, maxHeight: .infinity)
+        }
     }
 }
