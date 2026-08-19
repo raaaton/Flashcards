@@ -21,6 +21,8 @@ struct BulkImportView: View {
     @Query(sort: \Deck.name) private var decks: [Deck]
     @Query(sort: \Folder.name) private var folders: [Folder]
 
+    private let draftImportHandler: (([ParsedCard]) -> Void)?
+
     @State private var sourceText = ""
     @State private var termOption = TermDefinitionDelimiterOption.colon
     @State private var cardOption = CardDelimiterOption.newline
@@ -32,9 +34,17 @@ struct BulkImportView: View {
     @State private var newDeckName = ""
     @State private var selectedFolderID: UUID?
 
-    init(deck: Deck? = nil) {
+    init(
+        deck: Deck? = nil,
+        onDraftImport: (([ParsedCard]) -> Void)? = nil
+    ) {
+        draftImportHandler = onDraftImport
         _destination = State(initialValue: deck == nil ? .newDeck : .existingDeck)
         _selectedDeckID = State(initialValue: deck?.id)
+    }
+
+    init(onDraftImport: @escaping ([ParsedCard]) -> Void) {
+        self.init(deck: nil, onDraftImport: onDraftImport)
     }
 
     private var termDelimiter: String {
@@ -62,6 +72,7 @@ struct BulkImportView: View {
     }
 
     private var destinationIsValid: Bool {
+        if draftImportHandler != nil { return true }
         switch destination {
         case .newDeck: !cleanDeckName.isEmpty
         case .existingDeck: selectedDeckID != nil
@@ -114,12 +125,15 @@ struct BulkImportView: View {
                     }
                 }
 
-                destinationSection
+                if draftImportHandler == nil {
+                    destinationSection
+                }
                 previewSection
 
             }
-            .navigationTitle("Importer en masse")
+            .navigationTitle(draftImportHandler == nil ? "Importer en masse" : "Ajout en masse")
             .navigationBarTitleDisplayMode(.inline)
+            .scrollDismissesKeyboard(.interactively)
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
                     Button("Fermer") { dismiss() }
@@ -237,6 +251,13 @@ struct BulkImportView: View {
 
     private func importCards() {
         guard canImport else { return }
+
+        if let draftImportHandler {
+            draftImportHandler(preview.cards)
+            dismiss()
+            return
+        }
+
         let targetDeck: Deck
 
         switch destination {

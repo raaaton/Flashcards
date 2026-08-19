@@ -4,8 +4,13 @@ import SwiftUI
 
 private struct DeckCardDraft: Identifiable {
     let id = UUID()
-    var term = ""
-    var definition = ""
+    var term: String
+    var definition: String
+
+    init(term: String = "", definition: String = "") {
+        self.term = term
+        self.definition = definition
+    }
 
     var cleanTerm: String {
         term.trimmingCharacters(in: .whitespacesAndNewlines)
@@ -29,6 +34,7 @@ struct DeckFormView: View {
     @State private var deckDescription: String
     @State private var selectedFolderID: UUID?
     @State private var cardDrafts: [DeckCardDraft]
+    @State private var showingBulkAdd = false
 
     init(deck: Deck? = nil, initialFolder: Folder? = nil) {
         self.deck = deck
@@ -101,6 +107,11 @@ struct DeckFormView: View {
                             cardDrafts.append(DeckCardDraft())
                         }
                         .foregroundStyle(Theme.accent)
+
+                        Button("Ajout en masse", systemImage: "text.badge.plus") {
+                            showingBulkAdd = true
+                        }
+                        .foregroundStyle(Theme.accent)
                     } header: {
                         Text("Cartes initiales")
                     } footer: {
@@ -113,6 +124,7 @@ struct DeckFormView: View {
                     }
                 }
             }
+            .scrollDismissesKeyboard(.interactively)
             .navigationTitle(
                 deck == nil
                     ? L10n.text("deck.new.title")
@@ -127,6 +139,14 @@ struct DeckFormView: View {
                     Button("Enregistrer") { save() }
                         .disabled(!canSave)
                 }
+            }
+        }
+        .sheet(isPresented: $showingBulkAdd) {
+            BulkImportView { parsedCards in
+                cardDrafts.removeAll(where: \.isEmpty)
+                cardDrafts.append(contentsOf: parsedCards.map {
+                    DeckCardDraft(term: $0.term, definition: $0.definition)
+                })
             }
         }
     }
