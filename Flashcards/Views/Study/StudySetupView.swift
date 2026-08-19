@@ -38,10 +38,8 @@ struct StudySetupView: View {
         return snapshot
     }
 
-    private var masteredPercentage: Int {
-        guard !deck.cards.isEmpty else { return 0 }
-        let mastered = deck.cards.count(where: \.mastered)
-        return Int((Double(mastered) / Double(deck.cards.count) * 100).rounded())
+    private var masteredCount: Int {
+        deck.cards.count(where: \.mastered)
     }
 
     var body: some View {
@@ -75,8 +73,28 @@ struct StudySetupView: View {
                 .disabled(resumableSession != nil)
 
                 Section("Progression") {
-                    Text(L10n.format("study.cards_remaining", Int64(remainingCount)))
-                    Text(L10n.format("study.mastered.percent", Int64(masteredPercentage)))
+                    ProgressView(
+                        value: deck.cards.isEmpty
+                            ? 0
+                            : Double(masteredCount) / Double(deck.cards.count)
+                    ) {
+                        Text("Progression")
+                    } currentValueLabel: {
+                        Text("\(masteredCount) / \(deck.cards.count)")
+                    }
+                    .accessibilityLabel(L10n.format("deck.progress.label", deck.name))
+                    .accessibilityValue(
+                        L10n.format(
+                            "deck.progress.value",
+                            Int64(masteredCount),
+                            Int64(deck.cards.count)
+                        )
+                    )
+
+                    LabeledContent(
+                        "Cartes restantes",
+                        value: "\(remainingCount)"
+                    )
                 }
 
                 Section {
@@ -118,6 +136,8 @@ struct StudySetupView: View {
         .alert("Réinitialiser la progression ?", isPresented: $confirmingReset) {
             Button("Réinitialiser", role: .destructive) { resetProgress() }
             Button("Annuler", role: .cancel) {}
+                .tint(.gray)
+                .foregroundStyle(.secondary)
         } message: {
             Text("Toutes les cartes de ce deck redeviendront non maîtrisées.")
         }

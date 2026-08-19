@@ -47,6 +47,8 @@ struct StudyView: View {
         .alert("Réinitialiser la progression ?", isPresented: $confirmingReset) {
             Button("Réinitialiser", role: .destructive) { resetProgress() }
             Button("Annuler", role: .cancel) {}
+                .tint(.gray)
+                .foregroundStyle(.secondary)
         } message: {
             Text("Toutes les cartes de ce deck redeviendront non maîtrisées.")
         }
@@ -87,33 +89,65 @@ struct StudyView: View {
     }
 
     private var sessionHeader: some View {
-        VStack(spacing: 10) {
+        VStack(spacing: 12) {
             HStack {
                 Text(L10n.format("study.session.number", Int64(sessionNumber)))
                     .font(.subheadline.weight(.semibold))
                 Spacer()
-                Text("\(session.masteredInSession) / \(session.totalCards)")
+                Text("\(session.cardsSeen) / \(session.totalCards)")
                     .font(.subheadline.monospacedDigit())
                     .foregroundStyle(.secondary)
             }
 
+            HStack(alignment: .firstTextBaseline) {
+                sessionCounter(
+                    label: L10n.text("study.incorrect"),
+                    value: session.reviewAnswers,
+                    color: .red,
+                    alignment: .leading
+                )
+                Spacer()
+                sessionCounter(
+                    label: L10n.text("study.correct"),
+                    value: session.correctAnswers,
+                    color: .green,
+                    alignment: .trailing
+                )
+            }
+
             ProgressView(
-                value: Double(session.masteredInSession),
+                value: Double(session.cardsSeen),
                 total: Double(max(session.totalCards, 1))
             )
             .animation(
                 reduceMotion ? nil : .easeOut(duration: 0.22),
-                value: session.masteredInSession
+                value: session.cardsSeen
             )
             .accessibilityLabel("Progression de la session")
             .accessibilityValue(
                 L10n.format(
                     "study.progress.value",
-                    Int64(session.masteredInSession),
+                    Int64(session.cardsSeen),
                     Int64(session.totalCards)
                 )
             )
         }
+    }
+
+    private func sessionCounter(
+        label: String,
+        value: Int,
+        color: Color,
+        alignment: HorizontalAlignment
+    ) -> some View {
+        VStack(alignment: alignment, spacing: 2) {
+            Text(label)
+                .font(.caption.weight(.semibold))
+            Text("\(value)")
+                .font(.title2.bold().monospacedDigit())
+        }
+        .foregroundStyle(color)
+        .accessibilityElement(children: .combine)
     }
 
     private func cardStack(exitDistance: CGFloat) -> some View {
@@ -374,15 +408,20 @@ struct StudyView: View {
             .buttonStyle(.borderedProminent)
             .controlSize(.large)
 
-            Button(
-                "Réinitialiser la progression du deck",
-                systemImage: "trash",
-                role: .destructive
-            ) {
+            Button(role: .destructive) {
                 confirmingReset = true
+            } label: {
+                Label("Réinitialiser la progression du deck", systemImage: "trash")
+                    .foregroundStyle(.red)
+                    .padding(.horizontal, 18)
+                    .padding(.vertical, 12)
+                    .background(
+                        Theme.cardBackground,
+                        in: .rect(cornerRadius: 14, style: .continuous)
+                    )
+                    .contentShape(.rect)
             }
-            .buttonStyle(.bordered)
-            .foregroundStyle(.red)
+            .buttonStyle(.plain)
         }
         .padding()
         .navigationTitle(deck.name)
