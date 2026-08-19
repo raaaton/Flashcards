@@ -28,7 +28,10 @@ struct StudySetupView: View {
     var body: some View {
         Form {
             Section {
-                Label("Session \(nextSessionNumber)", systemImage: "rectangle.stack.fill")
+                Label(
+                    L10n.format("study.session.number", Int64(nextSessionNumber)),
+                    systemImage: "rectangle.stack.fill"
+                )
                     .font(.title2.bold())
                     .foregroundStyle(Theme.accent)
                     .accessibilityAddTraits(.isHeader)
@@ -48,7 +51,7 @@ struct StudySetupView: View {
                 Toggle("Inclure les cartes maîtrisées", isOn: $includeMastered)
                 LabeledContent(
                     "Cette session",
-                    value: "\(eligibleCount) carte\(eligibleCount > 1 ? "s" : "")"
+                    value: L10n.cards(eligibleCount)
                 )
             }
 

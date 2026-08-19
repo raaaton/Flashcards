@@ -9,9 +9,9 @@ enum TestQuestionType: String, CaseIterable, Identifiable, Hashable, Sendable {
 
     var title: String {
         switch self {
-        case .multipleChoice: "QCM"
-        case .trueFalse: "Vrai / Faux"
-        case .written: "Réponse écrite"
+        case .multipleChoice: L10n.text("test.type.multiple_choice")
+        case .trueFalse: L10n.text("test.type.true_false")
+        case .written: L10n.text("test.type.written")
         }
     }
 }

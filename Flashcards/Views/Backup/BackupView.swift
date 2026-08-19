@@ -28,7 +28,9 @@ struct BackupView: View {
                     if let exportURL {
                         ShareLink(item: exportURL) {
                             Label(
-                                deck == nil ? "Partager toute la base" : "Partager ce deck",
+                                deck == nil
+                                    ? L10n.text("backup.share.database")
+                                    : L10n.text("backup.share.deck"),
                                 systemImage: "square.and.arrow.up"
                             )
                         }
@@ -41,7 +43,7 @@ struct BackupView: View {
                     }
 
                     if let deck {
-                        LabeledContent("Contenu", value: "\(deck.cards.count) carte\(deck.cards.count > 1 ? "s" : "")")
+                        LabeledContent("Contenu", value: L10n.cards(deck.cards.count))
                     } else {
                         LabeledContent("Decks", value: "\(decks.count)")
                         LabeledContent("Cartes", value: "\(decks.reduce(0) { $0 + $1.cards.count })")
@@ -64,7 +66,11 @@ struct BackupView: View {
                     }
                 }
             }
-            .navigationTitle(deck == nil ? "Sauvegarde" : "Exporter le deck")
+            .navigationTitle(
+                deck == nil
+                    ? L10n.text("backup.title")
+                    : L10n.text("backup.export_deck.title")
+            )
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .confirmationAction) {
@@ -86,11 +92,12 @@ struct BackupView: View {
             Button("Annuler", role: .cancel) { pendingEnvelope = nil }
         } message: {
             if let pendingEnvelope {
-                Text(
-                    "\(pendingEnvelope.folders.count) dossier\(pendingEnvelope.folders.count > 1 ? "s" : ""), "
-                        + "\(pendingEnvelope.decks.count) deck\(pendingEnvelope.decks.count > 1 ? "s" : "") et "
-                        + "\(pendingEnvelope.decks.reduce(0) { $0 + $1.cards.count }) cartes seront fusionnés."
-                )
+                Text(L10n.format(
+                    "backup.merge.preview",
+                    Int64(pendingEnvelope.folders.count),
+                    Int64(pendingEnvelope.decks.count),
+                    Int64(pendingEnvelope.decks.reduce(0) { $0 + $1.cards.count })
+                ))
             }
         }
         .alert(statusTitle, isPresented: $showingStatus) {
@@ -120,7 +127,7 @@ struct BackupView: View {
             }
             exportURL = try BackupService.temporaryJSONFile(for: envelope, suggestedName: name)
         } catch {
-            showStatus(title: "Export impossible", message: error.localizedDescription)
+            showStatus(title: L10n.text("backup.export.failed"), message: error.localizedDescription)
         }
     }
 
@@ -133,7 +140,7 @@ struct BackupView: View {
             }
             pendingEnvelope = try BackupCodec.decode(Data(contentsOf: url))
         } catch {
-            showStatus(title: "Import impossible", message: error.localizedDescription)
+            showStatus(title: L10n.text("backup.import.failed"), message: error.localizedDescription)
         }
     }
 
@@ -143,9 +150,9 @@ struct BackupView: View {
         do {
             let report = try BackupService.importEnvelope(envelope, into: modelContext)
             prepareExport()
-            showStatus(title: "Import terminé", message: report.summary)
+            showStatus(title: L10n.text("backup.import.complete"), message: report.summary)
         } catch {
-            showStatus(title: "Import impossible", message: error.localizedDescription)
+            showStatus(title: L10n.text("backup.import.failed"), message: error.localizedDescription)
         }
     }
 

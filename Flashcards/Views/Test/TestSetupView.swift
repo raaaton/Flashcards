@@ -37,12 +37,12 @@ struct TestSetupView: View {
                 Toggle("Tout le deck", isOn: $useAllCards)
                 if !useAllCards {
                     Stepper(
-                        "\(questionCount) question\(questionCount > 1 ? "s" : "")",
+                        L10n.questions(questionCount),
                         value: $questionCount,
                         in: 1...max(deck.cards.count, 1)
                     )
                 }
-                LabeledContent("Test prévu", value: "\(effectiveCount) question\(effectiveCount > 1 ? "s" : "")")
+                LabeledContent("Test prévu", value: L10n.questions(effectiveCount))
             }
 
             Section {

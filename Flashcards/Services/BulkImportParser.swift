@@ -10,10 +10,10 @@ enum TermDefinitionDelimiterOption: String, CaseIterable, Identifiable, Sendable
 
     var title: String {
         switch self {
-        case .tab: "Tabulation"
-        case .comma: "Virgule"
-        case .semicolon: "Point-virgule"
-        case .custom: "Personnalisé"
+        case .tab: L10n.text("import.delimiter.tab")
+        case .comma: L10n.text("import.delimiter.comma")
+        case .semicolon: L10n.text("import.delimiter.semicolon")
+        case .custom: L10n.text("import.delimiter.custom")
         }
     }
 
@@ -36,9 +36,9 @@ enum CardDelimiterOption: String, CaseIterable, Identifiable, Sendable {
 
     var title: String {
         switch self {
-        case .newline: "Nouvelle ligne"
-        case .semicolon: "Point-virgule"
-        case .custom: "Personnalisé"
+        case .newline: L10n.text("import.delimiter.newline")
+        case .semicolon: L10n.text("import.delimiter.semicolon")
+        case .custom: L10n.text("import.delimiter.custom")
         }
     }
 
@@ -104,7 +104,7 @@ enum BulkImportParser {
                     InvalidRecord(
                         recordIndex: index,
                         content: record,
-                        reason: "Délimiteur terme/définition absent"
+                        reason: L10n.text("import.error.missing_term_delimiter")
                     )
                 )
                 continue
@@ -120,7 +120,9 @@ enum BulkImportParser {
                     InvalidRecord(
                         recordIndex: index,
                         content: record,
-                        reason: term.isEmpty ? "Terme vide" : "Définition vide"
+                        reason: term.isEmpty
+                            ? L10n.text("import.error.empty_term")
+                            : L10n.text("import.error.empty_definition")
                     )
                 )
                 continue

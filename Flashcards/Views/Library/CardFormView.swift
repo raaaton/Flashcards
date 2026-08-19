@@ -37,7 +37,11 @@ struct CardFormView: View {
                         .lineLimit(3...12)
                 }
             }
-            .navigationTitle(card == nil ? "Nouvelle carte" : "Modifier la carte")
+            .navigationTitle(
+                card == nil
+                    ? L10n.text("card.new.title")
+                    : L10n.text("card.edit.title")
+            )
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {

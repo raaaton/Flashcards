@@ -50,24 +50,35 @@ jobs:
           fi
           test "$(grep -c 'isa = PBXNativeTarget;' Flashcards.xcodeproj/project.pbxproj)" -eq 1
           test -z "$(find Flashcards -name '*.entitlements' -print -quit)"
+          jq -e '
+            .sourceLanguage == "fr"
+            and .version == "1.0"
+            and all(.strings[]; .localizations.en.stringUnit.state == "translated")
+          ' Flashcards/Localizable.xcstrings
 
       - name: Run Foundation smoke tests
         run: |
           set -euxo pipefail
           xcrun swiftc \
             -swift-version 6 \
+            Flashcards/AppPreferences.swift \
+            Flashcards/L10n.swift \
             Flashcards/Services/BulkImportParser.swift \
             CITests/BulkImportParserSmoke.swift \
             -o "$RUNNER_TEMP/bulk-import-smoke"
           "$RUNNER_TEMP/bulk-import-smoke"
           xcrun swiftc \
             -swift-version 6 \
+            Flashcards/AppPreferences.swift \
+            Flashcards/L10n.swift \
             Flashcards/Services/StudySessionState.swift \
             CITests/StudySessionSmoke.swift \
             -o "$RUNNER_TEMP/study-session-smoke"
           "$RUNNER_TEMP/study-session-smoke"
           xcrun swiftc \
             -swift-version 6 \
+            Flashcards/AppPreferences.swift \
+            Flashcards/L10n.swift \
             Flashcards/Services/StudySessionState.swift \
             Flashcards/Services/TestSessionState.swift \
             CITests/TestSessionSmoke.swift \
@@ -75,6 +86,8 @@ jobs:
           "$RUNNER_TEMP/test-session-smoke"
           xcrun swiftc \
             -swift-version 6 \
+            Flashcards/AppPreferences.swift \
+            Flashcards/L10n.swift \
             Flashcards/Services/BackupModels.swift \
             CITests/BackupCodecSmoke.swift \
             -o "$RUNNER_TEMP/backup-codec-smoke"

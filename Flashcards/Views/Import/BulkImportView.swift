@@ -9,8 +9,8 @@ private enum ImportDestination: String, CaseIterable, Identifiable {
 
     var title: String {
         switch self {
-        case .newDeck: "Nouveau deck"
-        case .existingDeck: "Deck existant"
+        case .newDeck: L10n.text("import.destination.new_deck")
+        case .existingDeck: L10n.text("import.destination.existing_deck")
         }
     }
 }
@@ -122,7 +122,7 @@ struct BulkImportView: View {
                         importCards()
                     } label: {
                         Label(
-                            "Importer \(preview.cards.count) carte\(preview.cards.count > 1 ? "s" : "")",
+                            L10n.format("import.action.cards", Int64(preview.cards.count)),
                             systemImage: "square.and.arrow.down"
                         )
                         .frame(maxWidth: .infinity)
@@ -215,7 +215,10 @@ struct BulkImportView: View {
 
             ForEach(preview.invalidRecords) { record in
                 VStack(alignment: .leading, spacing: 4) {
-                    Label("Ligne \(record.recordIndex + 1) ignorée", systemImage: "exclamationmark.circle")
+                    Label(
+                        L10n.format("import.preview.ignored_line", Int64(record.recordIndex + 1)),
+                        systemImage: "exclamationmark.circle"
+                    )
                         .font(.headline)
                     Text(record.content)
                         .lineLimit(2)
@@ -225,7 +228,7 @@ struct BulkImportView: View {
                 .foregroundStyle(.red)
             }
         } header: {
-            Text("Aperçu — \(preview.cards.count) carte\(preview.cards.count > 1 ? "s" : "")")
+            Text(L10n.format("import.preview.count", Int64(preview.cards.count)))
         } footer: {
             if !preview.invalidRecords.isEmpty {
                 Text("Les lignes signalées seront ignorées ; les autres seront importées.")

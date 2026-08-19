@@ -9,9 +9,9 @@ enum StudyDirection: String, CaseIterable, Identifiable, Sendable {
 
     var title: String {
         switch self {
-        case .termToDefinition: "Terme → Définition"
-        case .definitionToTerm: "Définition → Terme"
-        case .random: "Aléatoire"
+        case .termToDefinition: L10n.text("study.direction.term_definition")
+        case .definitionToTerm: L10n.text("study.direction.definition_term")
+        case .random: L10n.text("study.direction.random")
         }
     }
 }

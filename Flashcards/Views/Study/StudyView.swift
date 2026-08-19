@@ -96,7 +96,11 @@ struct StudyView: View {
     private var sessionHeader: some View {
         VStack(spacing: 10) {
             HStack {
-                Text("Session \(sessionNumber) · Round \(session.roundNumber)")
+                Text(L10n.format(
+                    "study.session.round",
+                    Int64(sessionNumber),
+                    Int64(session.roundNumber)
+                ))
                     .font(.subheadline.weight(.semibold))
                 Spacer()
                 Text("\(session.masteredInSession) / \(session.totalCards)")
@@ -113,7 +117,13 @@ struct StudyView: View {
                 value: session.masteredInSession
             )
             .accessibilityLabel("Progression de la session")
-            .accessibilityValue("\(session.masteredInSession) cartes maîtrisées sur \(session.totalCards)")
+            .accessibilityValue(
+                L10n.format(
+                    "study.progress.value",
+                    Int64(session.masteredInSession),
+                    Int64(session.totalCards)
+                )
+            )
         }
     }
 
@@ -196,7 +206,9 @@ struct StudyView: View {
         .gesture(isActive ? dragGesture(exitDistance: exitDistance) : nil)
         .accessibilityElement(children: .ignore)
         .accessibilityLabel(
-            isActive && isFlipped ? "Réponse : \(item.back)" : "Question : \(item.front)"
+            isActive && isFlipped
+                ? L10n.format("study.accessibility.answer", item.back)
+                : L10n.format("study.accessibility.question", item.front)
         )
         .accessibilityHint("Touchez deux fois pour retourner la carte, ou utilisez les actions d’étude")
         .accessibilityAction { if isActive { flipCard() } }
@@ -319,7 +331,7 @@ struct StudyView: View {
             Image(systemName: "checkmark.circle.fill")
                 .font(.system(size: 72))
                 .foregroundStyle(Theme.accent)
-            Text("Session \(sessionNumber) terminée")
+            Text(L10n.format("study.session.complete", Int64(sessionNumber)))
                 .font(.largeTitle.bold())
                 .multilineTextAlignment(.center)
             Text("Toutes les cartes de cette session sont maîtrisées.")
@@ -327,8 +339,8 @@ struct StudyView: View {
                 .multilineTextAlignment(.center)
 
             HStack(spacing: 28) {
-                statistic(value: "\(session.cardsSeen)", label: "Cartes vues")
-                statistic(value: "\(session.successRate) %", label: "Réussite")
+                statistic(value: "\(session.cardsSeen)", label: L10n.text("study.cards_seen"))
+                statistic(value: "\(session.successRate) %", label: L10n.text("study.success_rate"))
             }
 
             Spacer()

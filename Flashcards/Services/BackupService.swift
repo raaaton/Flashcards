@@ -10,9 +10,15 @@ struct BackupImportReport: Sendable {
     var updatedCards = 0
 
     var summary: String {
-        "Dossiers : \(addedFolders) ajoutés, \(updatedFolders) mis à jour. "
-            + "Decks : \(addedDecks) ajoutés, \(updatedDecks) mis à jour. "
-            + "Cartes : \(addedCards) ajoutées, \(updatedCards) mises à jour."
+        L10n.format(
+            "backup.import.summary",
+            Int64(addedFolders),
+            Int64(updatedFolders),
+            Int64(addedDecks),
+            Int64(updatedDecks),
+            Int64(addedCards),
+            Int64(updatedCards)
+        )
     }
 }
 

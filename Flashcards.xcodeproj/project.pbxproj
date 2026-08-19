@@ -41,6 +41,10 @@
 		B10000000000000000000020 /* HapticService.swift in Sources */ = {isa = PBXBuildFile; fileRef = C10000000000000000000021 /* HapticService.swift */; };
 		B10000000000000000000021 /* TestAnimationMetrics.swift in Sources */ = {isa = PBXBuildFile; fileRef = C10000000000000000000022 /* TestAnimationMetrics.swift */; };
 		B10000000000000000000022 /* ConfettiView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C10000000000000000000023 /* ConfettiView.swift */; };
+		B10000000000000000000023 /* AppSettings.swift in Sources */ = {isa = PBXBuildFile; fileRef = C10000000000000000000024 /* AppSettings.swift */; };
+		B10000000000000000000024 /* SettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C10000000000000000000025 /* SettingsView.swift */; };
+		B10000000000000000000025 /* L10n.swift in Sources */ = {isa = PBXBuildFile; fileRef = C10000000000000000000026 /* L10n.swift */; };
+		B10000000000000000000026 /* Localizable.xcstrings in Resources */ = {isa = PBXBuildFile; fileRef = C10000000000000000000027 /* Localizable.xcstrings */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -79,6 +83,10 @@
 		C10000000000000000000021 /* HapticService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HapticService.swift; sourceTree = "<group>"; };
 		C10000000000000000000022 /* TestAnimationMetrics.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TestAnimationMetrics.swift; sourceTree = "<group>"; };
 		C10000000000000000000023 /* ConfettiView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ConfettiView.swift; sourceTree = "<group>"; };
+		C10000000000000000000024 /* AppSettings.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppSettings.swift; sourceTree = "<group>"; };
+		C10000000000000000000025 /* SettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsView.swift; sourceTree = "<group>"; };
+		C10000000000000000000026 /* L10n.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = L10n.swift; sourceTree = "<group>"; };
+		C10000000000000000000027 /* Localizable.xcstrings */ = {isa = PBXFileReference; lastKnownFileType = text.json.xcstrings; path = Localizable.xcstrings; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -105,6 +113,8 @@
 			children = (
 				C10000000000000000000001 /* FlashcardsApp.swift */,
 				C10000000000000000000020 /* AppPreferences.swift */,
+				C10000000000000000000024 /* AppSettings.swift */,
+				C10000000000000000000026 /* L10n.swift */,
 				C10000000000000000000002 /* Theme.swift */,
 				C1000000000000000000001A /* FolderAppearance.swift */,
 				C1000000000000000000001E /* StudyAnimationMetrics.swift */,
@@ -113,6 +123,7 @@
 				E10000000000000000000007 /* Services */,
 				E10000000000000000000004 /* Views */,
 				C10000000000000000000007 /* Assets.xcassets */,
+				C10000000000000000000027 /* Localizable.xcstrings */,
 			);
 			path = Flashcards;
 			sourceTree = "<group>";
@@ -137,6 +148,7 @@
 				E1000000000000000000000A /* Test */,
 				E1000000000000000000000B /* Backup */,
 				E1000000000000000000000C /* Celebration */,
+				E1000000000000000000000D /* Settings */,
 			);
 			path = Views;
 			sourceTree = "<group>";
@@ -213,6 +225,14 @@
 			path = Celebration;
 			sourceTree = "<group>";
 		};
+		E1000000000000000000000D /* Settings */ = {
+			isa = PBXGroup;
+			children = (
+				C10000000000000000000025 /* SettingsView.swift */,
+			);
+			path = Settings;
+			sourceTree = "<group>";
+		};
 		E10000000000000000000006 /* Products */ = {
 			isa = PBXGroup;
 			children = (
@@ -262,6 +282,7 @@
 			hasScannedForEncodings = 0;
 			knownRegions = (
 				fr,
+				en,
 				Base,
 			);
 			mainGroup = E10000000000000000000001;
@@ -280,6 +301,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				B10000000000000000000007 /* Assets.xcassets in Resources */,
+				B10000000000000000000026 /* Localizable.xcstrings in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -323,6 +345,9 @@
 				B10000000000000000000020 /* HapticService.swift in Sources */,
 				B10000000000000000000021 /* TestAnimationMetrics.swift in Sources */,
 				B10000000000000000000022 /* ConfettiView.swift in Sources */,
+				B10000000000000000000023 /* AppSettings.swift in Sources */,
+				B10000000000000000000024 /* SettingsView.swift in Sources */,
+				B10000000000000000000025 /* L10n.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

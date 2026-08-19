@@ -3,6 +3,8 @@ import SwiftUI
 
 @main
 struct FlashcardsApp: App {
+    @State private var settings = AppSettings()
+
     private let modelContainer: ModelContainer = {
         let schema = Schema([
             Folder.self,
@@ -28,7 +30,9 @@ struct FlashcardsApp: App {
     var body: some Scene {
         WindowGroup {
             HomeView()
-                .tint(Theme.accent)
+                .environment(settings)
+                .environment(\.locale, settings.locale ?? Locale.autoupdatingCurrent)
+                .tint(settings.accentColor)
                 .preferredColorScheme(.dark)
         }
         .modelContainer(modelContainer)

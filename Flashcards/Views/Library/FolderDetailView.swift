@@ -55,7 +55,7 @@ struct FolderDetailView: View {
                 .animation(.default, value: decks.map(\.id))
             }
         }
-        .navigationTitle(folder?.name ?? "Sans dossier")
+        .navigationTitle(folder?.name ?? L10n.text("folder.unfiled"))
         .navigationBarTitleDisplayMode(.large)
         .searchable(text: $searchText, prompt: "Decks et cartes")
         .searchToolbarBehavior(.minimize)

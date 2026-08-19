@@ -71,7 +71,7 @@ struct DeckDetailView: View {
                         }
                     }
                     if orderedCards.count > 5 {
-                        Text("Et \(orderedCards.count - 5) autre\(orderedCards.count - 5 > 1 ? "s" : "")…")
+                        Text(L10n.format("deck.more_cards", Int64(orderedCards.count - 5)))
                             .foregroundStyle(.secondary)
                     }
                 }

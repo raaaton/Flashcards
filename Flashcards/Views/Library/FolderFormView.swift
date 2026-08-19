@@ -96,7 +96,11 @@ struct FolderFormView: View {
                         }
                 }
             }
-            .navigationTitle(folder == nil ? "Nouveau dossier" : "Modifier le dossier")
+            .navigationTitle(
+                folder == nil
+                    ? L10n.text("folder.new.title")
+                    : L10n.text("folder.edit.title")
+            )
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {

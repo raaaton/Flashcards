@@ -1,6 +1,7 @@
 import SwiftUI
 
+@MainActor
 enum Theme {
-    static let accent = Color.indigo
+    static var accent: Color { Color(folderHex: AppPreferences.accentHex) }
     static let cardBackground = Color(uiColor: .secondarySystemBackground)
 }

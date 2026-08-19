@@ -19,7 +19,7 @@ struct FolderTile: View {
                     .font(.headline)
                     .foregroundStyle(.white)
                     .lineLimit(1)
-                Text("\(deckCount) deck\(deckCount > 1 ? "s" : "")")
+                Text(L10n.decks(deckCount))
                     .font(.caption)
                     .foregroundStyle(.white.opacity(0.8))
             }

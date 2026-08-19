@@ -132,9 +132,9 @@ enum BackupCodecError: LocalizedError {
     var errorDescription: String? {
         switch self {
         case let .unsupportedSchema(version):
-            "Version de sauvegarde non prise en charge : \(version)."
+            L10n.format("backup.error.unsupported_schema", Int64(version))
         case .emptyBackup:
-            "La sauvegarde ne contient aucun deck ni dossier."
+            L10n.text("backup.error.empty")
         }
     }
 }

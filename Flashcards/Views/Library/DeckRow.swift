@@ -19,7 +19,7 @@ struct DeckRow: View {
                 .foregroundStyle(.primary)
 
             HStack {
-                Text("\(deck.cards.count) carte\(deck.cards.count > 1 ? "s" : "")")
+                Text(L10n.cards(deck.cards.count))
                 Spacer()
                 Text("\(Int(progress * 100)) %")
             }
@@ -27,8 +27,14 @@ struct DeckRow: View {
             .foregroundStyle(.secondary)
 
             ProgressView(value: progress)
-                .accessibilityLabel("Progression de \(deck.name)")
-                .accessibilityValue("\(masteredCount) cartes maîtrisées sur \(deck.cards.count)")
+                .accessibilityLabel(L10n.format("deck.progress.label", deck.name))
+                .accessibilityValue(
+                    L10n.format(
+                        "deck.progress.value",
+                        Int64(masteredCount),
+                        Int64(deck.cards.count)
+                    )
+                )
         }
         .padding(.vertical, 4)
     }

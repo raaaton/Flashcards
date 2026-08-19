@@ -40,7 +40,11 @@ struct DeckFormView: View {
                     }
                 }
             }
-            .navigationTitle(deck == nil ? "Nouveau deck" : "Modifier le deck")
+            .navigationTitle(
+                deck == nil
+                    ? L10n.text("deck.new.title")
+                    : L10n.text("deck.edit.title")
+            )
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {

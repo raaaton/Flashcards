@@ -11,6 +11,7 @@ struct HomeView: View {
     @State private var showingNewDeck = false
     @State private var showingBulkImport = false
     @State private var showingBackup = false
+    @State private var showingSettings = false
     @State private var folderToEdit: Folder?
     @State private var folderToDelete: Folder?
     @State private var deckToEdit: Deck?
@@ -59,6 +60,13 @@ struct HomeView: View {
                     .foregroundStyle(.white)
                 }
 
+                ToolbarItem(placement: .topBarTrailing) {
+                    Button("settings.title", systemImage: "gearshape") {
+                        showingSettings = true
+                    }
+                    .foregroundStyle(.white)
+                }
+
                 ToolbarItemGroup(placement: .bottomBar) {
                     Spacer()
                     addMenu
@@ -76,6 +84,9 @@ struct HomeView: View {
         }
         .sheet(isPresented: $showingBackup) {
             BackupView()
+        }
+        .sheet(isPresented: $showingSettings) {
+            SettingsView()
         }
         .sheet(item: $folderToEdit) { folder in
             FolderFormView(folder: folder)
@@ -133,7 +144,7 @@ struct HomeView: View {
                     FolderDetailView(folder: nil)
                 } label: {
                     FolderTile(
-                        name: "Sans dossier",
+                        name: L10n.text("folder.unfiled"),
                         systemImage: "tray.fill",
                         color: .gray,
                         deckCount: orphanedDeckCount
@@ -157,7 +168,7 @@ struct HomeView: View {
                     } label: {
                         VStack(alignment: .leading, spacing: 4) {
                             DeckRow(deck: deck)
-                            Label(deck.folder?.name ?? "Sans dossier", systemImage: "folder")
+                            Label(deck.folder?.name ?? L10n.text("folder.unfiled"), systemImage: "folder")
                                 .font(.caption)
                                 .foregroundStyle(.tertiary)
                         }

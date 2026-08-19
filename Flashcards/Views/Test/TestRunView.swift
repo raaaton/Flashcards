@@ -119,7 +119,11 @@ struct TestRunView: View {
     private var progressHeader: some View {
         VStack(spacing: 9) {
             HStack {
-                Text("Question \(session.currentIndex + 1) sur \(session.questions.count)")
+                Text(L10n.format(
+                    "test.question.progress",
+                    Int64(session.currentIndex + 1),
+                    Int64(session.questions.count)
+                ))
                     .font(.subheadline.weight(.semibold))
                 Spacer()
                 Text("\(session.currentIndex) / \(session.questions.count)")
@@ -137,7 +141,11 @@ struct TestRunView: View {
             )
             .accessibilityLabel("Progression du test")
             .accessibilityValue(
-                "\(session.currentIndex) questions répondues sur \(session.questions.count)"
+                L10n.format(
+                    "test.progress.value",
+                    Int64(session.currentIndex),
+                    Int64(session.questions.count)
+                )
             )
         }
     }
@@ -172,22 +180,33 @@ struct TestRunView: View {
     private func trueFalseAnswers(_ question: TestQuestion) -> some View {
         GlassEffectContainer(spacing: 16) {
             HStack(spacing: 16) {
-                verdictButton("Faux", systemImage: "xmark", question: question)
-                verdictButton("Vrai", systemImage: "checkmark", question: question)
+                verdictButton(
+                    canonicalAnswer: "Faux",
+                    title: L10n.text("test.false"),
+                    systemImage: "xmark",
+                    question: question
+                )
+                verdictButton(
+                    canonicalAnswer: "Vrai",
+                    title: L10n.text("test.true"),
+                    systemImage: "checkmark",
+                    question: question
+                )
             }
         }
     }
 
     private func verdictButton(
-        _ answer: String,
+        canonicalAnswer: String,
+        title: String,
         systemImage: String,
         question: TestQuestion
     ) -> some View {
-        Button(answer, systemImage: systemImage) { submit(answer) }
+        Button(title, systemImage: systemImage) { submit(canonicalAnswer) }
             .buttonStyle(.glassProminent)
-            .tint(verdictTint(answer, question: question))
+            .tint(verdictTint(canonicalAnswer, question: question))
             .frame(maxWidth: .infinity)
-            .scaleEffect(selectedAnswer == answer ? 1.025 : 1)
+            .scaleEffect(selectedAnswer == canonicalAnswer ? 1.025 : 1)
             .disabled(isTransitioning)
             .animation(.easeOut(duration: 0.15), value: selectedAnswer)
     }
@@ -214,14 +233,14 @@ struct TestRunView: View {
     private func feedbackBanner(isCorrect: Bool, question: TestQuestion) -> some View {
         VStack(alignment: .leading, spacing: 6) {
             Label(
-                isCorrect ? "Correct" : "À revoir",
+                isCorrect ? L10n.text("common.correct") : L10n.text("study.review"),
                 systemImage: isCorrect ? "checkmark.circle.fill" : "xmark.circle.fill"
             )
             .font(.headline)
             .foregroundStyle(isCorrect ? .green : .red)
 
             if !isCorrect {
-                Text("Bonne réponse : \(question.correctAnswer)")
+                Text(L10n.format("test.correct_answer", displayAnswer(question.correctAnswer, question: question)))
                     .foregroundStyle(.secondary)
             }
         }
@@ -239,7 +258,11 @@ struct TestRunView: View {
                         .foregroundStyle(Theme.accent)
                     Text("\(session.score) %")
                         .font(.largeTitle.bold())
-                    Text("\(session.correctCount) bonne\(session.correctCount > 1 ? "s" : "") réponse\(session.correctCount > 1 ? "s" : "") sur \(session.answers.count)")
+                    Text(L10n.format(
+                        "test.result.summary",
+                        Int64(session.correctCount),
+                        Int64(session.answers.count)
+                    ))
                         .foregroundStyle(.secondary)
                 }
                 .frame(maxWidth: .infinity)
@@ -267,7 +290,7 @@ struct TestRunView: View {
     private func answerReview(_ record: TestAnswerRecord) -> some View {
         VStack(alignment: .leading, spacing: 8) {
             Label(
-                record.isCorrect ? "Correct" : "À revoir",
+                record.isCorrect ? L10n.text("common.correct") : L10n.text("study.review"),
                 systemImage: record.isCorrect ? "checkmark.circle.fill" : "xmark.circle.fill"
             )
             .foregroundStyle(record.isCorrect ? .green : .red)
@@ -275,11 +298,17 @@ struct TestRunView: View {
 
             Text(record.question.prompt)
                 .font(.headline)
-            Text("Votre réponse : \(record.givenAnswer)")
-            Text("Bonne réponse : \(record.question.correctAnswer)")
+            Text(L10n.format(
+                "test.given_answer",
+                displayAnswer(record.givenAnswer, question: record.question)
+            ))
+            Text(L10n.format(
+                "test.correct_answer",
+                displayAnswer(record.question.correctAnswer, question: record.question)
+            ))
                 .foregroundStyle(.secondary)
             if record.question.type == .trueFalse {
-                Text("Association correcte : \(record.question.referenceAnswer)")
+                Text(L10n.format("test.correct_pairing", record.question.referenceAnswer))
                     .font(.caption)
                     .foregroundStyle(.secondary)
             }
@@ -324,6 +353,11 @@ struct TestRunView: View {
 
     private func answersMatch(_ lhs: String, _ rhs: String) -> Bool {
         TestQuestionFactory.normalize(lhs) == TestQuestionFactory.normalize(rhs)
+    }
+
+    private func displayAnswer(_ answer: String, question: TestQuestion) -> String {
+        guard question.type == .trueFalse else { return answer }
+        return answer == "Vrai" ? L10n.text("test.true") : L10n.text("test.false")
     }
 
     private func submitWrittenAnswer() {
