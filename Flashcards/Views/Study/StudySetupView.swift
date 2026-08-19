@@ -11,19 +11,31 @@ struct StudySetupView: View {
     @State private var showingSession = false
     @State private var confirmingReset = false
     @State private var confirmingNewSeries = false
-    @State private var activeSessionNumber: Int
-
-    init(deck: Deck) {
-        self.deck = deck
-        _activeSessionNumber = State(initialValue: deck.completedStudySessions + 1)
-    }
+    @State private var launchedSession: ActiveStudySessionSnapshot?
 
     private var eligibleCount: Int {
         deck.cards.count(where: { !$0.mastered })
     }
 
     private var nextSessionNumber: Int {
-        deck.completedStudySessions + 1
+        resumableSession?.sessionNumber ?? deck.completedStudySessions + 1
+    }
+
+    private var remainingCount: Int {
+        resumableSession?.state.remainingCards ?? eligibleCount
+    }
+
+    private var resumableSession: ActiveStudySessionSnapshot? {
+        guard let data = deck.activeStudySessionData,
+              let snapshot = StudySessionPersistence.decode(data, deckID: deck.id) else {
+            return nil
+        }
+        let deckCardIDs = Set(deck.cards.map(\.id))
+        let remainingIDs = snapshot.state.items
+            .dropFirst(snapshot.state.currentIndex)
+            .map(\.id)
+        guard remainingIDs.allSatisfy(deckCardIDs.contains) else { return nil }
+        return snapshot
     }
 
     private var masteredPercentage: Int {
@@ -43,6 +55,11 @@ struct StudySetupView: View {
                         .font(.title2.bold())
                         .foregroundStyle(Theme.accent)
                         .accessibilityAddTraits(.isHeader)
+                    if resumableSession != nil {
+                        Text("study.session.in_progress")
+                            .font(.subheadline.weight(.semibold))
+                            .foregroundStyle(.secondary)
+                    }
                 }
 
                 Section("Sens") {
@@ -50,13 +67,15 @@ struct StudySetupView: View {
                         StudyDirectionMenu(selection: $direction)
                     }
                 }
+                .disabled(resumableSession != nil)
 
                 Section("Options") {
                     Toggle("Mélanger", isOn: $shuffle)
                 }
+                .disabled(resumableSession != nil)
 
                 Section("Progression") {
-                    Text(L10n.format("study.cards_remaining", Int64(eligibleCount)))
+                    Text(L10n.format("study.cards_remaining", Int64(remainingCount)))
                     Text(L10n.format("study.mastered.percent", Int64(masteredPercentage)))
                 }
 
@@ -70,15 +89,21 @@ struct StudySetupView: View {
                     .disabled(
                         deck.completedStudySessions == 0
                             && deck.cards.allSatisfy { !$0.mastered }
+                            && resumableSession == nil
                     )
                 }
             }
 
-            PrimaryStartButton(isEnabled: !deck.cards.isEmpty) {
-                if eligibleCount == 0 {
+            PrimaryStartButton(
+                title: resumableSession == nil ? "common.start" : "study.resume",
+                isEnabled: !deck.cards.isEmpty
+            ) {
+                if let resumableSession {
+                    resume(resumableSession)
+                } else if eligibleCount == 0 {
                     confirmingNewSeries = true
                 } else {
-                    startSession()
+                    startNewSession()
                 }
             }
             .padding(.horizontal)
@@ -86,12 +111,9 @@ struct StudySetupView: View {
         }
         .navigationTitle("Flashcards")
         .navigationDestination(isPresented: $showingSession) {
-            StudyView(
-                deck: deck,
-                direction: direction,
-                shuffle: shuffle,
-                sessionNumber: activeSessionNumber
-            )
+            if let launchedSession {
+                StudyView(deck: deck, snapshot: launchedSession)
+            }
         }
         .alert("Réinitialiser la progression ?", isPresented: $confirmingReset) {
             Button("Réinitialiser", role: .destructive) { resetProgress() }
@@ -102,24 +124,46 @@ struct StudySetupView: View {
         .alert("study.new_series.title", isPresented: $confirmingNewSeries) {
             Button("Continuer") {
                 LibraryActions.resetStudyProgress(for: deck, in: modelContext)
-                startSession()
+                startNewSession()
             }
             Button("Annuler", role: .cancel) {}
         } message: {
             Text("study.new_series.message")
         }
+        .onAppear {
+            if let resumableSession {
+                direction = resumableSession.state.direction
+                shuffle = resumableSession.state.shuffle
+            }
+        }
     }
 
     private func resetProgress() {
         LibraryActions.resetStudyProgress(for: deck, in: modelContext)
-        activeSessionNumber = 1
     }
 
-    private func startSession() {
-        activeSessionNumber = deck.completedStudySessions + 1
-        deck.completedStudySessions = activeSessionNumber
+    private func startNewSession() {
+        let cards = deck.cards
+            .filter { !$0.mastered }
+            .sorted { $0.position < $1.position }
+            .map { StudyCardSnapshot(id: $0.id, term: $0.term, definition: $0.definition) }
+        guard !cards.isEmpty else { return }
+
+        let snapshot = ActiveStudySessionSnapshot(
+            deckID: deck.id,
+            sessionNumber: deck.completedStudySessions + 1,
+            state: StudySessionState(cards: cards, direction: direction, shuffle: shuffle)
+        )
+        guard let data = try? StudySessionPersistence.encode(snapshot) else { return }
+        deck.activeStudySessionData = data
         deck.updatedAt = .now
         try? modelContext.save()
+        launchedSession = snapshot
+        showingSession = true
+    }
+
+    private func resume(_ snapshot: ActiveStudySessionSnapshot) {
+        launchedSession = snapshot
         showingSession = true
     }
 }

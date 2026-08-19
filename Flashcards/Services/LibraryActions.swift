@@ -65,6 +65,7 @@ enum LibraryActions {
             card.mastered = false
         }
         deck.completedStudySessions = 0
+        deck.activeStudySessionData = nil
         deck.updatedAt = .now
         try? modelContext.save()
     }

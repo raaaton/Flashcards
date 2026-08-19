@@ -1,6 +1,6 @@
 import Foundation
 
-enum StudyDirection: String, CaseIterable, Identifiable, Sendable {
+enum StudyDirection: String, CaseIterable, Identifiable, Codable, Sendable {
     case termToDefinition
     case definitionToTerm
     case random
@@ -21,13 +21,13 @@ enum StudyOutcome: Equatable, Sendable {
     case review
 }
 
-struct StudyCardSnapshot: Identifiable, Equatable, Sendable {
+struct StudyCardSnapshot: Identifiable, Equatable, Codable, Sendable {
     let id: UUID
     let term: String
     let definition: String
 }
 
-struct StudySessionItem: Identifiable, Equatable, Sendable {
+struct StudySessionItem: Identifiable, Equatable, Codable, Sendable {
     let card: StudyCardSnapshot
     let isReversed: Bool
 
@@ -36,8 +36,9 @@ struct StudySessionItem: Identifiable, Equatable, Sendable {
     var back: String { isReversed ? card.term : card.definition }
 }
 
-struct StudySessionState: Equatable, Sendable {
+struct StudySessionState: Equatable, Codable, Sendable {
     let direction: StudyDirection
+    let shuffle: Bool
     private let initialCardCount: Int
 
     private(set) var items: [StudySessionItem]
@@ -49,6 +50,7 @@ struct StudySessionState: Equatable, Sendable {
 
     init(cards: [StudyCardSnapshot], direction: StudyDirection, shuffle: Bool = true) {
         self.direction = direction
+        self.shuffle = shuffle
         initialCardCount = cards.count
         items = Self.makeItems(cards: cards, direction: direction, shuffle: shuffle)
         isComplete = cards.isEmpty
@@ -112,5 +114,27 @@ struct StudySessionState: Equatable, Sendable {
             return StudySessionItem(card: card, isReversed: isReversed)
         }
         return shuffle ? items.shuffled() : items
+    }
+}
+
+struct ActiveStudySessionSnapshot: Equatable, Codable, Sendable {
+    let deckID: UUID
+    let sessionNumber: Int
+    var state: StudySessionState
+}
+
+enum StudySessionPersistence {
+    static func encode(_ snapshot: ActiveStudySessionSnapshot) throws -> Data {
+        try JSONEncoder().encode(snapshot)
+    }
+
+    static func decode(_ data: Data, deckID: UUID) -> ActiveStudySessionSnapshot? {
+        guard let snapshot = try? JSONDecoder().decode(
+            ActiveStudySessionSnapshot.self,
+            from: data
+        ), snapshot.deckID == deckID, !snapshot.state.isComplete else {
+            return nil
+        }
+        return snapshot
     }
 }

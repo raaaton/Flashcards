@@ -45,6 +45,7 @@ enum BackupCodecSmoke {
                     createdAt: date,
                     updatedAt: date,
                     completedStudySessions: 7,
+                    activeStudySessionData: Data("resume".utf8),
                     folderID: folderID,
                     cards: [originalCard]
                 )
@@ -56,6 +57,7 @@ enum BackupCodecSmoke {
         precondition(decoded.folders[0].iconName == "graduationcap.fill")
         precondition(decoded.folders[0].colorHex == "FF9500")
         precondition(decoded.decks[0].completedStudySessions == 7)
+        precondition(decoded.decks[0].activeStudySessionData == Data("resume".utf8))
 
         var legacyJSON = try JSONSerialization.jsonObject(
             with: BackupCodec.encode(envelope)
@@ -66,12 +68,14 @@ enum BackupCodecSmoke {
         legacyJSON["folders"] = legacyFolders
         var legacyDecks = legacyJSON["decks"] as! [[String: Any]]
         legacyDecks[0].removeValue(forKey: "completedStudySessions")
+        legacyDecks[0].removeValue(forKey: "activeStudySessionData")
         legacyJSON["decks"] = legacyDecks
         let legacyData = try JSONSerialization.data(withJSONObject: legacyJSON)
         let decodedLegacy = try BackupCodec.decode(legacyData)
         precondition(decodedLegacy.folders[0].iconName == "folder.fill")
         precondition(decodedLegacy.folders[0].colorHex == "5856D6")
         precondition(decodedLegacy.decks[0].completedStudySessions == 0)
+        precondition(decodedLegacy.decks[0].activeStudySessionData == nil)
 
         var local = envelope
         local.decks[0].cards.append(localOnlyCard)

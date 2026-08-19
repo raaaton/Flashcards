@@ -7,10 +7,16 @@ enum Theme {
 }
 
 struct PrimaryStartButton: View {
+    let title: LocalizedStringKey
     let isEnabled: Bool
     let action: () -> Void
 
-    init(isEnabled: Bool = true, action: @escaping () -> Void) {
+    init(
+        title: LocalizedStringKey = "common.start",
+        isEnabled: Bool = true,
+        action: @escaping () -> Void
+    ) {
+        self.title = title
         self.isEnabled = isEnabled
         self.action = action
     }
@@ -20,7 +26,7 @@ struct PrimaryStartButton: View {
             HapticService.play(.selection)
             action()
         } label: {
-            Text("common.start")
+            Text(title)
                 .font(.headline)
                 .foregroundStyle(.white)
                 .frame(maxWidth: .infinity)

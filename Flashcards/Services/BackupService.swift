@@ -107,6 +107,7 @@ enum BackupService {
                 deck.createdAt = dto.createdAt
                 deck.updatedAt = dto.updatedAt
                 deck.completedStudySessions = dto.completedStudySessions
+                deck.activeStudySessionData = dto.activeStudySessionData
                 deck.folder = dto.folderID.flatMap { foldersByID[$0] }
 
                 for cardDTO in dto.cards {
@@ -162,6 +163,7 @@ enum BackupService {
             createdAt: deck.createdAt,
             updatedAt: deck.updatedAt,
             completedStudySessions: deck.completedStudySessions,
+            activeStudySessionData: deck.activeStudySessionData,
             folderID: deck.folder?.id,
             cards: deck.cards
                 .sorted { $0.position < $1.position }

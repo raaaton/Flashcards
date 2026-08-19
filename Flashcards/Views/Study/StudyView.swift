@@ -22,21 +22,10 @@ struct StudyView: View {
     @State private var showCelebration = false
     @State private var confirmingReset = false
 
-    init(
-        deck: Deck,
-        direction: StudyDirection,
-        shuffle: Bool,
-        sessionNumber: Int
-    ) {
+    init(deck: Deck, snapshot: ActiveStudySessionSnapshot) {
         self.deck = deck
-        self.sessionNumber = sessionNumber
-        let cards = deck.cards
-            .filter { !$0.mastered }
-            .sorted { $0.position < $1.position }
-            .map { StudyCardSnapshot(id: $0.id, term: $0.term, definition: $0.definition) }
-        _session = State(
-            initialValue: StudySessionState(cards: cards, direction: direction, shuffle: shuffle)
-        )
+        sessionNumber = snapshot.sessionNumber
+        _session = State(initialValue: snapshot.state)
     }
 
     var body: some View {
@@ -493,9 +482,13 @@ struct StudyView: View {
         _ = session.answer(outcome)
         if session.isComplete && !didRecordCompletion {
             didRecordCompletion = true
+            deck.completedStudySessions = sessionNumber
+            deck.activeStudySessionData = nil
             if deck.cards.allSatisfy(\.mastered) {
                 celebrateCompletion()
             }
+        } else if !session.isComplete {
+            persistActiveSession()
         }
         deck.updatedAt = .now
         try? modelContext.save()
@@ -516,6 +509,15 @@ struct StudyView: View {
     private func resetProgress() {
         LibraryActions.resetStudyProgress(for: deck, in: modelContext)
         dismiss()
+    }
+
+    private func persistActiveSession() {
+        let snapshot = ActiveStudySessionSnapshot(
+            deckID: deck.id,
+            sessionNumber: sessionNumber,
+            state: session
+        )
+        deck.activeStudySessionData = try? StudySessionPersistence.encode(snapshot)
     }
 
     private func celebrateCompletion() {

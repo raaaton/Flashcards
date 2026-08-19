@@ -57,6 +57,7 @@ struct BackupDeckDTO: Codable, Equatable, Identifiable, Sendable {
     var createdAt: Date
     var updatedAt: Date
     var completedStudySessions: Int
+    var activeStudySessionData: Data?
     var folderID: UUID?
     var cards: [BackupCardDTO]
 
@@ -67,6 +68,7 @@ struct BackupDeckDTO: Codable, Equatable, Identifiable, Sendable {
         createdAt: Date,
         updatedAt: Date,
         completedStudySessions: Int = 0,
+        activeStudySessionData: Data? = nil,
         folderID: UUID?,
         cards: [BackupCardDTO]
     ) {
@@ -76,13 +78,14 @@ struct BackupDeckDTO: Codable, Equatable, Identifiable, Sendable {
         self.createdAt = createdAt
         self.updatedAt = updatedAt
         self.completedStudySessions = completedStudySessions
+        self.activeStudySessionData = activeStudySessionData
         self.folderID = folderID
         self.cards = cards
     }
 
     private enum CodingKeys: String, CodingKey {
         case id, name, deckDescription, createdAt, updatedAt
-        case completedStudySessions, folderID, cards
+        case completedStudySessions, activeStudySessionData, folderID, cards
     }
 
     init(from decoder: Decoder) throws {
@@ -96,6 +99,10 @@ struct BackupDeckDTO: Codable, Equatable, Identifiable, Sendable {
             Int.self,
             forKey: .completedStudySessions
         ) ?? 0
+        activeStudySessionData = try container.decodeIfPresent(
+            Data.self,
+            forKey: .activeStudySessionData
+        )
         folderID = try container.decodeIfPresent(UUID.self, forKey: .folderID)
         cards = try container.decode([BackupCardDTO].self, forKey: .cards)
     }

@@ -24,6 +24,26 @@ enum StudySessionSmoke {
         precondition(session.currentItem?.id != reviewedID)
         session.answer(.knew)
         precondition(session.masteredInSession == 1)
+
+        let deckID = UUID()
+        let suspended = ActiveStudySessionSnapshot(
+            deckID: deckID,
+            sessionNumber: 2,
+            state: session
+        )
+        let restored = StudySessionPersistence.decode(
+            try! StudySessionPersistence.encode(suspended),
+            deckID: deckID
+        )!
+        precondition(restored.sessionNumber == 2)
+        precondition(restored.state.currentIndex == 2)
+        precondition(restored.state.remainingCards == 2)
+        precondition(restored.state.currentItem?.id == session.currentItem?.id)
+        precondition(restored.state.items.map(\.id) == session.items.map(\.id))
+        precondition(restored.state.correctAnswers == 1)
+        precondition(restored.state.reviewAnswers == 1)
+
+        session = restored.state
         session.answer(.knew)
         session.answer(.knew)
 
@@ -35,6 +55,18 @@ enum StudySessionSmoke {
         precondition(session.masteredInSession == 3)
         precondition(session.answer(.knew) == nil)
         precondition(session.cardsSeen == 4)
+
+        let completed = ActiveStudySessionSnapshot(
+            deckID: deckID,
+            sessionNumber: 2,
+            state: session
+        )
+        precondition(
+            StudySessionPersistence.decode(
+                try! StudySessionPersistence.encode(completed),
+                deckID: deckID
+            ) == nil
+        )
 
         print("StudySessionState smoke tests passed")
     }

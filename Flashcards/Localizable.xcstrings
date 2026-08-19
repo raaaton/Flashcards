@@ -16,6 +16,8 @@
     "common.correct" : { "localizations" : { "fr" : { "stringUnit" : { "state" : "translated", "value" : "Correct" } }, "en" : { "stringUnit" : { "state" : "translated", "value" : "Correct" } } } },
     "common.start" : { "localizations" : { "fr" : { "stringUnit" : { "state" : "translated", "value" : "Commencer" } }, "en" : { "stringUnit" : { "state" : "translated", "value" : "Start" } } } },
     "common.next" : { "localizations" : { "fr" : { "stringUnit" : { "state" : "translated", "value" : "Suivant" } }, "en" : { "stringUnit" : { "state" : "translated", "value" : "Next" } } } },
+    "study.resume" : { "localizations" : { "fr" : { "stringUnit" : { "state" : "translated", "value" : "Reprendre" } }, "en" : { "stringUnit" : { "state" : "translated", "value" : "Resume" } } } },
+    "study.session.in_progress" : { "localizations" : { "fr" : { "stringUnit" : { "state" : "translated", "value" : "En cours" } }, "en" : { "stringUnit" : { "state" : "translated", "value" : "In progress" } } } },
     "folder.unfiled" : { "localizations" : { "fr" : { "stringUnit" : { "state" : "translated", "value" : "Sans dossier" } }, "en" : { "stringUnit" : { "state" : "translated", "value" : "Unfiled" } } } },
     "folder.new.title" : { "localizations" : { "fr" : { "stringUnit" : { "state" : "translated", "value" : "Nouveau dossier" } }, "en" : { "stringUnit" : { "state" : "translated", "value" : "New Folder" } } } },
     "folder.edit.title" : { "localizations" : { "fr" : { "stringUnit" : { "state" : "translated", "value" : "Modifier le dossier" } }, "en" : { "stringUnit" : { "state" : "translated", "value" : "Edit Folder" } } } },

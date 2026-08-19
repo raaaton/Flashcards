@@ -9,6 +9,7 @@ final class Deck {
     var createdAt: Date
     var updatedAt: Date
     var completedStudySessions: Int = 0
+    var activeStudySessionData: Data?
     var folder: Folder?
 
     @Relationship(deleteRule: .cascade, inverse: \Card.deck)
@@ -21,6 +22,7 @@ final class Deck {
         createdAt = .now
         updatedAt = .now
         completedStudySessions = 0
+        activeStudySessionData = nil
         self.folder = folder
         cards = []
     }
