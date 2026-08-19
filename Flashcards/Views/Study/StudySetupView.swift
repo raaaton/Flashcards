@@ -7,6 +7,7 @@ struct StudySetupView: View {
     let deck: Deck
 
     @State private var direction = StudyDirection.termToDefinition
+    @State private var shuffle = true
     @State private var showingSession = false
     @State private var confirmingReset = false
     @State private var confirmingNewSeries = false
@@ -25,69 +26,70 @@ struct StudySetupView: View {
         deck.completedStudySessions + 1
     }
 
+    private var masteredPercentage: Int {
+        guard !deck.cards.isEmpty else { return 0 }
+        let mastered = deck.cards.count(where: \.mastered)
+        return Int((Double(mastered) / Double(deck.cards.count) * 100).rounded())
+    }
+
     var body: some View {
-        Form {
-            Section {
-                Label(
-                    L10n.format("study.session.number", Int64(nextSessionNumber)),
-                    systemImage: "rectangle.stack.fill"
-                )
-                    .font(.title2.bold())
-                    .foregroundStyle(Theme.accent)
-                    .accessibilityAddTraits(.isHeader)
-            }
+        VStack(spacing: 0) {
+            Form {
+                Section {
+                    Label(
+                        L10n.format("study.session.number", Int64(nextSessionNumber)),
+                        systemImage: "rectangle.stack.fill"
+                    )
+                        .font(.title2.bold())
+                        .foregroundStyle(Theme.accent)
+                        .accessibilityAddTraits(.isHeader)
+                }
 
-            Section("Sens") {
-                Picker("Sens", selection: $direction) {
-                    ForEach(StudyDirection.allCases) { option in
-                        Text(option.title).tag(option)
+                Section("Sens") {
+                    LabeledContent("Sens") {
+                        StudyDirectionMenu(selection: $direction)
                     }
                 }
-                .labelsHidden()
-                .pickerStyle(.inline)
-            }
 
-            Section("Cartes") {
-                LabeledContent(
-                    "Cette session",
-                    value: L10n.cards(eligibleCount)
-                )
-            }
+                Section("Options") {
+                    Toggle("Mélanger", isOn: $shuffle)
+                }
 
-            Section {
-                Button {
-                    if eligibleCount == 0 {
-                        confirmingNewSeries = true
-                    } else {
-                        startSession()
+                Section("Progression") {
+                    Text(L10n.format("study.cards_remaining", Int64(eligibleCount)))
+                    Text(L10n.format("study.mastered.percent", Int64(masteredPercentage)))
+                }
+
+                Section {
+                    Button(role: .destructive) {
+                        confirmingReset = true
+                    } label: {
+                        Label("Réinitialiser la progression", systemImage: "arrow.counterclockwise")
+                            .foregroundStyle(.red)
                     }
-                } label: {
-                    Label("Commencer la session", systemImage: "play.fill")
-                        .frame(maxWidth: .infinity)
+                    .disabled(
+                        deck.completedStudySessions == 0
+                            && deck.cards.allSatisfy { !$0.mastered }
+                    )
                 }
-                .buttonStyle(.glassProminent)
-                .disabled(deck.cards.isEmpty)
             }
 
-            Section {
-                Button(role: .destructive) {
-                    confirmingReset = true
-                } label: {
-                    Label("Réinitialiser la progression", systemImage: "arrow.counterclockwise")
-                        .foregroundStyle(.red)
+            PrimaryStartButton(isEnabled: !deck.cards.isEmpty) {
+                if eligibleCount == 0 {
+                    confirmingNewSeries = true
+                } else {
+                    startSession()
                 }
-                .disabled(
-                    deck.completedStudySessions == 0
-                        && deck.cards.allSatisfy { !$0.mastered }
-                )
             }
+            .padding(.horizontal)
+            .padding(.vertical, 12)
         }
         .navigationTitle("Flashcards")
         .navigationDestination(isPresented: $showingSession) {
             StudyView(
                 deck: deck,
                 direction: direction,
-                shuffle: true,
+                shuffle: shuffle,
                 sessionNumber: activeSessionNumber
             )
         }

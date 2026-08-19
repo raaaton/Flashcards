@@ -49,7 +49,7 @@ struct StudyView: View {
         .navigationBarBackButtonHidden()
         .toolbar {
             ToolbarItem(placement: .topBarLeading) {
-                Button("Quitter", systemImage: "xmark") { dismiss() }
+                Button("Retour", systemImage: "chevron.left") { dismiss() }
                     .foregroundStyle(.white)
                     .accessibilityHint("La progression déjà enregistrée sera conservée")
             }
@@ -228,7 +228,7 @@ struct StudyView: View {
             RoundedRectangle(cornerRadius: 28, style: .continuous)
                 .fill(color.opacity(progress * 0.2))
 
-            Image(systemName: isKnew ? "checkmark.circle.fill" : "arrow.uturn.backward.circle.fill")
+            Image(systemName: isKnew ? "checkmark.circle.fill" : "xmark.circle.fill")
                 .font(.system(size: 42, weight: .semibold))
                 .foregroundStyle(color)
                 .padding(24)
@@ -304,7 +304,7 @@ struct StudyView: View {
                 Button {
                     commit(.review, predictedWidth: -exitDistance, exitDistance: exitDistance)
                 } label: {
-                    Label("À revoir", systemImage: "arrow.left")
+                    Label("À revoir", systemImage: "xmark")
                         .frame(maxWidth: .infinity)
                 }
                 .buttonStyle(.glassProminent)
@@ -363,6 +363,7 @@ struct StudyView: View {
                 confirmingReset = true
             }
             .buttonStyle(.bordered)
+            .foregroundStyle(.red)
         }
         .padding()
         .navigationTitle(deck.name)
