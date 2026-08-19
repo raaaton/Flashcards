@@ -56,6 +56,7 @@ struct BackupDeckDTO: Codable, Equatable, Identifiable, Sendable {
     var deckDescription: String?
     var createdAt: Date
     var updatedAt: Date
+    var lastOpenedAt: Date?
     var completedStudySessions: Int
     var activeStudySessionData: Data?
     var folderID: UUID?
@@ -67,6 +68,7 @@ struct BackupDeckDTO: Codable, Equatable, Identifiable, Sendable {
         deckDescription: String?,
         createdAt: Date,
         updatedAt: Date,
+        lastOpenedAt: Date? = nil,
         completedStudySessions: Int = 0,
         activeStudySessionData: Data? = nil,
         folderID: UUID?,
@@ -77,6 +79,7 @@ struct BackupDeckDTO: Codable, Equatable, Identifiable, Sendable {
         self.deckDescription = deckDescription
         self.createdAt = createdAt
         self.updatedAt = updatedAt
+        self.lastOpenedAt = lastOpenedAt
         self.completedStudySessions = completedStudySessions
         self.activeStudySessionData = activeStudySessionData
         self.folderID = folderID
@@ -84,7 +87,7 @@ struct BackupDeckDTO: Codable, Equatable, Identifiable, Sendable {
     }
 
     private enum CodingKeys: String, CodingKey {
-        case id, name, deckDescription, createdAt, updatedAt
+        case id, name, deckDescription, createdAt, updatedAt, lastOpenedAt
         case completedStudySessions, activeStudySessionData, folderID, cards
     }
 
@@ -95,6 +98,7 @@ struct BackupDeckDTO: Codable, Equatable, Identifiable, Sendable {
         deckDescription = try container.decodeIfPresent(String.self, forKey: .deckDescription)
         createdAt = try container.decode(Date.self, forKey: .createdAt)
         updatedAt = try container.decode(Date.self, forKey: .updatedAt)
+        lastOpenedAt = try container.decodeIfPresent(Date.self, forKey: .lastOpenedAt)
         completedStudySessions = try container.decodeIfPresent(
             Int.self,
             forKey: .completedStudySessions
@@ -189,6 +193,7 @@ enum BackupMerger {
                 cards[card.id] = card
             }
             var mergedDeck = incomingDeck
+            mergedDeck.lastOpenedAt = incomingDeck.lastOpenedAt ?? localDeck.lastOpenedAt
             mergedDeck.cards = cards.values.sorted { $0.position < $1.position }
             decks[incomingDeck.id] = mergedDeck
         }

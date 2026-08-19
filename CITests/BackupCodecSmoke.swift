@@ -44,6 +44,7 @@ enum BackupCodecSmoke {
                     deckDescription: "Description",
                     createdAt: date,
                     updatedAt: date,
+                    lastOpenedAt: date.addingTimeInterval(120),
                     completedStudySessions: 7,
                     activeStudySessionData: Data("resume".utf8),
                     folderID: folderID,
@@ -58,6 +59,7 @@ enum BackupCodecSmoke {
         precondition(decoded.folders[0].colorHex == "FF9500")
         precondition(decoded.decks[0].completedStudySessions == 7)
         precondition(decoded.decks[0].activeStudySessionData == Data("resume".utf8))
+        precondition(decoded.decks[0].lastOpenedAt == date.addingTimeInterval(120))
 
         var legacyJSON = try JSONSerialization.jsonObject(
             with: BackupCodec.encode(envelope)
@@ -69,6 +71,7 @@ enum BackupCodecSmoke {
         var legacyDecks = legacyJSON["decks"] as! [[String: Any]]
         legacyDecks[0].removeValue(forKey: "completedStudySessions")
         legacyDecks[0].removeValue(forKey: "activeStudySessionData")
+        legacyDecks[0].removeValue(forKey: "lastOpenedAt")
         legacyJSON["decks"] = legacyDecks
         let legacyData = try JSONSerialization.data(withJSONObject: legacyJSON)
         let decodedLegacy = try BackupCodec.decode(legacyData)
@@ -76,15 +79,18 @@ enum BackupCodecSmoke {
         precondition(decodedLegacy.folders[0].colorHex == "5856D6")
         precondition(decodedLegacy.decks[0].completedStudySessions == 0)
         precondition(decodedLegacy.decks[0].activeStudySessionData == nil)
+        precondition(decodedLegacy.decks[0].lastOpenedAt == nil)
 
         var local = envelope
         local.decks[0].cards.append(localOnlyCard)
         var incoming = envelope
         incoming.decks[0].name = "Deck renommé"
+        incoming.decks[0].lastOpenedAt = nil
         incoming.decks[0].cards[0].definition = "Définition mise à jour"
         let merged = BackupMerger.merge(local: local, incoming: incoming)
         precondition(merged.decks[0].name == "Deck renommé")
         precondition(merged.decks[0].cards.count == 2)
+        precondition(merged.decks[0].lastOpenedAt == date.addingTimeInterval(120))
         precondition(merged.decks[0].cards.first { $0.id == cardID }?.definition == "Définition mise à jour")
 
         let unsupported = BackupEnvelopeV1(

@@ -106,6 +106,7 @@ enum BackupService {
                 deck.deckDescription = dto.deckDescription
                 deck.createdAt = dto.createdAt
                 deck.updatedAt = dto.updatedAt
+                deck.lastOpenedAt = dto.lastOpenedAt ?? deck.lastOpenedAt
                 deck.completedStudySessions = dto.completedStudySessions
                 deck.activeStudySessionData = dto.activeStudySessionData
                 deck.folder = dto.folderID.flatMap { foldersByID[$0] }
@@ -162,6 +163,7 @@ enum BackupService {
             deckDescription: deck.deckDescription,
             createdAt: deck.createdAt,
             updatedAt: deck.updatedAt,
+            lastOpenedAt: deck.lastOpenedAt,
             completedStudySessions: deck.completedStudySessions,
             activeStudySessionData: deck.activeStudySessionData,
             folderID: deck.folder?.id,

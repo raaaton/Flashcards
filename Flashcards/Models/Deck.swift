@@ -8,6 +8,7 @@ final class Deck {
     var deckDescription: String?
     var createdAt: Date
     var updatedAt: Date
+    var lastOpenedAt: Date?
     var completedStudySessions: Int = 0
     var activeStudySessionData: Data?
     var folder: Folder?
@@ -21,6 +22,7 @@ final class Deck {
         deckDescription = nil
         createdAt = .now
         updatedAt = .now
+        lastOpenedAt = nil
         completedStudySessions = 0
         activeStudySessionData = nil
         self.folder = folder

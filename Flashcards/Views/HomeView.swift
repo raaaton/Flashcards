@@ -36,6 +36,17 @@ struct HomeView: View {
         decks.count { $0.folder == nil }
     }
 
+    private var recentDecks: [Deck] {
+        Array(
+            decks
+                .filter { $0.lastOpenedAt != nil }
+                .sorted {
+                    ($0.lastOpenedAt ?? .distantPast) > ($1.lastOpenedAt ?? .distantPast)
+                }
+                .prefix(2)
+        )
+    }
+
     var body: some View {
         NavigationStack {
             Group {
@@ -154,6 +165,26 @@ struct HomeView: View {
                     }
                 }
                 .padding(.horizontal)
+
+                if !recentDecks.isEmpty {
+                    Text("Récents")
+                        .font(.title2.bold())
+                        .padding(.horizontal)
+                        .padding(.top, 10)
+
+                    LazyVGrid(columns: columns, spacing: 14) {
+                        ForEach(recentDecks) { deck in
+                            NavigationLink {
+                                DeckDetailView(deck: deck)
+                            } label: {
+                                RecentDeckTile(deck: deck)
+                            }
+                            .buttonStyle(.plain)
+                        }
+                    }
+                    .padding(.horizontal)
+                    .transition(.move(edge: .bottom).combined(with: .opacity))
+                }
             }
             .padding(.top, 8)
             .padding(.bottom, 96)
@@ -161,6 +192,7 @@ struct HomeView: View {
         .scrollDismissesKeyboard(.interactively)
         .animation(.spring(duration: 0.35), value: folders.map(\.id))
         .animation(.spring(duration: 0.35), value: orphanedDeckCount)
+        .animation(.spring(duration: 0.35), value: recentDecks.map(\.id))
     }
 
     private var folderEmptyState: some View {
@@ -301,5 +333,35 @@ struct HomeView: View {
         modelContext.delete(deck)
         try? modelContext.save()
         deckToDelete = nil
+    }
+}
+
+private struct RecentDeckTile: View {
+    let deck: Deck
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 16) {
+            Image(systemName: "rectangle.stack.fill")
+                .font(.title2.weight(.semibold))
+                .foregroundStyle(.white)
+                .frame(width: 44, height: 44)
+                .background(.white.opacity(0.1), in: .circle)
+
+            VStack(alignment: .leading, spacing: 3) {
+                Text(deck.name)
+                    .font(.headline)
+                    .foregroundStyle(.primary)
+                    .lineLimit(2)
+                Text(L10n.cards(deck.cards.count))
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+            }
+        }
+        .frame(maxWidth: .infinity, minHeight: 112, alignment: .leading)
+        .padding(16)
+        .background(Theme.cardBackground, in: .rect(cornerRadius: 22, style: .continuous))
+        .contentShape(.rect(cornerRadius: 22, style: .continuous))
+        .accessibilityElement(children: .combine)
+        .accessibilityHint("Ouvrir ce deck")
     }
 }
