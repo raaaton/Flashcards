@@ -37,6 +37,7 @@ struct CardFormView: View {
                         .lineLimit(3...12)
                 }
             }
+            .scrollDismissesKeyboard(.interactively)
             .navigationTitle(
                 card == nil
                     ? L10n.text("card.new.title")

@@ -32,6 +32,7 @@ struct PrimaryStartButton: View {
                 .frame(maxWidth: .infinity)
                 .padding(.vertical, 15)
                 .background(Theme.accent, in: .rect(cornerRadius: 16, style: .continuous))
+                .contentShape(.rect(cornerRadius: 16, style: .continuous))
         }
         .buttonStyle(.plain)
         .disabled(!isEnabled)

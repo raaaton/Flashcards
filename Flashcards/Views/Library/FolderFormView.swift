@@ -96,6 +96,7 @@ struct FolderFormView: View {
                         }
                 }
             }
+            .scrollDismissesKeyboard(.interactively)
             .navigationTitle(
                 folder == nil
                     ? L10n.text("folder.new.title")

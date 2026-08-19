@@ -58,6 +58,7 @@ struct FolderDetailView: View {
         .navigationBarTitleDisplayMode(.large)
         .searchable(text: $searchText, prompt: "Decks et cartes")
         .searchToolbarBehavior(.minimize)
+        .scrollDismissesKeyboard(.interactively)
         .toolbar {
             if let folder {
                 ToolbarItem(placement: .topBarTrailing) {

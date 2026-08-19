@@ -110,14 +110,20 @@ struct TestRunView: View {
                     feedbackBanner(isCorrect: feedbackIsCorrect, question: question)
                         .transition(.opacity.combined(with: .scale(scale: 0.98)))
 
-                    Button(session.isLastQuestion ? "test.see_results" : "common.next") {
+                    Button {
                         advanceAfterFeedback()
+                    } label: {
+                        Text(session.isLastQuestion ? "test.see_results" : "common.next")
+                            .font(.headline)
+                            .foregroundStyle(.white)
+                            .frame(maxWidth: .infinity)
+                            .padding(.vertical, 14)
+                            .background(
+                                Theme.accent,
+                                in: .rect(cornerRadius: 16, style: .continuous)
+                            )
+                            .contentShape(.rect(cornerRadius: 16, style: .continuous))
                     }
-                    .font(.headline)
-                    .foregroundStyle(.white)
-                    .frame(maxWidth: .infinity)
-                    .padding(.vertical, 14)
-                    .background(Theme.accent, in: .rect(cornerRadius: 16, style: .continuous))
                     .buttonStyle(.plain)
                     .disabled(isTransitioning)
                 }
@@ -226,15 +232,20 @@ struct TestRunView: View {
 
     private func writtenAnswerForm(_ question: TestQuestion) -> some View {
         VStack(spacing: 16) {
-            TextField("Votre réponse", text: $writtenAnswer, axis: .vertical)
+            TextField("Votre réponse", text: $writtenAnswer)
                 .textFieldStyle(.roundedBorder)
-                .lineLimit(2...6)
                 .submitLabel(.done)
                 .focused($writtenFieldIsFocused)
                 .disabled(isTransitioning || feedbackIsCorrect != nil)
                 .onSubmit { submitWrittenAnswer() }
 
-            Button("Valider", systemImage: "checkmark") { submitWrittenAnswer() }
+            Button {
+                submitWrittenAnswer()
+            } label: {
+                Label("Valider", systemImage: "checkmark")
+                    .frame(maxWidth: .infinity)
+                    .contentShape(.rect)
+            }
                 .buttonStyle(.borderedProminent)
                 .foregroundStyle(.white)
                 .disabled(
