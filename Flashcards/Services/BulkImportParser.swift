@@ -1,7 +1,7 @@
 import Foundation
 
 enum TermDefinitionDelimiterOption: String, CaseIterable, Identifiable, Sendable {
-    case tab
+    case colon
     case comma
     case semicolon
     case custom
@@ -10,7 +10,7 @@ enum TermDefinitionDelimiterOption: String, CaseIterable, Identifiable, Sendable
 
     var title: String {
         switch self {
-        case .tab: L10n.text("import.delimiter.tab")
+        case .colon: L10n.text("import.delimiter.colon")
         case .comma: L10n.text("import.delimiter.comma")
         case .semicolon: L10n.text("import.delimiter.semicolon")
         case .custom: L10n.text("import.delimiter.custom")
@@ -19,7 +19,7 @@ enum TermDefinitionDelimiterOption: String, CaseIterable, Identifiable, Sendable
 
     func resolved(customValue: String) -> String {
         switch self {
-        case .tab: "\t"
+        case .colon: ":"
         case .comma: ","
         case .semicolon: ";"
         case .custom: customValue

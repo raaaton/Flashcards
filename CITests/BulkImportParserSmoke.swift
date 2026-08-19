@@ -4,13 +4,13 @@ import Foundation
 enum BulkImportParserSmoke {
     static func main() {
         let fiftyLines = (1...60)
-            .map { "Terme \($0)\tDéfinition \($0)" }
+            .map { "Terme \($0): Définition \($0)" }
             .joined(separator: "\n")
-        let tabResult = BulkImportParser.parse(
-            BulkImportInput(text: fiftyLines, termDelimiter: "\t", cardDelimiter: "\n")
+        let colonResult = BulkImportParser.parse(
+            BulkImportInput(text: fiftyLines, termDelimiter: ":", cardDelimiter: "\n")
         )
-        precondition(tabResult.cards.count == 60)
-        precondition(tabResult.invalidRecords.isEmpty)
+        precondition(colonResult.cards.count == 60)
+        precondition(colonResult.invalidRecords.isEmpty)
 
         let mixed = " Alpha , Première définition ;invalide; Beta , Seconde, avec virgule ; , vide"
         let commaResult = BulkImportParser.parse(

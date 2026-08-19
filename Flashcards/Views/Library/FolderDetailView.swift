@@ -10,7 +10,6 @@ struct FolderDetailView: View {
 
     @State private var searchText = ""
     @State private var showingNewDeck = false
-    @State private var showingBulkImport = false
     @State private var showingEditFolder = false
     @State private var confirmingFolderDeletion = false
     @State private var deckToEdit: Deck?
@@ -84,27 +83,18 @@ struct FolderDetailView: View {
 
             ToolbarItemGroup(placement: .bottomBar) {
                 Spacer()
-                Menu {
-                    Button("Nouveau deck", systemImage: "rectangle.stack.badge.plus") {
-                        showingNewDeck = true
-                    }
-                    .foregroundStyle(.white)
-                    Button("Importer en masse", systemImage: "text.badge.plus") {
-                        showingBulkImport = true
-                    }
-                    .foregroundStyle(.white)
+                Button {
+                    showingNewDeck = true
                 } label: {
-                    Label("Ajouter", systemImage: "plus")
+                    Image(systemName: "rectangle.stack.badge.plus")
                         .foregroundStyle(.white)
                 }
-                .accessibilityHint("Ajouter du contenu à ce dossier")
+                .accessibilityLabel("Nouveau deck")
+                .accessibilityHint("Créer un nouveau deck dans ce dossier")
             }
         }
         .sheet(isPresented: $showingNewDeck) {
             DeckFormView(initialFolder: folder)
-        }
-        .sheet(isPresented: $showingBulkImport) {
-            BulkImportView()
         }
         .sheet(isPresented: $showingEditFolder) {
             if let folder {

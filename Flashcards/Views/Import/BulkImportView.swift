@@ -22,7 +22,7 @@ struct BulkImportView: View {
     @Query(sort: \Folder.name) private var folders: [Folder]
 
     @State private var sourceText = ""
-    @State private var termOption = TermDefinitionDelimiterOption.tab
+    @State private var termOption = TermDefinitionDelimiterOption.colon
     @State private var cardOption = CardDelimiterOption.newline
     @State private var customTermDelimiter = ""
     @State private var customCardDelimiter = ""
@@ -117,25 +117,24 @@ struct BulkImportView: View {
                 destinationSection
                 previewSection
 
-                Section {
-                    Button {
-                        importCards()
-                    } label: {
-                        Label(
-                            L10n.format("import.action.cards", Int64(preview.cards.count)),
-                            systemImage: "square.and.arrow.down"
-                        )
-                        .frame(maxWidth: .infinity)
-                    }
-                    .buttonStyle(.borderedProminent)
-                    .disabled(!canImport)
-                }
             }
             .navigationTitle("Importer en masse")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
                     Button("Fermer") { dismiss() }
+                }
+                ToolbarItem(placement: .confirmationAction) {
+                    Button {
+                        importCards()
+                    } label: {
+                        Image(systemName: "checkmark")
+                            .foregroundStyle(.white)
+                    }
+                    .disabled(!canImport)
+                    .accessibilityLabel(
+                        L10n.format("import.action.cards", Int64(preview.cards.count))
+                    )
                 }
             }
             .task(id: parseInput) {
