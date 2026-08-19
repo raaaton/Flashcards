@@ -1,0 +1,126 @@
+import Foundation
+
+enum BackupScope: String, Codable, Sendable {
+    case deck
+    case database
+}
+
+struct BackupFolderDTO: Codable, Equatable, Identifiable, Sendable {
+    let id: UUID
+    var name: String
+    var createdAt: Date
+}
+
+struct BackupCardDTO: Codable, Equatable, Identifiable, Sendable {
+    let id: UUID
+    var term: String
+    var definition: String
+    var position: Int
+    var mastered: Bool
+    var timesStudied: Int
+    var timesCorrect: Int
+}
+
+struct BackupDeckDTO: Codable, Equatable, Identifiable, Sendable {
+    let id: UUID
+    var name: String
+    var deckDescription: String?
+    var createdAt: Date
+    var updatedAt: Date
+    var folderID: UUID?
+    var cards: [BackupCardDTO]
+}
+
+struct BackupEnvelopeV1: Codable, Equatable, Sendable {
+    static let currentSchemaVersion = 1
+
+    var schemaVersion: Int
+    var exportedAt: Date
+    var scope: BackupScope
+    var folders: [BackupFolderDTO]
+    var decks: [BackupDeckDTO]
+
+    init(
+        schemaVersion: Int = currentSchemaVersion,
+        exportedAt: Date = .now,
+        scope: BackupScope,
+        folders: [BackupFolderDTO],
+        decks: [BackupDeckDTO]
+    ) {
+        self.schemaVersion = schemaVersion
+        self.exportedAt = exportedAt
+        self.scope = scope
+        self.folders = folders
+        self.decks = decks
+    }
+}
+
+enum BackupCodecError: LocalizedError {
+    case unsupportedSchema(Int)
+    case emptyBackup
+
+    var errorDescription: String? {
+        switch self {
+        case let .unsupportedSchema(version):
+            "Version de sauvegarde non prise en charge : \(version)."
+        case .emptyBackup:
+            "La sauvegarde ne contient aucun deck ni dossier."
+        }
+    }
+}
+
+enum BackupCodec {
+    static func encode(_ envelope: BackupEnvelopeV1) throws -> Data {
+        let encoder = JSONEncoder()
+        encoder.dateEncodingStrategy = .iso8601
+        encoder.outputFormatting = [.prettyPrinted, .sortedKeys, .withoutEscapingSlashes]
+        return try encoder.encode(envelope)
+    }
+
+    static func decode(_ data: Data) throws -> BackupEnvelopeV1 {
+        let decoder = JSONDecoder()
+        decoder.dateDecodingStrategy = .iso8601
+        let envelope = try decoder.decode(BackupEnvelopeV1.self, from: data)
+        guard envelope.schemaVersion == BackupEnvelopeV1.currentSchemaVersion else {
+            throw BackupCodecError.unsupportedSchema(envelope.schemaVersion)
+        }
+        guard !envelope.decks.isEmpty || !envelope.folders.isEmpty else {
+            throw BackupCodecError.emptyBackup
+        }
+        return envelope
+    }
+}
+
+enum BackupMerger {
+    static func merge(
+        local: BackupEnvelopeV1,
+        incoming: BackupEnvelopeV1
+    ) -> BackupEnvelopeV1 {
+        var folders = Dictionary(uniqueKeysWithValues: local.folders.map { ($0.id, $0) })
+        for folder in incoming.folders {
+            folders[folder.id] = folder
+        }
+
+        var decks = Dictionary(uniqueKeysWithValues: local.decks.map { ($0.id, $0) })
+        for incomingDeck in incoming.decks {
+            guard let localDeck = decks[incomingDeck.id] else {
+                decks[incomingDeck.id] = incomingDeck
+                continue
+            }
+            var cards = Dictionary(uniqueKeysWithValues: localDeck.cards.map { ($0.id, $0) })
+            for card in incomingDeck.cards {
+                cards[card.id] = card
+            }
+            var mergedDeck = incomingDeck
+            mergedDeck.cards = cards.values.sorted { $0.position < $1.position }
+            decks[incomingDeck.id] = mergedDeck
+        }
+
+        return BackupEnvelopeV1(
+            exportedAt: incoming.exportedAt,
+            scope: .database,
+            folders: folders.values.sorted { $0.createdAt < $1.createdAt },
+            decks: decks.values.sorted { $0.createdAt < $1.createdAt }
+        )
+    }
+}

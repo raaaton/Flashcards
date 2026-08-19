@@ -28,6 +28,9 @@
 		B10000000000000000000013 /* TestSessionState.swift in Sources */ = {isa = PBXBuildFile; fileRef = C10000000000000000000014 /* TestSessionState.swift */; };
 		B10000000000000000000014 /* TestSetupView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C10000000000000000000015 /* TestSetupView.swift */; };
 		B10000000000000000000015 /* TestRunView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C10000000000000000000016 /* TestRunView.swift */; };
+		B10000000000000000000016 /* BackupModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = C10000000000000000000017 /* BackupModels.swift */; };
+		B10000000000000000000017 /* BackupService.swift in Sources */ = {isa = PBXBuildFile; fileRef = C10000000000000000000018 /* BackupService.swift */; };
+		B10000000000000000000018 /* BackupView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C10000000000000000000019 /* BackupView.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -53,6 +56,9 @@
 		C10000000000000000000014 /* TestSessionState.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TestSessionState.swift; sourceTree = "<group>"; };
 		C10000000000000000000015 /* TestSetupView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TestSetupView.swift; sourceTree = "<group>"; };
 		C10000000000000000000016 /* TestRunView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TestRunView.swift; sourceTree = "<group>"; };
+		C10000000000000000000017 /* BackupModels.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BackupModels.swift; sourceTree = "<group>"; };
+		C10000000000000000000018 /* BackupService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BackupService.swift; sourceTree = "<group>"; };
+		C10000000000000000000019 /* BackupView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BackupView.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -105,6 +111,7 @@
 				E10000000000000000000008 /* Import */,
 				E10000000000000000000009 /* Study */,
 				E1000000000000000000000A /* Test */,
+				E1000000000000000000000B /* Backup */,
 			);
 			path = Views;
 			sourceTree = "<group>";
@@ -128,6 +135,8 @@
 				C1000000000000000000000F /* BulkImportParser.swift */,
 				C10000000000000000000011 /* StudySessionState.swift */,
 				C10000000000000000000014 /* TestSessionState.swift */,
+				C10000000000000000000017 /* BackupModels.swift */,
+				C10000000000000000000018 /* BackupService.swift */,
 			);
 			path = Services;
 			sourceTree = "<group>";
@@ -156,6 +165,14 @@
 				C10000000000000000000016 /* TestRunView.swift */,
 			);
 			path = Test;
+			sourceTree = "<group>";
+		};
+		E1000000000000000000000B /* Backup */ = {
+			isa = PBXGroup;
+			children = (
+				C10000000000000000000019 /* BackupView.swift */,
+			);
+			path = Backup;
 			sourceTree = "<group>";
 		};
 		E10000000000000000000006 /* Products */ = {
@@ -255,6 +272,9 @@
 				B10000000000000000000013 /* TestSessionState.swift in Sources */,
 				B10000000000000000000014 /* TestSetupView.swift in Sources */,
 				B10000000000000000000015 /* TestRunView.swift in Sources */,
+				B10000000000000000000016 /* BackupModels.swift in Sources */,
+				B10000000000000000000017 /* BackupService.swift in Sources */,
+				B10000000000000000000018 /* BackupView.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

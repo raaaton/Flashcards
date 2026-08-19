@@ -103,15 +103,17 @@ struct TestRunView: View {
     }
 
     private var trueFalseAnswers: some View {
-        HStack(spacing: 16) {
-            Button("Faux", systemImage: "xmark") { submit("Faux") }
-                .buttonStyle(.borderedProminent)
-                .tint(.red)
-                .frame(maxWidth: .infinity)
-            Button("Vrai", systemImage: "checkmark") { submit("Vrai") }
-                .buttonStyle(.borderedProminent)
-                .tint(.green)
-                .frame(maxWidth: .infinity)
+        GlassEffectContainer(spacing: 16) {
+            HStack(spacing: 16) {
+                Button("Faux", systemImage: "xmark") { submit("Faux") }
+                    .buttonStyle(.glassProminent)
+                    .tint(.red)
+                    .frame(maxWidth: .infinity)
+                Button("Vrai", systemImage: "checkmark") { submit("Vrai") }
+                    .buttonStyle(.glassProminent)
+                    .tint(.green)
+                    .frame(maxWidth: .infinity)
+            }
         }
     }
 

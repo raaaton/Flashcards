@@ -23,6 +23,34 @@ jobs:
           xcrun --sdk iphoneos --show-sdk-version
           gh --version
 
+      - name: Prepare optional app icon
+        run: |
+          set -euxo pipefail
+          if test -f AppIcon.png; then
+            test "$(sips -g pixelWidth AppIcon.png | awk '/pixelWidth/ {print $2}')" = "1024"
+            test "$(sips -g pixelHeight AppIcon.png | awk '/pixelHeight/ {print $2}')" = "1024"
+            test "$(sips -g hasAlpha AppIcon.png | awk '/hasAlpha/ {print $2}')" = "no"
+            cp AppIcon.png Flashcards/Assets.xcassets/AppIcon.appiconset/AppIcon.png
+            plutil -replace images.0.filename -string AppIcon.png \
+              Flashcards/Assets.xcassets/AppIcon.appiconset/Contents.json
+          fi
+
+      - name: Audit offline single-target project
+        run: |
+          set -euxo pipefail
+          if grep -R -n -E 'URLSession|import (Network|CloudKit)|NSPersistentCloudKitContainer|Analytics|Tracking' Flashcards; then
+            exit 1
+          fi
+          if grep -R -n -E 'cloudKitDatabase:[[:space:]]+\.(automatic|private)' Flashcards; then
+            exit 1
+          fi
+          if grep -n -E 'XCRemoteSwiftPackageReference|packageProductDependencies|SystemCapabilities' \
+            Flashcards.xcodeproj/project.pbxproj; then
+            exit 1
+          fi
+          test "$(grep -c 'isa = PBXNativeTarget;' Flashcards.xcodeproj/project.pbxproj)" -eq 1
+          test -z "$(find Flashcards -name '*.entitlements' -print -quit)"
+
       - name: Run Foundation smoke tests
         run: |
           set -euxo pipefail
@@ -45,6 +73,12 @@ jobs:
             CITests/TestSessionSmoke.swift \
             -o "$RUNNER_TEMP/test-session-smoke"
           "$RUNNER_TEMP/test-session-smoke"
+          xcrun swiftc \
+            -swift-version 6 \
+            Flashcards/Services/BackupModels.swift \
+            CITests/BackupCodecSmoke.swift \
+            -o "$RUNNER_TEMP/backup-codec-smoke"
+          "$RUNNER_TEMP/backup-codec-smoke"
 
       - name: Build app for iPhone
         run: |

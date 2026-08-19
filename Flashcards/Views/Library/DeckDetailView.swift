@@ -7,6 +7,7 @@ struct DeckDetailView: View {
     let deck: Deck
 
     @State private var showingEditDeck = false
+    @State private var showingExport = false
     @State private var confirmingDeletion = false
 
     private var orderedCards: [Card] {
@@ -82,6 +83,9 @@ struct DeckDetailView: View {
             ToolbarItem(placement: .topBarTrailing) {
                 Menu {
                     Button("Modifier le deck", systemImage: "pencil") { showingEditDeck = true }
+                    Button("Exporter en JSON", systemImage: "square.and.arrow.up") {
+                        showingExport = true
+                    }
                     Button("Supprimer", systemImage: "trash", role: .destructive) {
                         confirmingDeletion = true
                     }
@@ -92,6 +96,9 @@ struct DeckDetailView: View {
         }
         .sheet(isPresented: $showingEditDeck) {
             DeckFormView(deck: deck)
+        }
+        .sheet(isPresented: $showingExport) {
+            BackupView(deck: deck)
         }
         .alert("Supprimer ce deck ?", isPresented: $confirmingDeletion) {
             Button("Supprimer", role: .destructive) {

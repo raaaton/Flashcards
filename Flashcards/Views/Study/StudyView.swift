@@ -65,7 +65,7 @@ struct StudyView: View {
                 Button("Afficher la réponse", systemImage: "arrow.2.circlepath") {
                     flipCard()
                 }
-                .buttonStyle(.borderedProminent)
+                .buttonStyle(.glassProminent)
             }
         }
         .padding()
@@ -126,24 +126,26 @@ struct StudyView: View {
     }
 
     private var answerControls: some View {
-        HStack(spacing: 14) {
-            Button {
-                answer(.review)
-            } label: {
-                Label("À revoir", systemImage: "arrow.left")
-                    .frame(maxWidth: .infinity)
-            }
-            .buttonStyle(.borderedProminent)
-            .tint(.red)
+        GlassEffectContainer(spacing: 14) {
+            HStack(spacing: 14) {
+                Button {
+                    answer(.review)
+                } label: {
+                    Label("À revoir", systemImage: "arrow.left")
+                        .frame(maxWidth: .infinity)
+                }
+                .buttonStyle(.glassProminent)
+                .tint(.red)
 
-            Button {
-                answer(.knew)
-            } label: {
-                Label("Je savais", systemImage: "arrow.right")
-                    .frame(maxWidth: .infinity)
+                Button {
+                    answer(.knew)
+                } label: {
+                    Label("Je savais", systemImage: "arrow.right")
+                        .frame(maxWidth: .infinity)
+                }
+                .buttonStyle(.glassProminent)
+                .tint(.green)
             }
-            .buttonStyle(.borderedProminent)
-            .tint(.green)
         }
     }
 

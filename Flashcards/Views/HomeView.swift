@@ -10,6 +10,7 @@ struct HomeView: View {
     @State private var showingNewFolder = false
     @State private var showingNewDeck = false
     @State private var showingBulkImport = false
+    @State private var showingBackup = false
     @State private var folderToRename: Folder?
     @State private var folderToDelete: Folder?
     @State private var deckToEdit: Deck?
@@ -45,6 +46,11 @@ struct HomeView: View {
             .navigationTitle("Flashcards")
             .searchable(text: $searchText, prompt: "Decks et cartes")
             .toolbar {
+                ToolbarItem(placement: .topBarLeading) {
+                    Button("Sauvegarde", systemImage: "externaldrive") {
+                        showingBackup = true
+                    }
+                }
                 ToolbarItem(placement: .topBarTrailing) {
                     Menu {
                         Button("Nouveau deck", systemImage: "rectangle.stack.badge.plus") {
@@ -72,6 +78,9 @@ struct HomeView: View {
         }
         .sheet(isPresented: $showingBulkImport) {
             BulkImportView()
+        }
+        .sheet(isPresented: $showingBackup) {
+            BackupView()
         }
         .sheet(item: $folderToRename) { folder in
             FolderFormView(folder: folder)
