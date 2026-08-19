@@ -25,6 +25,9 @@
 		B10000000000000000000010 /* StudySessionState.swift in Sources */ = {isa = PBXBuildFile; fileRef = C10000000000000000000011 /* StudySessionState.swift */; };
 		B10000000000000000000011 /* StudySetupView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C10000000000000000000012 /* StudySetupView.swift */; };
 		B10000000000000000000012 /* StudyView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C10000000000000000000013 /* StudyView.swift */; };
+		B10000000000000000000013 /* TestSessionState.swift in Sources */ = {isa = PBXBuildFile; fileRef = C10000000000000000000014 /* TestSessionState.swift */; };
+		B10000000000000000000014 /* TestSetupView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C10000000000000000000015 /* TestSetupView.swift */; };
+		B10000000000000000000015 /* TestRunView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C10000000000000000000016 /* TestRunView.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -47,6 +50,9 @@
 		C10000000000000000000011 /* StudySessionState.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StudySessionState.swift; sourceTree = "<group>"; };
 		C10000000000000000000012 /* StudySetupView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StudySetupView.swift; sourceTree = "<group>"; };
 		C10000000000000000000013 /* StudyView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StudyView.swift; sourceTree = "<group>"; };
+		C10000000000000000000014 /* TestSessionState.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TestSessionState.swift; sourceTree = "<group>"; };
+		C10000000000000000000015 /* TestSetupView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TestSetupView.swift; sourceTree = "<group>"; };
+		C10000000000000000000016 /* TestRunView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TestRunView.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -98,6 +104,7 @@
 				E10000000000000000000005 /* Library */,
 				E10000000000000000000008 /* Import */,
 				E10000000000000000000009 /* Study */,
+				E1000000000000000000000A /* Test */,
 			);
 			path = Views;
 			sourceTree = "<group>";
@@ -120,6 +127,7 @@
 			children = (
 				C1000000000000000000000F /* BulkImportParser.swift */,
 				C10000000000000000000011 /* StudySessionState.swift */,
+				C10000000000000000000014 /* TestSessionState.swift */,
 			);
 			path = Services;
 			sourceTree = "<group>";
@@ -139,6 +147,15 @@
 				C10000000000000000000013 /* StudyView.swift */,
 			);
 			path = Study;
+			sourceTree = "<group>";
+		};
+		E1000000000000000000000A /* Test */ = {
+			isa = PBXGroup;
+			children = (
+				C10000000000000000000015 /* TestSetupView.swift */,
+				C10000000000000000000016 /* TestRunView.swift */,
+			);
+			path = Test;
 			sourceTree = "<group>";
 		};
 		E10000000000000000000006 /* Products */ = {
@@ -235,6 +252,9 @@
 				B10000000000000000000010 /* StudySessionState.swift in Sources */,
 				B10000000000000000000011 /* StudySetupView.swift in Sources */,
 				B10000000000000000000012 /* StudyView.swift in Sources */,
+				B10000000000000000000013 /* TestSessionState.swift in Sources */,
+				B10000000000000000000014 /* TestSetupView.swift in Sources */,
+				B10000000000000000000015 /* TestRunView.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

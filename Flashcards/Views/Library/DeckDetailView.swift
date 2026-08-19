@@ -41,6 +41,13 @@ struct DeckDetailView: View {
                     Label("Flashcards", systemImage: "rectangle.on.rectangle.angled")
                 }
                 .disabled(deck.cards.isEmpty)
+
+                NavigationLink {
+                    TestSetupView(deck: deck)
+                } label: {
+                    Label("Test", systemImage: "checklist")
+                }
+                .disabled(deck.cards.isEmpty)
             }
 
             Section("Cartes") {
