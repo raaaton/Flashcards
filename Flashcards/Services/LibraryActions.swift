@@ -64,6 +64,7 @@ enum LibraryActions {
         for card in deck.cards {
             card.mastered = false
         }
+        deck.completedStudySessions = 0
         deck.updatedAt = .now
         try? modelContext.save()
     }

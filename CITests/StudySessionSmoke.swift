@@ -12,36 +12,29 @@ enum StudySessionSmoke {
             shuffle: false
         )
 
-        let firstRoundIDs = session.currentRound.map(\.id)
-        precondition(Set(firstRoundIDs).count == cards.count)
-        precondition(session.roundNumber == 1)
+        let sessionIDs = session.items.map(\.id)
+        precondition(Set(sessionIDs).count == cards.count)
         precondition(session.totalCards == 4)
         precondition(session.masteredInSession == 0)
-        precondition(session.visibleItems.map(\.id) == Array(firstRoundIDs.prefix(2)))
+        precondition(session.visibleItems.map(\.id) == Array(sessionIDs.prefix(2)))
 
         let reviewedID = session.currentItem?.id
         session.answer(.review)
+        precondition(!session.isComplete)
+        precondition(session.currentItem?.id != reviewedID)
         session.answer(.knew)
         precondition(session.masteredInSession == 1)
         session.answer(.knew)
         session.answer(.knew)
 
-        precondition(!session.isComplete)
-        precondition(session.roundNumber == 2)
-        precondition(session.currentRound.count == 1)
-        precondition(session.currentItem?.id == reviewedID)
-
-        session.answer(.knew)
         precondition(session.isComplete)
-        precondition(session.cardsSeen == 5)
-        precondition(session.correctAnswers == 4)
-        precondition(session.successRate == 80)
-        precondition(session.masteredInSession == session.totalCards)
-
-        session.restart(with: cards)
-        precondition(!session.isComplete)
-        precondition(session.cardsSeen == 0)
-        precondition(session.currentRound.count == 4)
+        precondition(session.cardsSeen == 4)
+        precondition(session.correctAnswers == 3)
+        precondition(session.reviewAnswers == 1)
+        precondition(session.successRate == 75)
+        precondition(session.masteredInSession == 3)
+        precondition(session.answer(.knew) == nil)
+        precondition(session.cardsSeen == 4)
 
         print("StudySessionState smoke tests passed")
     }

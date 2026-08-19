@@ -7,18 +7,18 @@ struct StudySetupView: View {
     let deck: Deck
 
     @State private var direction = StudyDirection.termToDefinition
-    @State private var includeMastered: Bool
     @State private var showingSession = false
     @State private var confirmingReset = false
+    @State private var confirmingNewSeries = false
+    @State private var activeSessionNumber: Int
 
     init(deck: Deck) {
         self.deck = deck
-        let hasUnmasteredCards = deck.cards.contains { !$0.mastered }
-        _includeMastered = State(initialValue: !deck.cards.isEmpty && !hasUnmasteredCards)
+        _activeSessionNumber = State(initialValue: deck.completedStudySessions + 1)
     }
 
     private var eligibleCount: Int {
-        includeMastered ? deck.cards.count : deck.cards.count(where: { !$0.mastered })
+        deck.cards.count(where: { !$0.mastered })
     }
 
     private var nextSessionNumber: Int {
@@ -48,7 +48,6 @@ struct StudySetupView: View {
             }
 
             Section("Cartes") {
-                Toggle("Inclure les cartes maîtrisées", isOn: $includeMastered)
                 LabeledContent(
                     "Cette session",
                     value: L10n.cards(eligibleCount)
@@ -57,17 +56,17 @@ struct StudySetupView: View {
 
             Section {
                 Button {
-                    showingSession = true
+                    if eligibleCount == 0 {
+                        confirmingNewSeries = true
+                    } else {
+                        startSession()
+                    }
                 } label: {
                     Label("Commencer la session", systemImage: "play.fill")
                         .frame(maxWidth: .infinity)
                 }
                 .buttonStyle(.glassProminent)
-                .disabled(eligibleCount == 0)
-            } footer: {
-                if eligibleCount == 0 {
-                    Text("Toutes les cartes sont déjà maîtrisées. Activez leur inclusion pour les revoir.")
-                }
+                .disabled(deck.cards.isEmpty)
             }
 
             Section {
@@ -77,7 +76,10 @@ struct StudySetupView: View {
                     Label("Réinitialiser la progression", systemImage: "arrow.counterclockwise")
                         .foregroundStyle(.red)
                 }
-                .disabled(deck.cards.allSatisfy { !$0.mastered })
+                .disabled(
+                    deck.completedStudySessions == 0
+                        && deck.cards.allSatisfy { !$0.mastered }
+                )
             }
         }
         .navigationTitle("Flashcards")
@@ -85,8 +87,8 @@ struct StudySetupView: View {
             StudyView(
                 deck: deck,
                 direction: direction,
-                includeMastered: includeMastered,
-                sessionNumber: nextSessionNumber
+                shuffle: true,
+                sessionNumber: activeSessionNumber
             )
         }
         .alert("Réinitialiser la progression ?", isPresented: $confirmingReset) {
@@ -95,10 +97,27 @@ struct StudySetupView: View {
         } message: {
             Text("Toutes les cartes de ce deck redeviendront non maîtrisées.")
         }
+        .alert("study.new_series.title", isPresented: $confirmingNewSeries) {
+            Button("Continuer") {
+                LibraryActions.resetStudyProgress(for: deck, in: modelContext)
+                startSession()
+            }
+            Button("Annuler", role: .cancel) {}
+        } message: {
+            Text("study.new_series.message")
+        }
     }
 
     private func resetProgress() {
         LibraryActions.resetStudyProgress(for: deck, in: modelContext)
-        includeMastered = false
+        activeSessionNumber = 1
+    }
+
+    private func startSession() {
+        activeSessionNumber = deck.completedStudySessions + 1
+        deck.completedStudySessions = activeSessionNumber
+        deck.updatedAt = .now
+        try? modelContext.save()
+        showingSession = true
     }
 }

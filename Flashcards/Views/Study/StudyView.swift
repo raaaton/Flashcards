@@ -24,16 +24,18 @@ struct StudyView: View {
     init(
         deck: Deck,
         direction: StudyDirection,
-        includeMastered: Bool,
+        shuffle: Bool,
         sessionNumber: Int
     ) {
         self.deck = deck
         self.sessionNumber = sessionNumber
         let cards = deck.cards
-            .filter { includeMastered || !$0.mastered }
+            .filter { !$0.mastered }
             .sorted { $0.position < $1.position }
             .map { StudyCardSnapshot(id: $0.id, term: $0.term, definition: $0.definition) }
-        _session = State(initialValue: StudySessionState(cards: cards, direction: direction))
+        _session = State(
+            initialValue: StudySessionState(cards: cards, direction: direction, shuffle: shuffle)
+        )
     }
 
     var body: some View {
@@ -97,11 +99,7 @@ struct StudyView: View {
     private var sessionHeader: some View {
         VStack(spacing: 10) {
             HStack {
-                Text(L10n.format(
-                    "study.session.round",
-                    Int64(sessionNumber),
-                    Int64(session.roundNumber)
-                ))
+                Text(L10n.format("study.session.number", Int64(sessionNumber)))
                     .font(.subheadline.weight(.semibold))
                 Spacer()
                 Text("\(session.masteredInSession) / \(session.totalCards)")
@@ -162,7 +160,7 @@ struct StudyView: View {
     }
 
     private func card(
-        _ item: StudyRoundItem,
+        _ item: StudySessionItem,
         isActive: Bool,
         exitDistance: CGFloat
     ) -> some View {
@@ -329,13 +327,17 @@ struct StudyView: View {
     private var summary: some View {
         VStack(spacing: 24) {
             Spacer()
-            Image(systemName: "checkmark.circle.fill")
+            Image(
+                systemName: remainingDeckCards == 0
+                    ? "checkmark.circle.fill"
+                    : "clock.arrow.circlepath"
+            )
                 .font(.system(size: 72))
                 .foregroundStyle(Theme.accent)
             Text(L10n.format("study.session.complete", Int64(sessionNumber)))
                 .font(.largeTitle.bold())
                 .multilineTextAlignment(.center)
-            Text("Toutes les cartes de cette session sont maîtrisées.")
+            Text(summaryMessage)
                 .foregroundStyle(.secondary)
                 .multilineTextAlignment(.center)
 
@@ -346,7 +348,7 @@ struct StudyView: View {
 
             Spacer()
 
-            Button("Recommencer", systemImage: "arrow.counterclockwise") {
+            Button("Terminer", systemImage: "checkmark") {
                 dismiss()
             }
             .foregroundStyle(.white)
@@ -373,6 +375,17 @@ struct StudyView: View {
             Text(label).font(.caption).foregroundStyle(.secondary)
         }
         .accessibilityElement(children: .combine)
+    }
+
+    private var remainingDeckCards: Int {
+        deck.cards.count { !$0.mastered }
+    }
+
+    private var summaryMessage: String {
+        if remainingDeckCards == 0 {
+            return L10n.text("study.all_mastered")
+        }
+        return L10n.format("study.cards_remaining", Int64(remainingDeckCards))
     }
 
     private func flipCard() {
@@ -440,8 +453,9 @@ struct StudyView: View {
         _ = session.answer(outcome)
         if session.isComplete && !didRecordCompletion {
             didRecordCompletion = true
-            deck.completedStudySessions += 1
-            celebrateCompletion()
+            if deck.cards.allSatisfy(\.mastered) {
+                celebrateCompletion()
+            }
         }
         deck.updatedAt = .now
         try? modelContext.save()

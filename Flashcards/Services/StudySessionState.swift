@@ -27,7 +27,7 @@ struct StudyCardSnapshot: Identifiable, Equatable, Sendable {
     let definition: String
 }
 
-struct StudyRoundItem: Identifiable, Equatable, Sendable {
+struct StudySessionItem: Identifiable, Equatable, Sendable {
     let card: StudyCardSnapshot
     let isReversed: Bool
 
@@ -38,32 +38,29 @@ struct StudyRoundItem: Identifiable, Equatable, Sendable {
 
 struct StudySessionState: Equatable, Sendable {
     let direction: StudyDirection
-    private let shufflesRounds: Bool
     private let initialCardCount: Int
 
-    private(set) var currentRound: [StudyRoundItem]
-    private(set) var nextRound: [StudyCardSnapshot] = []
+    private(set) var items: [StudySessionItem]
     private(set) var currentIndex = 0
-    private(set) var roundNumber = 1
     private(set) var cardsSeen = 0
     private(set) var correctAnswers = 0
+    private(set) var reviewAnswers = 0
     private(set) var isComplete = false
 
     init(cards: [StudyCardSnapshot], direction: StudyDirection, shuffle: Bool = true) {
         self.direction = direction
-        shufflesRounds = shuffle
         initialCardCount = cards.count
-        currentRound = Self.makeRound(cards: cards, direction: direction, shuffle: shuffle)
+        items = Self.makeItems(cards: cards, direction: direction, shuffle: shuffle)
         isComplete = cards.isEmpty
     }
 
-    var currentItem: StudyRoundItem? {
-        guard currentRound.indices.contains(currentIndex) else { return nil }
-        return currentRound[currentIndex]
+    var currentItem: StudySessionItem? {
+        guard items.indices.contains(currentIndex) else { return nil }
+        return items[currentIndex]
     }
 
-    var remainingInRound: Int {
-        max(currentRound.count - currentIndex, 0)
+    var remainingCards: Int {
+        max(items.count - currentIndex, 0)
     }
 
     var totalCards: Int {
@@ -74,9 +71,9 @@ struct StudySessionState: Equatable, Sendable {
         correctAnswers
     }
 
-    var visibleItems: [StudyRoundItem] {
-        guard currentRound.indices.contains(currentIndex) else { return [] }
-        return Array(currentRound[currentIndex...].prefix(2))
+    var visibleItems: [StudySessionItem] {
+        guard items.indices.contains(currentIndex) else { return [] }
+        return Array(items[currentIndex...].prefix(2))
     }
 
     var successRate: Int {
@@ -93,48 +90,26 @@ struct StudySessionState: Equatable, Sendable {
         case .knew:
             correctAnswers += 1
         case .review:
-            nextRound.append(item.card)
+            reviewAnswers += 1
         }
 
         currentIndex += 1
-        if currentIndex >= currentRound.count {
-            advanceRound()
-        }
+        isComplete = currentIndex >= items.count
         return item.card.id
     }
 
-    mutating func restart(with cards: [StudyCardSnapshot]) {
-        self = StudySessionState(cards: cards, direction: direction, shuffle: shufflesRounds)
-    }
-
-    private mutating func advanceRound() {
-        guard !nextRound.isEmpty else {
-            isComplete = true
-            return
-        }
-
-        currentRound = Self.makeRound(
-            cards: nextRound,
-            direction: direction,
-            shuffle: shufflesRounds
-        )
-        nextRound.removeAll(keepingCapacity: true)
-        currentIndex = 0
-        roundNumber += 1
-    }
-
-    private static func makeRound(
+    private static func makeItems(
         cards: [StudyCardSnapshot],
         direction: StudyDirection,
         shuffle: Bool
-    ) -> [StudyRoundItem] {
+    ) -> [StudySessionItem] {
         let items = cards.map { card in
             let isReversed = switch direction {
             case .termToDefinition: false
             case .definitionToTerm: true
             case .random: Bool.random()
             }
-            return StudyRoundItem(card: card, isReversed: isReversed)
+            return StudySessionItem(card: card, isReversed: isReversed)
         }
         return shuffle ? items.shuffled() : items
     }
