@@ -37,6 +37,10 @@
 		B1000000000000000000001C /* FolderDetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C1000000000000000000001D /* FolderDetailView.swift */; };
 		B1000000000000000000001D /* StudyAnimationMetrics.swift in Sources */ = {isa = PBXBuildFile; fileRef = C1000000000000000000001E /* StudyAnimationMetrics.swift */; };
 		B1000000000000000000001E /* StudyCardFace.swift in Sources */ = {isa = PBXBuildFile; fileRef = C1000000000000000000001F /* StudyCardFace.swift */; };
+		B1000000000000000000001F /* AppPreferences.swift in Sources */ = {isa = PBXBuildFile; fileRef = C10000000000000000000020 /* AppPreferences.swift */; };
+		B10000000000000000000020 /* HapticService.swift in Sources */ = {isa = PBXBuildFile; fileRef = C10000000000000000000021 /* HapticService.swift */; };
+		B10000000000000000000021 /* TestAnimationMetrics.swift in Sources */ = {isa = PBXBuildFile; fileRef = C10000000000000000000022 /* TestAnimationMetrics.swift */; };
+		B10000000000000000000022 /* ConfettiView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C10000000000000000000023 /* ConfettiView.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -71,6 +75,10 @@
 		C1000000000000000000001D /* FolderDetailView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FolderDetailView.swift; sourceTree = "<group>"; };
 		C1000000000000000000001E /* StudyAnimationMetrics.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StudyAnimationMetrics.swift; sourceTree = "<group>"; };
 		C1000000000000000000001F /* StudyCardFace.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StudyCardFace.swift; sourceTree = "<group>"; };
+		C10000000000000000000020 /* AppPreferences.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppPreferences.swift; sourceTree = "<group>"; };
+		C10000000000000000000021 /* HapticService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HapticService.swift; sourceTree = "<group>"; };
+		C10000000000000000000022 /* TestAnimationMetrics.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TestAnimationMetrics.swift; sourceTree = "<group>"; };
+		C10000000000000000000023 /* ConfettiView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ConfettiView.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -96,9 +104,11 @@
 			isa = PBXGroup;
 			children = (
 				C10000000000000000000001 /* FlashcardsApp.swift */,
+				C10000000000000000000020 /* AppPreferences.swift */,
 				C10000000000000000000002 /* Theme.swift */,
 				C1000000000000000000001A /* FolderAppearance.swift */,
 				C1000000000000000000001E /* StudyAnimationMetrics.swift */,
+				C10000000000000000000022 /* TestAnimationMetrics.swift */,
 				E10000000000000000000003 /* Models */,
 				E10000000000000000000007 /* Services */,
 				E10000000000000000000004 /* Views */,
@@ -126,6 +136,7 @@
 				E10000000000000000000009 /* Study */,
 				E1000000000000000000000A /* Test */,
 				E1000000000000000000000B /* Backup */,
+				E1000000000000000000000C /* Celebration */,
 			);
 			path = Views;
 			sourceTree = "<group>";
@@ -149,6 +160,7 @@
 			isa = PBXGroup;
 			children = (
 				C1000000000000000000001B /* LibraryActions.swift */,
+				C10000000000000000000021 /* HapticService.swift */,
 				C1000000000000000000000F /* BulkImportParser.swift */,
 				C10000000000000000000011 /* StudySessionState.swift */,
 				C10000000000000000000014 /* TestSessionState.swift */,
@@ -191,6 +203,14 @@
 				C10000000000000000000019 /* BackupView.swift */,
 			);
 			path = Backup;
+			sourceTree = "<group>";
+		};
+		E1000000000000000000000C /* Celebration */ = {
+			isa = PBXGroup;
+			children = (
+				C10000000000000000000023 /* ConfettiView.swift */,
+			);
+			path = Celebration;
 			sourceTree = "<group>";
 		};
 		E10000000000000000000006 /* Products */ = {
@@ -299,6 +319,10 @@
 				B1000000000000000000001C /* FolderDetailView.swift in Sources */,
 				B1000000000000000000001D /* StudyAnimationMetrics.swift in Sources */,
 				B1000000000000000000001E /* StudyCardFace.swift in Sources */,
+				B1000000000000000000001F /* AppPreferences.swift in Sources */,
+				B10000000000000000000020 /* HapticService.swift in Sources */,
+				B10000000000000000000021 /* TestAnimationMetrics.swift in Sources */,
+				B10000000000000000000022 /* ConfettiView.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

@@ -2,12 +2,20 @@ import SwiftData
 import SwiftUI
 
 struct TestRunView: View {
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @Environment(\.dismiss) private var dismiss
     @Environment(\.modelContext) private var modelContext
 
     let deck: Deck
+
     @State private var session: TestSessionState
     @State private var writtenAnswer = ""
+    @State private var selectedAnswer: String?
+    @State private var feedbackIsCorrect: Bool?
+    @State private var isTransitioning = false
+    @State private var didCelebrate = false
+    @State private var showCelebration = false
+    @FocusState private var writtenFieldIsFocused: Bool
 
     init(
         deck: Deck,
@@ -29,30 +37,47 @@ struct TestRunView: View {
     }
 
     var body: some View {
-        Group {
+        ZStack {
             if session.isComplete {
                 resultsView
+                    .transition(questionTransition)
             } else if let question = session.currentQuestion {
                 questionView(question)
+                    .id(question.id)
+                    .transition(questionTransition)
             }
         }
         .navigationBarBackButtonHidden()
         .toolbar {
             ToolbarItem(placement: .topBarLeading) {
                 Button("Quitter", systemImage: "xmark") { dismiss() }
+                    .foregroundStyle(.white)
             }
         }
+        .overlay {
+            if showCelebration {
+                ConfettiView()
+                    .ignoresSafeArea()
+            }
+        }
+    }
+
+    private var questionTransition: AnyTransition {
+        guard !reduceMotion else { return .opacity }
+        return .asymmetric(
+            insertion: .move(edge: .trailing)
+                .combined(with: .opacity)
+                .combined(with: .scale(scale: TestAnimationMetrics.transitionScale)),
+            removal: .move(edge: .leading)
+                .combined(with: .opacity)
+                .combined(with: .scale(scale: TestAnimationMetrics.transitionScale))
+        )
     }
 
     private func questionView(_ question: TestQuestion) -> some View {
         ScrollView {
             VStack(alignment: .leading, spacing: 24) {
-                ProgressView(
-                    value: Double(session.currentIndex),
-                    total: Double(max(session.questions.count, 1))
-                ) {
-                    Text("Question \(session.currentIndex + 1) sur \(session.questions.count)")
-                }
+                progressHeader
 
                 Text(question.type.title.uppercased())
                     .font(.caption.weight(.bold))
@@ -74,15 +99,47 @@ struct TestRunView: View {
                 case .multipleChoice:
                     multipleChoiceAnswers(question)
                 case .trueFalse:
-                    trueFalseAnswers
+                    trueFalseAnswers(question)
                 case .written:
-                    writtenAnswerForm
+                    writtenAnswerForm(question)
+                }
+
+                if let feedbackIsCorrect {
+                    feedbackBanner(isCorrect: feedbackIsCorrect, question: question)
+                        .transition(.opacity.combined(with: .scale(scale: 0.98)))
                 }
             }
             .padding()
         }
+        .scrollDismissesKeyboard(.interactively)
         .navigationTitle(deck.name)
         .navigationBarTitleDisplayMode(.inline)
+    }
+
+    private var progressHeader: some View {
+        VStack(spacing: 9) {
+            HStack {
+                Text("Question \(session.currentIndex + 1) sur \(session.questions.count)")
+                    .font(.subheadline.weight(.semibold))
+                Spacer()
+                Text("\(session.currentIndex) / \(session.questions.count)")
+                    .font(.subheadline.monospacedDigit())
+                    .foregroundStyle(.secondary)
+            }
+
+            ProgressView(
+                value: Double(session.currentIndex),
+                total: Double(max(session.questions.count, 1))
+            )
+            .animation(
+                reduceMotion ? nil : .easeOut(duration: 0.2),
+                value: session.currentIndex
+            )
+            .accessibilityLabel("Progression du test")
+            .accessibilityValue(
+                "\(session.currentIndex) questions répondues sur \(session.questions.count)"
+            )
+        }
     }
 
     private func multipleChoiceAnswers(_ question: TestQuestion) -> some View {
@@ -93,42 +150,84 @@ struct TestRunView: View {
                 } label: {
                     Text(choice)
                         .multilineTextAlignment(.leading)
+                        .foregroundStyle(.primary)
                         .frame(maxWidth: .infinity, alignment: .leading)
-                        .padding(.vertical, 8)
+                        .padding(.horizontal, 16)
+                        .padding(.vertical, 14)
+                        .background(choiceFill(choice, question: question))
+                        .overlay {
+                            RoundedRectangle(cornerRadius: 14, style: .continuous)
+                                .stroke(choiceStroke(choice, question: question), lineWidth: 1.5)
+                        }
+                        .clipShape(.rect(cornerRadius: 14, style: .continuous))
+                        .scaleEffect(selectedAnswer == choice ? 1.012 : 1)
                 }
-                .buttonStyle(.bordered)
-                .controlSize(.large)
+                .buttonStyle(.plain)
+                .disabled(isTransitioning)
             }
         }
+        .animation(.easeOut(duration: 0.15), value: selectedAnswer)
     }
 
-    private var trueFalseAnswers: some View {
+    private func trueFalseAnswers(_ question: TestQuestion) -> some View {
         GlassEffectContainer(spacing: 16) {
             HStack(spacing: 16) {
-                Button("Faux", systemImage: "xmark") { submit("Faux") }
-                    .buttonStyle(.glassProminent)
-                    .tint(.red)
-                    .frame(maxWidth: .infinity)
-                Button("Vrai", systemImage: "checkmark") { submit("Vrai") }
-                    .buttonStyle(.glassProminent)
-                    .tint(.green)
-                    .frame(maxWidth: .infinity)
+                verdictButton("Faux", systemImage: "xmark", question: question)
+                verdictButton("Vrai", systemImage: "checkmark", question: question)
             }
         }
     }
 
-    private var writtenAnswerForm: some View {
+    private func verdictButton(
+        _ answer: String,
+        systemImage: String,
+        question: TestQuestion
+    ) -> some View {
+        Button(answer, systemImage: systemImage) { submit(answer) }
+            .buttonStyle(.glassProminent)
+            .tint(verdictTint(answer, question: question))
+            .frame(maxWidth: .infinity)
+            .scaleEffect(selectedAnswer == answer ? 1.025 : 1)
+            .disabled(isTransitioning)
+            .animation(.easeOut(duration: 0.15), value: selectedAnswer)
+    }
+
+    private func writtenAnswerForm(_ question: TestQuestion) -> some View {
         VStack(spacing: 16) {
             TextField("Votre réponse", text: $writtenAnswer, axis: .vertical)
                 .textFieldStyle(.roundedBorder)
                 .lineLimit(2...6)
                 .submitLabel(.done)
+                .focused($writtenFieldIsFocused)
+                .disabled(isTransitioning)
                 .onSubmit { submitWrittenAnswer() }
 
             Button("Valider", systemImage: "checkmark") { submitWrittenAnswer() }
                 .buttonStyle(.borderedProminent)
-                .disabled(writtenAnswer.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
+                .disabled(
+                    isTransitioning
+                        || writtenAnswer.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+                )
         }
+    }
+
+    private func feedbackBanner(isCorrect: Bool, question: TestQuestion) -> some View {
+        VStack(alignment: .leading, spacing: 6) {
+            Label(
+                isCorrect ? "Correct" : "À revoir",
+                systemImage: isCorrect ? "checkmark.circle.fill" : "xmark.circle.fill"
+            )
+            .font(.headline)
+            .foregroundStyle(isCorrect ? .green : .red)
+
+            if !isCorrect {
+                Text("Bonne réponse : \(question.correctAnswer)")
+                    .foregroundStyle(.secondary)
+            }
+        }
+        .padding(14)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .background(Theme.cardBackground, in: .rect(cornerRadius: 14, style: .continuous))
     }
 
     private var resultsView: some View {
@@ -156,8 +255,7 @@ struct TestRunView: View {
             Section {
                 if session.answers.contains(where: { !$0.isCorrect }) {
                     Button("Refaire uniquement les erreurs", systemImage: "arrow.counterclockwise") {
-                        session.retryErrors()
-                        writtenAnswer = ""
+                        retryErrors()
                     }
                 }
                 Button("Terminer", systemImage: "checkmark") { dismiss() }
@@ -199,6 +297,35 @@ struct TestRunView: View {
         .padding(.vertical, 6)
     }
 
+    private func choiceFill(_ choice: String, question: TestQuestion) -> Color {
+        guard selectedAnswer != nil else { return Theme.cardBackground }
+        if answersMatch(choice, question.correctAnswer) {
+            return .green.opacity(0.2)
+        }
+        if selectedAnswer == choice {
+            return .red.opacity(0.2)
+        }
+        return Theme.cardBackground
+    }
+
+    private func choiceStroke(_ choice: String, question: TestQuestion) -> Color {
+        guard selectedAnswer != nil else { return .secondary.opacity(0.45) }
+        if answersMatch(choice, question.correctAnswer) { return .green }
+        if selectedAnswer == choice { return .red }
+        return .secondary.opacity(0.25)
+    }
+
+    private func verdictTint(_ answer: String, question: TestQuestion) -> Color {
+        guard selectedAnswer != nil else { return answer == "Vrai" ? .green : .red }
+        if answersMatch(answer, question.correctAnswer) { return .green }
+        if selectedAnswer == answer { return .red }
+        return .gray
+    }
+
+    private func answersMatch(_ lhs: String, _ rhs: String) -> Bool {
+        TestQuestionFactory.normalize(lhs) == TestQuestionFactory.normalize(rhs)
+    }
+
     private func submitWrittenAnswer() {
         let cleanAnswer = writtenAnswer.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !cleanAnswer.isEmpty else { return }
@@ -206,15 +333,54 @@ struct TestRunView: View {
     }
 
     private func submit(_ answer: String) {
-        guard let record = session.submit(answer: answer),
-              let card = deck.cards.first(where: { $0.id == record.question.cardID }) else { return }
+        guard !isTransitioning,
+              let question = session.currentQuestion else { return }
+
+        isTransitioning = true
+        selectedAnswer = answer
+        feedbackIsCorrect = answersMatch(answer, question.correctAnswer)
+        writtenFieldIsFocused = false
+        HapticService.play(feedbackIsCorrect == true ? .correct : .wrong)
+
+        Task { @MainActor in
+            try? await Task.sleep(for: .milliseconds(TestAnimationMetrics.feedbackMilliseconds))
+            guard session.currentQuestion?.id == question.id else { return }
+
+            let transitionAnimation: Animation = reduceMotion
+                ? .easeOut(duration: 0.12)
+                : .spring(
+                    response: TestAnimationMetrics.transitionResponse,
+                    dampingFraction: TestAnimationMetrics.transitionDamping
+                )
+
+            let record = withAnimation(transitionAnimation) {
+                let submitted = session.submit(answer: answer)
+                selectedAnswer = nil
+                feedbackIsCorrect = nil
+                writtenAnswer = ""
+                return submitted
+            }
+
+            if let record {
+                persist(record)
+            }
+            if session.isComplete && session.score == 100 {
+                celebratePerfectScore()
+            }
+
+            try? await Task.sleep(for: .milliseconds(TestAnimationMetrics.transitionMilliseconds))
+            isTransitioning = false
+        }
+    }
+
+    private func persist(_ record: TestAnswerRecord) {
+        guard let card = deck.cards.first(where: { $0.id == record.question.cardID }) else { return }
         card.timesStudied += 1
         if record.isCorrect {
             card.timesCorrect += 1
         }
         deck.updatedAt = .now
         try? modelContext.save()
-        writtenAnswer = ""
     }
 
     private func override(_ record: TestAnswerRecord) {
@@ -223,5 +389,35 @@ struct TestRunView: View {
         card.timesCorrect += 1
         deck.updatedAt = .now
         try? modelContext.save()
+        HapticService.play(.correct)
+
+        if session.score == 100 {
+            celebratePerfectScore()
+        }
+    }
+
+    private func retryErrors() {
+        didCelebrate = false
+        showCelebration = false
+        writtenAnswer = ""
+        selectedAnswer = nil
+        feedbackIsCorrect = nil
+        withAnimation(
+            reduceMotion
+                ? .easeOut(duration: 0.12)
+                : .spring(
+                    response: TestAnimationMetrics.transitionResponse,
+                    dampingFraction: TestAnimationMetrics.transitionDamping
+                )
+        ) {
+            session.retryErrors()
+        }
+    }
+
+    private func celebratePerfectScore() {
+        guard !didCelebrate else { return }
+        didCelebrate = true
+        HapticService.play(.completion)
+        showCelebration = AppPreferences.celebrationsEnabled && !reduceMotion
     }
 }

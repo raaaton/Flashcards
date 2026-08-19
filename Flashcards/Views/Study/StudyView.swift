@@ -17,6 +17,8 @@ struct StudyView: View {
     @State private var isCommitting = false
     @State private var didCrossThreshold = false
     @State private var didRecordCompletion = false
+    @State private var didCelebrate = false
+    @State private var showCelebration = false
     @State private var confirmingReset = false
 
     init(
@@ -55,6 +57,12 @@ struct StudyView: View {
             Button("Annuler", role: .cancel) {}
         } message: {
             Text("Toutes les cartes de ce deck redeviendront non maîtrisées.")
+        }
+        .overlay {
+            if showCelebration {
+                ConfettiView()
+                    .ignoresSafeArea()
+            }
         }
     }
 
@@ -243,8 +251,10 @@ struct StudyView: View {
                     height: value.translation.height * 0.12
                 )
 
-                if abs(value.translation.width) >= StudyAnimationMetrics.swipeThreshold {
+                if abs(value.translation.width) >= StudyAnimationMetrics.swipeThreshold,
+                   !didCrossThreshold {
                     didCrossThreshold = true
+                    HapticService.play(value.translation.width >= 0 ? .correct : .review)
                 }
             }
             .onEnded { value in
@@ -353,6 +363,7 @@ struct StudyView: View {
 
     private func flipCard() {
         guard !isCommitting else { return }
+        HapticService.play(.flip)
         isFlipped.toggle()
         let targetAngle = isFlipped ? 180.0 : 0.0
 
@@ -373,6 +384,9 @@ struct StudyView: View {
         guard !isCommitting,
               let cardID = session.currentItem?.id else { return }
 
+        if !didCrossThreshold {
+            HapticService.play(outcome == .knew ? .correct : .review)
+        }
         isCommitting = true
         let sign: CGFloat = outcome == .knew ? 1 : -1
         let inertialDistance = max(exitDistance, abs(predictedWidth) * 1.12)
@@ -413,6 +427,7 @@ struct StudyView: View {
         if session.isComplete && !didRecordCompletion {
             didRecordCompletion = true
             deck.completedStudySessions += 1
+            celebrateCompletion()
         }
         deck.updatedAt = .now
         try? modelContext.save()
@@ -432,5 +447,12 @@ struct StudyView: View {
     private func resetProgress() {
         LibraryActions.resetStudyProgress(for: deck, in: modelContext)
         dismiss()
+    }
+
+    private func celebrateCompletion() {
+        guard !didCelebrate else { return }
+        didCelebrate = true
+        HapticService.play(.completion)
+        showCelebration = AppPreferences.celebrationsEnabled && !reduceMotion
     }
 }
