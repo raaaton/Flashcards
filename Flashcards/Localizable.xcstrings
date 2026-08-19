@@ -84,6 +84,11 @@
 
     "Sauvegarde" : { "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "Backup" } } } },
     "Decks et cartes" : { "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "Decks and cards" } } } },
+    "Rechercher" : { "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "Search" } } } },
+    "Dossiers" : { "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "Folders" } } } },
+    "Aucun dossier pour le moment" : { "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "No folders yet" } } } },
+    "Créez un dossier pour organiser vos decks." : { "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "Create a folder to organize your decks." } } } },
+    "Créer un dossier" : { "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "Create Folder" } } } },
     "Supprimer ce dossier ?" : { "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "Delete this folder?" } } } },
     "Conserver les decks" : { "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "Keep Decks" } } } },
     "Tout supprimer" : { "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "Delete Everything" } } } },

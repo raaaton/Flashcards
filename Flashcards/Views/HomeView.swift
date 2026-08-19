@@ -9,7 +9,6 @@ struct HomeView: View {
     @State private var searchText = ""
     @State private var showingNewFolder = false
     @State private var showingNewDeck = false
-    @State private var showingBulkImport = false
     @State private var showingSettings = false
     @State private var folderToEdit: Folder?
     @State private var folderToDelete: Folder?
@@ -50,15 +49,21 @@ struct HomeView: View {
             }
             .navigationTitle("Flashcards")
             .toolbar {
-                ToolbarItem(placement: .topBarTrailing) {
-                    Button("settings.title", systemImage: "gearshape") {
+                ToolbarItem(placement: .topBarLeading) {
+                    Button {
                         showingSettings = true
+                    } label: {
+                        Image(systemName: "gearshape")
+                            .foregroundStyle(.white)
                     }
-                    .foregroundStyle(.white)
+                    .accessibilityLabel("settings.title")
+                }
+                ToolbarItem(placement: .topBarTrailing) {
+                    addMenu
                 }
             }
             .safeAreaInset(edge: .bottom, spacing: 0) {
-                bottomControls
+                bottomSearch
             }
         }
         .sheet(isPresented: $showingNewFolder) {
@@ -66,9 +71,6 @@ struct HomeView: View {
         }
         .sheet(isPresented: $showingNewDeck) {
             DeckFormView()
-        }
-        .sheet(isPresented: $showingBulkImport) {
-            BulkImportView()
         }
         .sheet(isPresented: $showingSettings) {
             SettingsView()
@@ -100,54 +102,83 @@ struct HomeView: View {
 
     private var folderGrid: some View {
         ScrollView {
-            LazyVGrid(columns: columns, spacing: 14) {
-                ForEach(folders) { folder in
-                    NavigationLink {
-                        FolderDetailView(folder: folder)
-                    } label: {
-                        FolderTile(
-                            name: folder.name,
-                            systemImage: folder.iconName,
-                            color: Color(folderHex: folder.colorHex),
-                            deckCount: folder.decks.count
-                        )
-                    }
-                    .buttonStyle(.plain)
-                    .contextMenu {
-                        Button("Modifier", systemImage: "pencil") { folderToEdit = folder }
-                            .foregroundStyle(Theme.accent)
-                        Button("Dupliquer", systemImage: "plus.square.on.square") {
-                            LibraryActions.duplicateFolder(folder, in: modelContext)
-                        }
-                        .foregroundStyle(Theme.accent)
-                        Button(role: .destructive) { folderToDelete = folder } label: {
-                            Label("Supprimer", systemImage: "trash")
-                                .foregroundStyle(.red)
-                        }
-                    }
+            VStack(alignment: .leading, spacing: 14) {
+                Text("Dossiers")
+                    .font(.title2.bold())
+                    .padding(.horizontal)
+
+                if folders.isEmpty {
+                    folderEmptyState
                 }
 
-                if orphanedDeckCount > 0 {
-                    NavigationLink {
-                        FolderDetailView(folder: nil)
-                    } label: {
-                        FolderTile(
-                            name: L10n.text("folder.unfiled"),
-                            systemImage: "tray.fill",
-                            color: .gray,
-                            deckCount: orphanedDeckCount
-                        )
+                LazyVGrid(columns: columns, spacing: 14) {
+                    ForEach(folders) { folder in
+                        NavigationLink {
+                            FolderDetailView(folder: folder)
+                        } label: {
+                            FolderTile(
+                                name: folder.name,
+                                systemImage: folder.iconName,
+                                color: Color(folderHex: folder.colorHex),
+                                deckCount: folder.decks.count
+                            )
+                        }
+                        .buttonStyle(.plain)
+                        .contextMenu {
+                            Button("Modifier", systemImage: "pencil") { folderToEdit = folder }
+                                .foregroundStyle(Theme.accent)
+                            Button("Dupliquer", systemImage: "plus.square.on.square") {
+                                LibraryActions.duplicateFolder(folder, in: modelContext)
+                            }
+                            .foregroundStyle(Theme.accent)
+                            Button(role: .destructive) { folderToDelete = folder } label: {
+                                Label("Supprimer", systemImage: "trash")
+                                    .foregroundStyle(.red)
+                            }
+                        }
                     }
-                    .buttonStyle(.plain)
-                    .transition(.scale(scale: 0.92).combined(with: .opacity))
+
+                    if orphanedDeckCount > 0 {
+                        NavigationLink {
+                            FolderDetailView(folder: nil)
+                        } label: {
+                            FolderTile(
+                                name: L10n.text("folder.unfiled"),
+                                systemImage: "tray.fill",
+                                color: .gray,
+                                deckCount: orphanedDeckCount
+                            )
+                        }
+                        .buttonStyle(.plain)
+                        .transition(.scale(scale: 0.92).combined(with: .opacity))
+                    }
                 }
+                .padding(.horizontal)
             }
-            .padding(.horizontal)
             .padding(.top, 8)
             .padding(.bottom, 96)
         }
+        .scrollDismissesKeyboard(.interactively)
         .animation(.spring(duration: 0.35), value: folders.map(\.id))
         .animation(.spring(duration: 0.35), value: orphanedDeckCount)
+    }
+
+    private var folderEmptyState: some View {
+        VStack(alignment: .leading, spacing: 9) {
+            Text("Aucun dossier pour le moment")
+                .font(.headline)
+            Text("Créez un dossier pour organiser vos decks.")
+                .foregroundStyle(.secondary)
+            Button("Créer un dossier", systemImage: "folder.badge.plus") {
+                showingNewFolder = true
+            }
+            .foregroundStyle(Theme.accent)
+            .padding(.top, 2)
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .padding(18)
+        .background(Theme.cardBackground, in: .rect(cornerRadius: 18, style: .continuous))
+        .padding(.horizontal)
     }
 
     private var searchResults: some View {
@@ -189,41 +220,33 @@ struct HomeView: View {
                 }
             }
         }
+        .scrollDismissesKeyboard(.interactively)
         .animation(.default, value: matchingDecks.map(\.id))
     }
 
-    private var bottomControls: some View {
-        GlassEffectContainer(spacing: 12) {
-            HStack(spacing: 12) {
-                HStack(spacing: 10) {
-                    Image(systemName: "magnifyingglass")
+    private var bottomSearch: some View {
+        HStack(spacing: 10) {
+            Image(systemName: "magnifyingglass")
+                .foregroundStyle(.white)
+
+            TextField("Rechercher", text: $searchText)
+                .textFieldStyle(.plain)
+                .submitLabel(.search)
+
+            if !searchText.isEmpty {
+                Button {
+                    searchText = ""
+                } label: {
+                    Image(systemName: "xmark.circle.fill")
                         .foregroundStyle(.white)
-
-                    TextField("Decks et cartes", text: $searchText)
-                        .textFieldStyle(.plain)
-                        .submitLabel(.search)
-
-                    if !searchText.isEmpty {
-                        Button {
-                            searchText = ""
-                        } label: {
-                            Image(systemName: "xmark.circle.fill")
-                                .foregroundStyle(.white)
-                        }
-                        .buttonStyle(.plain)
-                        .accessibilityLabel("Effacer la recherche")
-                    }
                 }
-                .padding(.horizontal, 16)
-                .frame(maxWidth: .infinity, minHeight: 52)
-                .glassEffect(.regular.interactive(), in: .rect(cornerRadius: 18, style: .continuous))
-
-                addMenu
-                    .frame(width: 52, height: 52)
-                    .buttonStyle(.glassProminent)
-                    .buttonBorderShape(.circle)
+                .buttonStyle(.plain)
+                .accessibilityLabel("Effacer la recherche")
             }
         }
+        .padding(.horizontal, 17)
+        .frame(maxWidth: .infinity, minHeight: 52)
+        .glassEffect(.regular.interactive(), in: Capsule())
         .padding(.horizontal)
         .padding(.vertical, 8)
     }
@@ -236,11 +259,6 @@ struct HomeView: View {
             .foregroundStyle(Theme.accent)
             Button("Nouveau dossier", systemImage: "folder.badge.plus") {
                 showingNewFolder = true
-            }
-            .foregroundStyle(Theme.accent)
-            Divider()
-            Button("Importer en masse", systemImage: "text.badge.plus") {
-                showingBulkImport = true
             }
             .foregroundStyle(Theme.accent)
         } label: {
