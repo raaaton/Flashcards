@@ -23,17 +23,20 @@ jobs:
           xcrun --sdk iphoneos --show-sdk-version
           gh --version
 
-      - name: Prepare optional app icon
+      - name: Verify app icon
         run: |
           set -euxo pipefail
-          if test -f AppIcon.png; then
-            test "$(sips -g pixelWidth AppIcon.png | awk '/pixelWidth/ {print $2}')" = "1024"
-            test "$(sips -g pixelHeight AppIcon.png | awk '/pixelHeight/ {print $2}')" = "1024"
-            test "$(sips -g hasAlpha AppIcon.png | awk '/hasAlpha/ {print $2}')" = "no"
-            cp AppIcon.png Flashcards/Assets.xcassets/AppIcon.appiconset/AppIcon.png
-            plutil -replace images.0.filename -string AppIcon.png \
-              Flashcards/Assets.xcassets/AppIcon.appiconset/Contents.json
-          fi
+          SOURCE_ICON="Flashcards/icon.png"
+          CATALOG_ICON="Flashcards/Assets.xcassets/AppIcon.appiconset/AppIcon.png"
+          test -f "$SOURCE_ICON"
+          test -f "$CATALOG_ICON"
+          test "$(sips -g pixelWidth "$SOURCE_ICON" | awk '/pixelWidth/ {print $2}')" = "1024"
+          test "$(sips -g pixelHeight "$SOURCE_ICON" | awk '/pixelHeight/ {print $2}')" = "1024"
+          cmp "$SOURCE_ICON" "$CATALOG_ICON"
+          jq -e '.images == [{"filename":"AppIcon.png","idiom":"universal","platform":"ios","size":"1024x1024"}]' \
+            Flashcards/Assets.xcassets/AppIcon.appiconset/Contents.json
+          test "$(grep -c 'ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;' \
+            Flashcards.xcodeproj/project.pbxproj)" -eq 2
 
       - name: Audit offline single-target project
         run: |
@@ -147,6 +150,8 @@ jobs:
             -maxdepth 1 -type d -name '*.app' -print -quit)"
           test -n "$APP_PATH"
           test -d "$APP_PATH"
+          test -s "$APP_PATH/Assets.car"
+          plutil -p "$APP_PATH/Info.plist" | grep -q 'AppIcon'
           rm -rf Payload Flashcards.ipa
           mkdir Payload
           cp -R "$APP_PATH" Payload/
