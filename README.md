@@ -15,9 +15,9 @@ Native iOS flashcards application, fully local and offline. It lets you manage f
 
 1. Open the [latest Release](https://github.com/raaaton/Flashcards/releases/latest).
 2. Download `Flashcards.ipa`.
-3. Import the file into SideStore on your iPhone.
+3. Import the file into SideStore or AltStore (not Altstore PAL) on your iPhone.
 
-The IPA is unsigned. SideStore handles signing and renewal using the user's Apple ID.
+The IPA is unsigned. SideStore and AltStore handle signing and renewal using the user's Apple ID.
 
 ## Build
 
