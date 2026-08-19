@@ -24,7 +24,7 @@ struct BackupView: View {
     var body: some View {
         NavigationStack {
             List {
-                Section("Exporter") {
+                Section {
                     if let exportURL {
                         ShareLink(item: exportURL) {
                             Label(
@@ -46,15 +46,19 @@ struct BackupView: View {
                         LabeledContent("Decks", value: "\(decks.count)")
                         LabeledContent("Cartes", value: "\(decks.reduce(0) { $0 + $1.cards.count })")
                     }
+                } header: {
+                    Text("Exporter")
                 } footer: {
                     Text("Le fichier contient le texte, les dossiers, l’ordre et les statistiques de progression.")
                 }
 
                 if deck == nil {
-                    Section("Importer") {
+                    Section {
                         Button("Choisir un fichier JSON", systemImage: "doc.badge.plus") {
                             showingFileImporter = true
                         }
+                    } header: {
+                        Text("Importer")
                     } footer: {
                         Text("L’import fusionne les éléments par identifiant sans supprimer le contenu local absent du fichier.")
                     }
