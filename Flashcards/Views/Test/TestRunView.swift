@@ -21,7 +21,8 @@ struct TestRunView: View {
         deck: Deck,
         types: Set<TestQuestionType>,
         questionCount: Int,
-        direction: StudyDirection
+        direction: StudyDirection,
+        shuffle: Bool
     ) {
         self.deck = deck
         let cards = deck.cards
@@ -31,7 +32,8 @@ struct TestRunView: View {
             cards: cards,
             types: types,
             count: questionCount,
-            direction: direction
+            direction: direction,
+            shuffle: shuffle
         )
         _session = State(initialValue: TestSessionState(questions: questions))
     }

@@ -14,6 +14,7 @@ enum TestSessionSmoke {
             shuffle: false
         )
         precondition(questions.count == 5)
+        precondition(questions.map(\.cardID) == cards.map(\.id))
         precondition(Set(questions.prefix(3).map(\.type)).count == 3)
 
         let qcm = questions.first { $0.type == .multipleChoice }!
