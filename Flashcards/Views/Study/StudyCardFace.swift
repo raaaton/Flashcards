@@ -3,7 +3,20 @@ import SwiftUI
 struct StudyCardFace: View, Animatable {
     let front: String
     let back: String
+    let obscuresContent: Bool
     var angle: Double
+
+    init(
+        front: String,
+        back: String,
+        obscuresContent: Bool = false,
+        angle: Double
+    ) {
+        self.front = front
+        self.back = back
+        self.obscuresContent = obscuresContent
+        self.angle = angle
+    }
 
     nonisolated var animatableData: Double {
         get { angle }
@@ -42,6 +55,7 @@ struct StudyCardFace: View, Animatable {
                 .minimumScaleFactor(0.72)
                 .padding(30)
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
+                .opacity(obscuresContent ? 0 : 1)
         }
     }
 }

@@ -234,6 +234,7 @@ struct StudyView: View {
                 StudyCardFace(
                     front: item.front,
                     back: item.back,
+                    obscuresContent: !isActive && isFlipAnimating,
                     angle: isActive ? flipAngle : 0
                 )
             }
@@ -362,7 +363,7 @@ struct StudyView: View {
                 }
                 .buttonStyle(.glassProminent)
                 .tint(.red)
-                .disabled(isCommitting)
+                .allowsHitTesting(!isCommitting)
 
                 Button {
                     commit(.knew, predictedWidth: exitDistance, exitDistance: exitDistance)
@@ -372,7 +373,7 @@ struct StudyView: View {
                 }
                 .buttonStyle(.glassProminent)
                 .tint(.green)
-                .disabled(isCommitting)
+                .allowsHitTesting(!isCommitting)
             }
         }
     }
