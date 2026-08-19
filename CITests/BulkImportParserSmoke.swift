@@ -27,7 +27,7 @@ enum BulkImportParserSmoke {
         precondition(customResult.cards.map(\.term) == ["un", "deux"])
 
         let blankResult = BulkImportParser.parse(
-            BulkImportInput(text: "\n\n", termDelimiter: "\t", cardDelimiter: "\n")
+            BulkImportInput(text: "\n\n", termDelimiter: ":", cardDelimiter: "\n")
         )
         precondition(blankResult.cards.isEmpty)
         precondition(blankResult.ignoredEmptyRecords == 3)

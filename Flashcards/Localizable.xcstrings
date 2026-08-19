@@ -137,7 +137,6 @@
     "Touchez deux fois pour retourner la carte, ou utilisez les actions d’étude" : { "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "Double-tap to flip the card, or use the study actions" } } } },
     "Je savais" : { "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "I Knew It" } } } },
     "À revoir" : { "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "Review" } } } },
-    "Recommencer" : { "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "Start Again" } } } },
     "Réinitialiser la progression du deck" : { "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "Reset Deck Progress" } } } },
     "Sens" : { "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "Direction" } } } },
     "Réinitialiser la progression" : { "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "Reset Progress" } } } },
