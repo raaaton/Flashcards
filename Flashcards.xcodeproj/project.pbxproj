@@ -14,6 +14,12 @@
 		B10000000000000000000005 /* Card.swift in Sources */ = {isa = PBXBuildFile; fileRef = C10000000000000000000005 /* Card.swift */; };
 		B10000000000000000000006 /* HomeView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C10000000000000000000006 /* HomeView.swift */; };
 		B10000000000000000000007 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = C10000000000000000000007 /* Assets.xcassets */; };
+		B10000000000000000000008 /* DeckRow.swift in Sources */ = {isa = PBXBuildFile; fileRef = C10000000000000000000009 /* DeckRow.swift */; };
+		B10000000000000000000009 /* FolderFormView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C1000000000000000000000A /* FolderFormView.swift */; };
+		B1000000000000000000000A /* DeckFormView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C1000000000000000000000B /* DeckFormView.swift */; };
+		B1000000000000000000000B /* CardFormView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C1000000000000000000000C /* CardFormView.swift */; };
+		B1000000000000000000000C /* EditCardsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C1000000000000000000000D /* EditCardsView.swift */; };
+		B1000000000000000000000D /* DeckDetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C1000000000000000000000E /* DeckDetailView.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -25,6 +31,12 @@
 		C10000000000000000000006 /* HomeView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HomeView.swift; sourceTree = "<group>"; };
 		C10000000000000000000007 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		C10000000000000000000008 /* Flashcards.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Flashcards.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		C10000000000000000000009 /* DeckRow.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DeckRow.swift; sourceTree = "<group>"; };
+		C1000000000000000000000A /* FolderFormView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FolderFormView.swift; sourceTree = "<group>"; };
+		C1000000000000000000000B /* DeckFormView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DeckFormView.swift; sourceTree = "<group>"; };
+		C1000000000000000000000C /* CardFormView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CardFormView.swift; sourceTree = "<group>"; };
+		C1000000000000000000000D /* EditCardsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EditCardsView.swift; sourceTree = "<group>"; };
+		C1000000000000000000000E /* DeckDetailView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DeckDetailView.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -72,8 +84,22 @@
 			isa = PBXGroup;
 			children = (
 				C10000000000000000000006 /* HomeView.swift */,
+				E10000000000000000000005 /* Library */,
 			);
 			path = Views;
+			sourceTree = "<group>";
+		};
+		E10000000000000000000005 /* Library */ = {
+			isa = PBXGroup;
+			children = (
+				C10000000000000000000009 /* DeckRow.swift */,
+				C1000000000000000000000A /* FolderFormView.swift */,
+				C1000000000000000000000B /* DeckFormView.swift */,
+				C1000000000000000000000C /* CardFormView.swift */,
+				C1000000000000000000000D /* EditCardsView.swift */,
+				C1000000000000000000000E /* DeckDetailView.swift */,
+			);
+			path = Library;
 			sourceTree = "<group>";
 		};
 		E10000000000000000000006 /* Products */ = {
@@ -159,6 +185,12 @@
 				B10000000000000000000004 /* Deck.swift in Sources */,
 				B10000000000000000000005 /* Card.swift in Sources */,
 				B10000000000000000000006 /* HomeView.swift in Sources */,
+				B10000000000000000000008 /* DeckRow.swift in Sources */,
+				B10000000000000000000009 /* FolderFormView.swift in Sources */,
+				B1000000000000000000000A /* DeckFormView.swift in Sources */,
+				B1000000000000000000000B /* CardFormView.swift in Sources */,
+				B1000000000000000000000C /* EditCardsView.swift in Sources */,
+				B1000000000000000000000D /* DeckDetailView.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
