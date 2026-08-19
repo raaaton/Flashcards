@@ -1,24 +1,24 @@
 # Flashcards
 
-Application iOS native de flashcards, entièrement locale et hors ligne. Elle permet de gérer des dossiers, decks et cartes, d’importer plusieurs centaines de cartes depuis du texte, d’étudier par rounds, de générer des tests et de sauvegarder la base en JSON.
+Native iOS flashcards application, fully local and offline. It lets you manage folders, decks, and cards, import hundreds of cards from text, study using rounds, generate tests, and back up the entire database as JSON.
 
-## Caractéristiques
+## Features
 
-- SwiftUI, SwiftData et APIs Apple uniquement
-- iOS 27.0 minimum, interface française en dark mode
-- aucun compte, serveur, tracking, achat ou appel réseau
-- import en masse avec aperçu et délimiteurs configurables
-- modes Flashcards et Test (QCM, Vrai/Faux, réponse écrite)
-- export/import JSON fusionnel
+* SwiftUI, SwiftData, and Apple APIs only
+* iOS 27.0 minimum, French interface with dark mode
+* no account, server, tracking, purchases, or network requests
+* bulk import with live preview and configurable delimiters
+* Flashcards and Test modes (multiple choice, True/False, written answers)
+* merge-based JSON export/import
 
-## Installer l’IPA
+## Install the IPA
 
-1. Ouvrir la [dernière Release](https://github.com/raaaton/Flashcards/releases/latest).
-2. Télécharger `Flashcards.ipa`.
-3. Importer le fichier dans SideStore sur l’iPhone.
+1. Open the [latest Release](https://github.com/raaaton/Flashcards/releases/latest).
+2. Download `Flashcards.ipa`.
+3. Import the file into SideStore on your iPhone.
 
-L’IPA est non signée. SideStore gère la signature et son renouvellement avec l’identifiant Apple de l’utilisateur.
+The IPA is unsigned. SideStore handles signing and renewal using the user's Apple ID.
 
 ## Build
 
-Chaque push sur `main` utilise le runner GitHub Actions `xcode-27`, compile pour `iphoneos` sans signature, effectue les smoke tests et publie une Release contenant l’IPA.
+Every push to `main` uses the GitHub Actions `xcode-27` runner, builds for `iphoneos` without signing, runs smoke tests, and publishes a Release containing the IPA.
