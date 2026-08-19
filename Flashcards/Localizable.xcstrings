@@ -186,7 +186,8 @@
     "Sans dossier" : { "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "Unfiled" } } } },
     "Test" : { "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "Test" } } } },
     "Vrai" : { "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "True" } } } },
-    "Faux" : { "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "False" } } } }
+    "Faux" : { "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "False" } } } },
+    "Effacer la recherche" : { "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "Clear Search" } } } }
   },
   "version" : "1.0"
 }

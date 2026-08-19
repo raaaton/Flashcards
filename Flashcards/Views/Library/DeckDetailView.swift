@@ -40,6 +40,7 @@ struct DeckDetailView: View {
                     StudySetupView(deck: deck)
                 } label: {
                     Label("Flashcards", systemImage: "rectangle.on.rectangle.angled")
+                        .foregroundStyle(.white)
                 }
                 .disabled(deck.cards.isEmpty)
 
@@ -47,6 +48,7 @@ struct DeckDetailView: View {
                     TestSetupView(deck: deck)
                 } label: {
                     Label("Test", systemImage: "checklist")
+                        .foregroundStyle(.white)
                 }
                 .disabled(deck.cards.isEmpty)
             }
@@ -56,6 +58,7 @@ struct DeckDetailView: View {
                     EditCardsView(deck: deck)
                 } label: {
                     Label("Modifier les cartes", systemImage: "square.and.pencil")
+                        .foregroundStyle(.white)
                 }
 
                 if orderedCards.isEmpty {
@@ -83,9 +86,11 @@ struct DeckDetailView: View {
             ToolbarItem(placement: .topBarTrailing) {
                 Menu {
                     Button("Modifier le deck", systemImage: "pencil") { showingEditDeck = true }
+                        .foregroundStyle(.white)
                     Button("Exporter en JSON", systemImage: "square.and.arrow.up") {
                         showingExport = true
                     }
+                    .foregroundStyle(.white)
                     Button(role: .destructive) {
                         confirmingDeletion = true
                     } label: {

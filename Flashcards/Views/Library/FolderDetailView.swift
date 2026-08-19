@@ -64,9 +64,11 @@ struct FolderDetailView: View {
                 ToolbarItem(placement: .topBarTrailing) {
                     Menu {
                         Button("Modifier", systemImage: "pencil") { showingEditFolder = true }
+                            .foregroundStyle(.white)
                         Button("Dupliquer", systemImage: "plus.square.on.square") {
                             LibraryActions.duplicateFolder(folder, in: modelContext)
                         }
+                        .foregroundStyle(.white)
                         Button(role: .destructive) {
                             confirmingFolderDeletion = true
                         } label: {
@@ -86,9 +88,11 @@ struct FolderDetailView: View {
                     Button("Nouveau deck", systemImage: "rectangle.stack.badge.plus") {
                         showingNewDeck = true
                     }
+                    .foregroundStyle(.white)
                     Button("Importer en masse", systemImage: "text.badge.plus") {
                         showingBulkImport = true
                     }
+                    .foregroundStyle(.white)
                 } label: {
                     Label("Ajouter", systemImage: "plus")
                         .foregroundStyle(.white)
@@ -138,17 +142,22 @@ struct FolderDetailView: View {
         .swipeActions(edge: .trailing) {
             Button(role: .destructive) { deckToDelete = deck } label: {
                 Label("Supprimer", systemImage: "trash")
+                    .foregroundStyle(.red)
             }
+            .tint(Theme.cardBackground)
             Button { LibraryActions.duplicateDeck(deck, in: modelContext) } label: {
                 Label("Dupliquer", systemImage: "plus.square.on.square")
+                    .foregroundStyle(.white)
             }
             .tint(Theme.accent)
         }
         .contextMenu {
             Button("Modifier", systemImage: "pencil") { deckToEdit = deck }
+                .foregroundStyle(.white)
             Button("Dupliquer", systemImage: "plus.square.on.square") {
                 LibraryActions.duplicateDeck(deck, in: modelContext)
             }
+            .foregroundStyle(.white)
             Button(role: .destructive) { deckToDelete = deck } label: {
                 Label("Supprimer", systemImage: "trash")
                     .foregroundStyle(.red)

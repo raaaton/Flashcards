@@ -223,6 +223,7 @@ struct TestRunView: View {
 
             Button("Valider", systemImage: "checkmark") { submitWrittenAnswer() }
                 .buttonStyle(.borderedProminent)
+                .foregroundStyle(.white)
                 .disabled(
                     isTransitioning
                         || writtenAnswer.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
@@ -280,8 +281,10 @@ struct TestRunView: View {
                     Button("Refaire uniquement les erreurs", systemImage: "arrow.counterclockwise") {
                         retryErrors()
                     }
+                    .foregroundStyle(.white)
                 }
                 Button("Terminer", systemImage: "checkmark") { dismiss() }
+                    .foregroundStyle(.white)
             }
         }
         .navigationTitle("Résultats")

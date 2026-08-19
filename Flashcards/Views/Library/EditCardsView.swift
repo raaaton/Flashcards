@@ -32,8 +32,16 @@ struct EditCardsView: View {
                 }
                 .buttonStyle(.plain)
                 .accessibilityHint("Modifier cette carte")
+                .swipeActions(edge: .trailing) {
+                    Button(role: .destructive) {
+                        deleteCard(card)
+                    } label: {
+                        Label("Supprimer", systemImage: "trash")
+                            .foregroundStyle(.red)
+                    }
+                    .tint(Theme.cardBackground)
+                }
             }
-            .onDelete(perform: deleteCards)
             .onMove(perform: moveCards)
         }
         .overlay {
@@ -54,7 +62,9 @@ struct EditCardsView: View {
             ToolbarItem(placement: .topBarTrailing) {
                 Menu {
                     Button("Ajouter une carte", systemImage: "plus") { showingNewCard = true }
+                        .foregroundStyle(.white)
                     Button("Importer en masse", systemImage: "text.badge.plus") { showingBulkImport = true }
+                        .foregroundStyle(.white)
                 } label: {
                     Label("Ajouter", systemImage: "plus")
                         .foregroundStyle(.white)
@@ -72,14 +82,11 @@ struct EditCardsView: View {
         }
     }
 
-    private func deleteCards(at offsets: IndexSet) {
+    private func deleteCard(_ card: Card) {
         let cards = orderedCards
-        let removedIDs = Set(offsets.map { cards[$0].id })
-        for offset in offsets {
-            modelContext.delete(cards[offset])
-        }
-        for (position, card) in cards.filter({ !removedIDs.contains($0.id) }).enumerated() {
-            card.position = position
+        modelContext.delete(card)
+        for (position, remainingCard) in cards.filter({ $0.id != card.id }).enumerated() {
+            remainingCard.position = position
         }
         deck.updatedAt = .now
         try? modelContext.save()

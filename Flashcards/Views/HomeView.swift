@@ -10,7 +10,6 @@ struct HomeView: View {
     @State private var showingNewFolder = false
     @State private var showingNewDeck = false
     @State private var showingBulkImport = false
-    @State private var showingBackup = false
     @State private var showingSettings = false
     @State private var folderToEdit: Folder?
     @State private var folderToDelete: Folder?
@@ -50,27 +49,16 @@ struct HomeView: View {
                 }
             }
             .navigationTitle("Flashcards")
-            .searchable(text: $searchText, prompt: "Decks et cartes")
-            .searchToolbarBehavior(.minimize)
             .toolbar {
-                ToolbarItem(placement: .topBarLeading) {
-                    Button("Sauvegarde", systemImage: "externaldrive") {
-                        showingBackup = true
-                    }
-                    .foregroundStyle(.white)
-                }
-
                 ToolbarItem(placement: .topBarTrailing) {
                     Button("settings.title", systemImage: "gearshape") {
                         showingSettings = true
                     }
                     .foregroundStyle(.white)
                 }
-
-                ToolbarItemGroup(placement: .bottomBar) {
-                    Spacer()
-                    addMenu
-                }
+            }
+            .safeAreaInset(edge: .bottom, spacing: 0) {
+                bottomControls
             }
         }
         .sheet(isPresented: $showingNewFolder) {
@@ -81,9 +69,6 @@ struct HomeView: View {
         }
         .sheet(isPresented: $showingBulkImport) {
             BulkImportView()
-        }
-        .sheet(isPresented: $showingBackup) {
-            BackupView()
         }
         .sheet(isPresented: $showingSettings) {
             SettingsView()
@@ -130,9 +115,11 @@ struct HomeView: View {
                     .buttonStyle(.plain)
                     .contextMenu {
                         Button("Modifier", systemImage: "pencil") { folderToEdit = folder }
+                            .foregroundStyle(.white)
                         Button("Dupliquer", systemImage: "plus.square.on.square") {
                             LibraryActions.duplicateFolder(folder, in: modelContext)
                         }
+                        .foregroundStyle(.white)
                         Button(role: .destructive) { folderToDelete = folder } label: {
                             Label("Supprimer", systemImage: "trash")
                                 .foregroundStyle(.red)
@@ -140,23 +127,27 @@ struct HomeView: View {
                     }
                 }
 
-                NavigationLink {
-                    FolderDetailView(folder: nil)
-                } label: {
-                    FolderTile(
-                        name: L10n.text("folder.unfiled"),
-                        systemImage: "tray.fill",
-                        color: .gray,
-                        deckCount: orphanedDeckCount
-                    )
+                if orphanedDeckCount > 0 {
+                    NavigationLink {
+                        FolderDetailView(folder: nil)
+                    } label: {
+                        FolderTile(
+                            name: L10n.text("folder.unfiled"),
+                            systemImage: "tray.fill",
+                            color: .gray,
+                            deckCount: orphanedDeckCount
+                        )
+                    }
+                    .buttonStyle(.plain)
+                    .transition(.scale(scale: 0.92).combined(with: .opacity))
                 }
-                .buttonStyle(.plain)
             }
             .padding(.horizontal)
             .padding(.top, 8)
             .padding(.bottom, 96)
         }
         .animation(.spring(duration: 0.35), value: folders.map(\.id))
+        .animation(.spring(duration: 0.35), value: orphanedDeckCount)
     }
 
     private var searchResults: some View {
@@ -176,17 +167,22 @@ struct HomeView: View {
                     .swipeActions(edge: .trailing) {
                         Button(role: .destructive) { deckToDelete = deck } label: {
                             Label("Supprimer", systemImage: "trash")
+                                .foregroundStyle(.red)
                         }
+                        .tint(Theme.cardBackground)
                         Button { LibraryActions.duplicateDeck(deck, in: modelContext) } label: {
                             Label("Dupliquer", systemImage: "plus.square.on.square")
+                                .foregroundStyle(.white)
                         }
                         .tint(Theme.accent)
                     }
                     .contextMenu {
                         Button("Modifier", systemImage: "pencil") { deckToEdit = deck }
+                            .foregroundStyle(.white)
                         Button("Dupliquer", systemImage: "plus.square.on.square") {
                             LibraryActions.duplicateDeck(deck, in: modelContext)
                         }
+                        .foregroundStyle(.white)
                         Button(role: .destructive) { deckToDelete = deck } label: {
                             Label("Supprimer", systemImage: "trash")
                                 .foregroundStyle(.red)
@@ -198,22 +194,62 @@ struct HomeView: View {
         .animation(.default, value: matchingDecks.map(\.id))
     }
 
+    private var bottomControls: some View {
+        GlassEffectContainer(spacing: 12) {
+            HStack(spacing: 12) {
+                HStack(spacing: 10) {
+                    Image(systemName: "magnifyingglass")
+                        .foregroundStyle(.white)
+
+                    TextField("Decks et cartes", text: $searchText)
+                        .textFieldStyle(.plain)
+                        .submitLabel(.search)
+
+                    if !searchText.isEmpty {
+                        Button {
+                            searchText = ""
+                        } label: {
+                            Image(systemName: "xmark.circle.fill")
+                                .foregroundStyle(.white)
+                        }
+                        .buttonStyle(.plain)
+                        .accessibilityLabel("Effacer la recherche")
+                    }
+                }
+                .padding(.horizontal, 16)
+                .frame(maxWidth: .infinity, minHeight: 52)
+                .glassEffect(.regular.interactive(), in: .rect(cornerRadius: 18, style: .continuous))
+
+                addMenu
+                    .frame(width: 52, height: 52)
+                    .buttonStyle(.glassProminent)
+                    .buttonBorderShape(.circle)
+            }
+        }
+        .padding(.horizontal)
+        .padding(.vertical, 8)
+    }
+
     private var addMenu: some View {
         Menu {
             Button("Nouveau deck", systemImage: "rectangle.stack.badge.plus") {
                 showingNewDeck = true
             }
+            .foregroundStyle(.white)
             Button("Nouveau dossier", systemImage: "folder.badge.plus") {
                 showingNewFolder = true
             }
+            .foregroundStyle(.white)
             Divider()
             Button("Importer en masse", systemImage: "text.badge.plus") {
                 showingBulkImport = true
             }
+            .foregroundStyle(.white)
         } label: {
-            Label("Ajouter", systemImage: "plus")
+            Image(systemName: "plus")
                 .foregroundStyle(.white)
         }
+        .accessibilityLabel("Ajouter")
         .accessibilityHint("Créer un deck ou un dossier")
     }
 

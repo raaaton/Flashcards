@@ -84,6 +84,7 @@ struct StudyView: View {
                         flipCard()
                     }
                     .buttonStyle(.glassProminent)
+                    .foregroundStyle(.white)
                     .disabled(isCommitting)
                 }
             }
@@ -348,6 +349,7 @@ struct StudyView: View {
             Button("Recommencer", systemImage: "arrow.counterclockwise") {
                 dismiss()
             }
+            .foregroundStyle(.white)
             .buttonStyle(.borderedProminent)
             .controlSize(.large)
 
