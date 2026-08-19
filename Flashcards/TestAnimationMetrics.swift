@@ -1,7 +1,6 @@
 import Foundation
 
 enum TestAnimationMetrics {
-    static let feedbackMilliseconds = 360
     static let transitionMilliseconds = 210
     static let transitionDistance: CGFloat = 26
     static let transitionScale: CGFloat = 0.985

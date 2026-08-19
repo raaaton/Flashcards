@@ -109,6 +109,17 @@ struct TestRunView: View {
                 if let feedbackIsCorrect {
                     feedbackBanner(isCorrect: feedbackIsCorrect, question: question)
                         .transition(.opacity.combined(with: .scale(scale: 0.98)))
+
+                    Button(session.isLastQuestion ? "test.see_results" : "common.next") {
+                        advanceAfterFeedback()
+                    }
+                    .font(.headline)
+                    .foregroundStyle(.white)
+                    .frame(maxWidth: .infinity)
+                    .padding(.vertical, 14)
+                    .background(Theme.accent, in: .rect(cornerRadius: 16, style: .continuous))
+                    .buttonStyle(.plain)
+                    .disabled(isTransitioning)
                 }
             }
             .padding()
@@ -128,24 +139,24 @@ struct TestRunView: View {
                 ))
                     .font(.subheadline.weight(.semibold))
                 Spacer()
-                Text("\(session.currentIndex) / \(session.questions.count)")
+                Text("\(session.answers.count) / \(session.questions.count)")
                     .font(.subheadline.monospacedDigit())
                     .foregroundStyle(.secondary)
             }
 
             ProgressView(
-                value: Double(session.currentIndex),
+                value: Double(session.answers.count),
                 total: Double(max(session.questions.count, 1))
             )
             .animation(
                 reduceMotion ? nil : .easeOut(duration: 0.2),
-                value: session.currentIndex
+                value: session.answers.count
             )
             .accessibilityLabel("Progression du test")
             .accessibilityValue(
                 L10n.format(
                     "test.progress.value",
-                    Int64(session.currentIndex),
+                    Int64(session.answers.count),
                     Int64(session.questions.count)
                 )
             )
@@ -173,7 +184,7 @@ struct TestRunView: View {
                         .scaleEffect(selectedAnswer == choice ? 1.012 : 1)
                 }
                 .buttonStyle(.plain)
-                .disabled(isTransitioning)
+                .disabled(isTransitioning || feedbackIsCorrect != nil)
             }
         }
         .animation(.easeOut(duration: 0.15), value: selectedAnswer)
@@ -209,7 +220,7 @@ struct TestRunView: View {
             .tint(verdictTint(canonicalAnswer, question: question))
             .frame(maxWidth: .infinity)
             .scaleEffect(selectedAnswer == canonicalAnswer ? 1.025 : 1)
-            .disabled(isTransitioning)
+            .disabled(isTransitioning || feedbackIsCorrect != nil)
             .animation(.easeOut(duration: 0.15), value: selectedAnswer)
     }
 
@@ -220,7 +231,7 @@ struct TestRunView: View {
                 .lineLimit(2...6)
                 .submitLabel(.done)
                 .focused($writtenFieldIsFocused)
-                .disabled(isTransitioning)
+                .disabled(isTransitioning || feedbackIsCorrect != nil)
                 .onSubmit { submitWrittenAnswer() }
 
             Button("Valider", systemImage: "checkmark") { submitWrittenAnswer() }
@@ -228,6 +239,7 @@ struct TestRunView: View {
                 .foregroundStyle(.white)
                 .disabled(
                     isTransitioning
+                        || feedbackIsCorrect != nil
                         || writtenAnswer.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
                 )
         }
@@ -373,40 +385,44 @@ struct TestRunView: View {
 
     private func submit(_ answer: String) {
         guard !isTransitioning,
-              let question = session.currentQuestion else { return }
+              feedbackIsCorrect == nil,
+              session.currentQuestion != nil else { return }
 
-        isTransitioning = true
-        selectedAnswer = answer
-        feedbackIsCorrect = answersMatch(answer, question.correctAnswer)
+        guard let record = session.submit(answer: answer) else { return }
+        withAnimation(.easeOut(duration: 0.16)) {
+            selectedAnswer = answer
+            feedbackIsCorrect = record.isCorrect
+        }
         writtenFieldIsFocused = false
-        HapticService.play(feedbackIsCorrect == true ? .correct : .wrong)
+        HapticService.play(record.isCorrect ? .correct : .wrong)
+        persist(record)
+    }
+
+    private func advanceAfterFeedback() {
+        guard !isTransitioning, session.currentAnswer != nil else { return }
+        isTransitioning = true
+        HapticService.play(.selection)
+
+        let completesTest = session.isLastQuestion
+        let transitionAnimation: Animation = reduceMotion
+            ? .easeOut(duration: 0.12)
+            : .spring(
+                response: TestAnimationMetrics.transitionResponse,
+                dampingFraction: TestAnimationMetrics.transitionDamping
+            )
+
+        withAnimation(transitionAnimation) {
+            _ = session.advance()
+            selectedAnswer = nil
+            feedbackIsCorrect = nil
+            writtenAnswer = ""
+        }
+
+        if completesTest && session.score == 100 {
+            celebratePerfectScore()
+        }
 
         Task { @MainActor in
-            try? await Task.sleep(for: .milliseconds(TestAnimationMetrics.feedbackMilliseconds))
-            guard session.currentQuestion?.id == question.id else { return }
-
-            let transitionAnimation: Animation = reduceMotion
-                ? .easeOut(duration: 0.12)
-                : .spring(
-                    response: TestAnimationMetrics.transitionResponse,
-                    dampingFraction: TestAnimationMetrics.transitionDamping
-                )
-
-            let record = withAnimation(transitionAnimation) {
-                let submitted = session.submit(answer: answer)
-                selectedAnswer = nil
-                feedbackIsCorrect = nil
-                writtenAnswer = ""
-                return submitted
-            }
-
-            if let record {
-                persist(record)
-            }
-            if session.isComplete && session.score == 100 {
-                celebratePerfectScore()
-            }
-
             try? await Task.sleep(for: .milliseconds(TestAnimationMetrics.transitionMilliseconds))
             isTransitioning = false
         }

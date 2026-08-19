@@ -169,6 +169,7 @@ struct TestSessionState: Equatable, Sendable {
     private(set) var questions: [TestQuestion]
     private(set) var currentIndex = 0
     private(set) var answers: [TestAnswerRecord] = []
+    private(set) var currentAnswer: TestAnswerRecord?
 
     init(questions: [TestQuestion]) {
         self.questions = questions
@@ -183,6 +184,10 @@ struct TestSessionState: Equatable, Sendable {
         currentIndex >= questions.count
     }
 
+    var isLastQuestion: Bool {
+        !questions.isEmpty && currentIndex == questions.count - 1
+    }
+
     var correctCount: Int {
         answers.count(where: \.isCorrect)
     }
@@ -194,7 +199,7 @@ struct TestSessionState: Equatable, Sendable {
 
     @discardableResult
     mutating func submit(answer: String) -> TestAnswerRecord? {
-        guard let question = currentQuestion else { return nil }
+        guard let question = currentQuestion, currentAnswer == nil else { return nil }
         let isCorrect = TestQuestionFactory.normalize(answer)
             == TestQuestionFactory.normalize(question.correctAnswer)
         let record = TestAnswerRecord(
@@ -204,8 +209,16 @@ struct TestSessionState: Equatable, Sendable {
             wasOverridden: false
         )
         answers.append(record)
-        currentIndex += 1
+        currentAnswer = record
         return record
+    }
+
+    @discardableResult
+    mutating func advance() -> Bool {
+        guard currentAnswer != nil else { return false }
+        currentAnswer = nil
+        currentIndex += 1
+        return true
     }
 
     @discardableResult
@@ -222,5 +235,6 @@ struct TestSessionState: Equatable, Sendable {
         questions = answers.filter { !$0.isCorrect }.map(\.question)
         currentIndex = 0
         answers = []
+        currentAnswer = nil
     }
 }

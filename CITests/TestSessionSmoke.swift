@@ -38,6 +38,12 @@ enum TestSessionSmoke {
         correctSession.submit(answer: "  eleve   APPLIQUÉ ")
         precondition(correctSession.correctCount == 1)
         precondition(correctSession.score == 100)
+        precondition(!correctSession.isComplete)
+        precondition(correctSession.submit(answer: "double") == nil)
+        precondition(correctSession.currentIndex == 0)
+        precondition(correctSession.advance())
+        precondition(correctSession.isComplete)
+        precondition(!correctSession.advance())
 
         var overrideSession = TestSessionState(questions: [written])
         overrideSession.submit(answer: "une formulation équivalente")
