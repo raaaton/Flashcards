@@ -47,12 +47,23 @@ jobs:
           if grep -R -n -E 'cloudKitDatabase:[[:space:]]+\.(automatic|private)' Flashcards; then
             exit 1
           fi
+          grep -q 'static let accent = Color.blue' Flashcards/Theme.swift
+          test -z "$(find Flashcards/Assets.xcassets -name 'AccentColor.colorset' -print -quit)"
           if grep -R -n -E 'StudyRound|currentRound|nextRound|roundNumber|feedbackMilliseconds|card\(s\)|carte\(s\)|Tabulation|accentHex' \
             Flashcards CITests; then
             exit 1
           fi
+          grep -q 'ToolbarItem(placement: .topBarLeading)' Flashcards/Views/HomeView.swift
+          grep -q 'ToolbarItem(placement: .topBarTrailing)' Flashcards/Views/HomeView.swift
+          grep -q 'safeAreaInset(edge: .bottom' Flashcards/Views/HomeView.swift
+          grep -q 'private var bottomSearch' Flashcards/Views/HomeView.swift
+          grep -q '\.prefix(2)' Flashcards/Views/HomeView.swift
           grep -q '@State private var termOption = TermDefinitionDelimiterOption.colon' \
             Flashcards/Views/Import/BulkImportView.swift
+          grep -q 'var activeStudySessionData: Data?' Flashcards/Models/Deck.swift
+          grep -q 'var lastOpenedAt: Date?' Flashcards/Models/Deck.swift
+          grep -q 'allowsHitTesting(!isCommitting)' Flashcards/Views/Study/StudyView.swift
+          grep -q 'onSubmit { submitWrittenAnswer() }' Flashcards/Views/Test/TestRunView.swift
           grep -q 'cloudKitDatabase: .none' Flashcards/FlashcardsApp.swift
           if grep -n -E 'XCRemoteSwiftPackageReference|packageProductDependencies|SystemCapabilities' \
             Flashcards.xcodeproj/project.pbxproj; then
