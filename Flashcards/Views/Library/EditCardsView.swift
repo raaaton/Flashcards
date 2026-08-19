@@ -49,6 +49,7 @@ struct EditCardsView: View {
         .toolbar {
             ToolbarItem(placement: .topBarTrailing) {
                 EditButton()
+                    .foregroundStyle(.white)
             }
             ToolbarItem(placement: .topBarTrailing) {
                 Menu {
@@ -56,6 +57,7 @@ struct EditCardsView: View {
                     Button("Importer en masse", systemImage: "text.badge.plus") { showingBulkImport = true }
                 } label: {
                     Label("Ajouter", systemImage: "plus")
+                        .foregroundStyle(.white)
                 }
             }
         }

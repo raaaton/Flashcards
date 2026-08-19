@@ -28,7 +28,15 @@ enum BackupCodecSmoke {
         let envelope = BackupEnvelopeV1(
             exportedAt: date,
             scope: .database,
-            folders: [BackupFolderDTO(id: folderID, name: "Dossier", createdAt: date)],
+            folders: [
+                BackupFolderDTO(
+                    id: folderID,
+                    name: "Dossier",
+                    createdAt: date,
+                    iconName: "graduationcap.fill",
+                    colorHex: "FF9500"
+                )
+            ],
             decks: [
                 BackupDeckDTO(
                     id: deckID,
@@ -44,6 +52,20 @@ enum BackupCodecSmoke {
 
         let decoded = try BackupCodec.decode(BackupCodec.encode(envelope))
         precondition(decoded == envelope)
+        precondition(decoded.folders[0].iconName == "graduationcap.fill")
+        precondition(decoded.folders[0].colorHex == "FF9500")
+
+        var legacyJSON = try JSONSerialization.jsonObject(
+            with: BackupCodec.encode(envelope)
+        ) as! [String: Any]
+        var legacyFolders = legacyJSON["folders"] as! [[String: Any]]
+        legacyFolders[0].removeValue(forKey: "iconName")
+        legacyFolders[0].removeValue(forKey: "colorHex")
+        legacyJSON["folders"] = legacyFolders
+        let legacyData = try JSONSerialization.data(withJSONObject: legacyJSON)
+        let decodedLegacy = try BackupCodec.decode(legacyData)
+        precondition(decodedLegacy.folders[0].iconName == "folder.fill")
+        precondition(decodedLegacy.folders[0].colorHex == "5856D6")
 
         var local = envelope
         local.decks[0].cards.append(localOnlyCard)

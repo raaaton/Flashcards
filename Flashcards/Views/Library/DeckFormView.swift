@@ -11,11 +11,11 @@ struct DeckFormView: View {
     @State private var deckDescription: String
     @State private var selectedFolderID: UUID?
 
-    init(deck: Deck? = nil) {
+    init(deck: Deck? = nil, initialFolder: Folder? = nil) {
         self.deck = deck
         _name = State(initialValue: deck?.name ?? "")
         _deckDescription = State(initialValue: deck?.deckDescription ?? "")
-        _selectedFolderID = State(initialValue: deck?.folder?.id)
+        _selectedFolderID = State(initialValue: deck?.folder?.id ?? initialFolder?.id)
     }
 
     private var cleanName: String {

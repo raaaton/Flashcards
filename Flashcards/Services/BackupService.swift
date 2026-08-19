@@ -66,9 +66,15 @@ enum BackupService {
                 if let folder = foldersByID[dto.id] {
                     folder.name = dto.name
                     folder.createdAt = dto.createdAt
+                    folder.iconName = dto.iconName
+                    folder.colorHex = dto.colorHex
                     report.updatedFolders += 1
                 } else {
-                    let folder = Folder(name: dto.name)
+                    let folder = Folder(
+                        name: dto.name,
+                        iconName: dto.iconName,
+                        colorHex: dto.colorHex
+                    )
                     folder.id = dto.id
                     folder.createdAt = dto.createdAt
                     modelContext.insert(folder)
@@ -132,7 +138,13 @@ enum BackupService {
     }
 
     private static func folderDTO(_ folder: Folder) -> BackupFolderDTO {
-        BackupFolderDTO(id: folder.id, name: folder.name, createdAt: folder.createdAt)
+        BackupFolderDTO(
+            id: folder.id,
+            name: folder.name,
+            createdAt: folder.createdAt,
+            iconName: folder.iconName,
+            colorHex: folder.colorHex
+        )
     }
 
     private static func deckDTO(_ deck: Deck) -> BackupDeckDTO {

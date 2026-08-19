@@ -31,6 +31,10 @@
 		B10000000000000000000016 /* BackupModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = C10000000000000000000017 /* BackupModels.swift */; };
 		B10000000000000000000017 /* BackupService.swift in Sources */ = {isa = PBXBuildFile; fileRef = C10000000000000000000018 /* BackupService.swift */; };
 		B10000000000000000000018 /* BackupView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C10000000000000000000019 /* BackupView.swift */; };
+		B10000000000000000000019 /* FolderAppearance.swift in Sources */ = {isa = PBXBuildFile; fileRef = C1000000000000000000001A /* FolderAppearance.swift */; };
+		B1000000000000000000001A /* LibraryActions.swift in Sources */ = {isa = PBXBuildFile; fileRef = C1000000000000000000001B /* LibraryActions.swift */; };
+		B1000000000000000000001B /* FolderTile.swift in Sources */ = {isa = PBXBuildFile; fileRef = C1000000000000000000001C /* FolderTile.swift */; };
+		B1000000000000000000001C /* FolderDetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C1000000000000000000001D /* FolderDetailView.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -59,6 +63,10 @@
 		C10000000000000000000017 /* BackupModels.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BackupModels.swift; sourceTree = "<group>"; };
 		C10000000000000000000018 /* BackupService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BackupService.swift; sourceTree = "<group>"; };
 		C10000000000000000000019 /* BackupView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BackupView.swift; sourceTree = "<group>"; };
+		C1000000000000000000001A /* FolderAppearance.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FolderAppearance.swift; sourceTree = "<group>"; };
+		C1000000000000000000001B /* LibraryActions.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LibraryActions.swift; sourceTree = "<group>"; };
+		C1000000000000000000001C /* FolderTile.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FolderTile.swift; sourceTree = "<group>"; };
+		C1000000000000000000001D /* FolderDetailView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FolderDetailView.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -85,6 +93,7 @@
 			children = (
 				C10000000000000000000001 /* FlashcardsApp.swift */,
 				C10000000000000000000002 /* Theme.swift */,
+				C1000000000000000000001A /* FolderAppearance.swift */,
 				E10000000000000000000003 /* Models */,
 				E10000000000000000000007 /* Services */,
 				E10000000000000000000004 /* Views */,
@@ -120,6 +129,8 @@
 			isa = PBXGroup;
 			children = (
 				C10000000000000000000009 /* DeckRow.swift */,
+				C1000000000000000000001C /* FolderTile.swift */,
+				C1000000000000000000001D /* FolderDetailView.swift */,
 				C1000000000000000000000A /* FolderFormView.swift */,
 				C1000000000000000000000B /* DeckFormView.swift */,
 				C1000000000000000000000C /* CardFormView.swift */,
@@ -132,6 +143,7 @@
 		E10000000000000000000007 /* Services */ = {
 			isa = PBXGroup;
 			children = (
+				C1000000000000000000001B /* LibraryActions.swift */,
 				C1000000000000000000000F /* BulkImportParser.swift */,
 				C10000000000000000000011 /* StudySessionState.swift */,
 				C10000000000000000000014 /* TestSessionState.swift */,
@@ -275,6 +287,10 @@
 				B10000000000000000000016 /* BackupModels.swift in Sources */,
 				B10000000000000000000017 /* BackupService.swift in Sources */,
 				B10000000000000000000018 /* BackupView.swift in Sources */,
+				B10000000000000000000019 /* FolderAppearance.swift in Sources */,
+				B1000000000000000000001A /* LibraryActions.swift in Sources */,
+				B1000000000000000000001B /* FolderTile.swift in Sources */,
+				B1000000000000000000001C /* FolderDetailView.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

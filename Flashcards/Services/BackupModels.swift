@@ -9,6 +9,35 @@ struct BackupFolderDTO: Codable, Equatable, Identifiable, Sendable {
     let id: UUID
     var name: String
     var createdAt: Date
+    var iconName: String
+    var colorHex: String
+
+    init(
+        id: UUID,
+        name: String,
+        createdAt: Date,
+        iconName: String = "folder.fill",
+        colorHex: String = "5856D6"
+    ) {
+        self.id = id
+        self.name = name
+        self.createdAt = createdAt
+        self.iconName = iconName
+        self.colorHex = colorHex
+    }
+
+    private enum CodingKeys: String, CodingKey {
+        case id, name, createdAt, iconName, colorHex
+    }
+
+    init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        id = try container.decode(UUID.self, forKey: .id)
+        name = try container.decode(String.self, forKey: .name)
+        createdAt = try container.decode(Date.self, forKey: .createdAt)
+        iconName = try container.decodeIfPresent(String.self, forKey: .iconName) ?? "folder.fill"
+        colorHex = try container.decodeIfPresent(String.self, forKey: .colorHex) ?? "5856D6"
+    }
 }
 
 struct BackupCardDTO: Codable, Equatable, Identifiable, Sendable {

@@ -86,11 +86,15 @@ struct DeckDetailView: View {
                     Button("Exporter en JSON", systemImage: "square.and.arrow.up") {
                         showingExport = true
                     }
-                    Button("Supprimer", systemImage: "trash", role: .destructive) {
+                    Button(role: .destructive) {
                         confirmingDeletion = true
+                    } label: {
+                        Label("Supprimer", systemImage: "trash")
+                            .foregroundStyle(.red)
                     }
                 } label: {
                     Label("Actions", systemImage: "ellipsis")
+                        .foregroundStyle(.white)
                 }
             }
         }
