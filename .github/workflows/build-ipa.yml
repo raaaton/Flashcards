@@ -1,0 +1,86 @@
+name: Build unsigned IPA
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: xcode-27
+
+    steps:
+      - uses: actions/checkout@v6
+
+      - name: Verify toolchain
+        run: |
+          set -euxo pipefail
+          xcodebuild -version
+          swift --version
+          xcrun --sdk iphoneos --show-sdk-version
+          gh --version
+
+      - name: Build app for iPhone
+        run: |
+          set -euxo pipefail
+          xcodebuild \
+            -project Flashcards.xcodeproj \
+            -scheme Flashcards \
+            -configuration Release \
+            -sdk iphoneos \
+            -destination 'generic/platform=iOS' \
+            -derivedDataPath "$RUNNER_TEMP/DerivedData" \
+            CODE_SIGNING_ALLOWED=NO \
+            CODE_SIGNING_REQUIRED=NO \
+            build
+
+      - name: Simulator launch smoke test
+        run: |
+          set -euxo pipefail
+          xcrun simctl shutdown all || true
+          xcodebuild \
+            -project Flashcards.xcodeproj \
+            -scheme Flashcards \
+            -configuration Debug \
+            -sdk iphonesimulator \
+            -destination 'platform=iOS Simulator,name=iPhone 17 Pro,OS=latest' \
+            -derivedDataPath "$RUNNER_TEMP/SimulatorData" \
+            CODE_SIGNING_ALLOWED=NO \
+            build
+          xcrun simctl boot 'iPhone 17 Pro'
+          xcrun simctl bootstatus booted -b
+          SIM_APP="$RUNNER_TEMP/SimulatorData/Build/Products/Debug-iphonesimulator/Flashcards.app"
+          test -d "$SIM_APP"
+          xcrun simctl install booted "$SIM_APP"
+          xcrun simctl launch booted com.raton.flashcards
+
+      - name: Package IPA
+        run: |
+          set -euxo pipefail
+          APP_PATH="$(find "$RUNNER_TEMP/DerivedData/Build/Products/Release-iphoneos" \
+            -maxdepth 1 -type d -name '*.app' -print -quit)"
+          test -n "$APP_PATH"
+          test -d "$APP_PATH"
+          rm -rf Payload Flashcards.ipa
+          mkdir Payload
+          cp -R "$APP_PATH" Payload/
+          /usr/bin/zip -qry Flashcards.ipa Payload
+          test -s Flashcards.ipa
+
+      - name: Publish GitHub Release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euxo pipefail
+          TAG="build-${{ github.run_number }}"
+          if gh release view "$TAG" >/dev/null 2>&1; then
+            gh release upload "$TAG" Flashcards.ipa --clobber
+          else
+            gh release create "$TAG" Flashcards.ipa \
+              --target "$GITHUB_SHA" \
+              --title "Flashcards build ${{ github.run_number }}" \
+              --notes "Automated unsigned IPA build."
+          fi
