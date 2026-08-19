@@ -5,7 +5,7 @@ struct StudyCardFace: View, Animatable {
     let back: String
     var angle: Double
 
-    var animatableData: Double {
+    nonisolated var animatableData: Double {
         get { angle }
         set { angle = newValue }
     }
