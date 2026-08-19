@@ -22,6 +22,9 @@
 		B1000000000000000000000D /* DeckDetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C1000000000000000000000E /* DeckDetailView.swift */; };
 		B1000000000000000000000E /* BulkImportParser.swift in Sources */ = {isa = PBXBuildFile; fileRef = C1000000000000000000000F /* BulkImportParser.swift */; };
 		B1000000000000000000000F /* BulkImportView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C10000000000000000000010 /* BulkImportView.swift */; };
+		B10000000000000000000010 /* StudySessionState.swift in Sources */ = {isa = PBXBuildFile; fileRef = C10000000000000000000011 /* StudySessionState.swift */; };
+		B10000000000000000000011 /* StudySetupView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C10000000000000000000012 /* StudySetupView.swift */; };
+		B10000000000000000000012 /* StudyView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C10000000000000000000013 /* StudyView.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -41,6 +44,9 @@
 		C1000000000000000000000E /* DeckDetailView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DeckDetailView.swift; sourceTree = "<group>"; };
 		C1000000000000000000000F /* BulkImportParser.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BulkImportParser.swift; sourceTree = "<group>"; };
 		C10000000000000000000010 /* BulkImportView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BulkImportView.swift; sourceTree = "<group>"; };
+		C10000000000000000000011 /* StudySessionState.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StudySessionState.swift; sourceTree = "<group>"; };
+		C10000000000000000000012 /* StudySetupView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StudySetupView.swift; sourceTree = "<group>"; };
+		C10000000000000000000013 /* StudyView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StudyView.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -91,6 +97,7 @@
 				C10000000000000000000006 /* HomeView.swift */,
 				E10000000000000000000005 /* Library */,
 				E10000000000000000000008 /* Import */,
+				E10000000000000000000009 /* Study */,
 			);
 			path = Views;
 			sourceTree = "<group>";
@@ -112,6 +119,7 @@
 			isa = PBXGroup;
 			children = (
 				C1000000000000000000000F /* BulkImportParser.swift */,
+				C10000000000000000000011 /* StudySessionState.swift */,
 			);
 			path = Services;
 			sourceTree = "<group>";
@@ -122,6 +130,15 @@
 				C10000000000000000000010 /* BulkImportView.swift */,
 			);
 			path = Import;
+			sourceTree = "<group>";
+		};
+		E10000000000000000000009 /* Study */ = {
+			isa = PBXGroup;
+			children = (
+				C10000000000000000000012 /* StudySetupView.swift */,
+				C10000000000000000000013 /* StudyView.swift */,
+			);
+			path = Study;
 			sourceTree = "<group>";
 		};
 		E10000000000000000000006 /* Products */ = {
@@ -215,6 +232,9 @@
 				B1000000000000000000000D /* DeckDetailView.swift in Sources */,
 				B1000000000000000000000E /* BulkImportParser.swift in Sources */,
 				B1000000000000000000000F /* BulkImportView.swift in Sources */,
+				B10000000000000000000010 /* StudySessionState.swift in Sources */,
+				B10000000000000000000011 /* StudySetupView.swift in Sources */,
+				B10000000000000000000012 /* StudyView.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

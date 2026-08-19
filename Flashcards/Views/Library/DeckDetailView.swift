@@ -34,6 +34,15 @@ struct DeckDetailView: View {
                 }
             }
 
+            Section("Réviser") {
+                NavigationLink {
+                    StudySetupView(deck: deck)
+                } label: {
+                    Label("Flashcards", systemImage: "rectangle.on.rectangle.angled")
+                }
+                .disabled(deck.cards.isEmpty)
+            }
+
             Section("Cartes") {
                 NavigationLink {
                     EditCardsView(deck: deck)

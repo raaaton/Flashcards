@@ -32,6 +32,12 @@ jobs:
             CITests/BulkImportParserSmoke.swift \
             -o "$RUNNER_TEMP/bulk-import-smoke"
           "$RUNNER_TEMP/bulk-import-smoke"
+          xcrun swiftc \
+            -swift-version 6 \
+            Flashcards/Services/StudySessionState.swift \
+            CITests/StudySessionSmoke.swift \
+            -o "$RUNNER_TEMP/study-session-smoke"
+          "$RUNNER_TEMP/study-session-smoke"
 
       - name: Build app for iPhone
         run: |
