@@ -74,8 +74,8 @@ struct BulkImportView: View {
     private var destinationIsValid: Bool {
         if draftImportHandler != nil { return true }
         switch destination {
-        case .newDeck: !cleanDeckName.isEmpty
-        case .existingDeck: selectedDeckID != nil
+        case .newDeck: return !cleanDeckName.isEmpty
+        case .existingDeck: return selectedDeckID != nil
         }
     }
 
