@@ -100,7 +100,7 @@ struct DeckFormView: View {
                         Button("Ajouter une carte", systemImage: "plus") {
                             cardDrafts.append(DeckCardDraft())
                         }
-                        .foregroundStyle(.white)
+                        .foregroundStyle(Theme.accent)
                     } header: {
                         Text("Cartes initiales")
                     } footer: {

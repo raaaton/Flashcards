@@ -86,11 +86,11 @@ struct DeckDetailView: View {
             ToolbarItem(placement: .topBarTrailing) {
                 Menu {
                     Button("Modifier le deck", systemImage: "pencil") { showingEditDeck = true }
-                        .foregroundStyle(.white)
+                        .foregroundStyle(Theme.accent)
                     Button("Exporter en JSON", systemImage: "square.and.arrow.up") {
                         showingExport = true
                     }
-                    .foregroundStyle(.white)
+                    .foregroundStyle(Theme.accent)
                     Button(role: .destructive) {
                         confirmingDeletion = true
                     } label: {

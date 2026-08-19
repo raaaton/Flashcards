@@ -33,7 +33,7 @@ struct BackupView: View {
                                     : L10n.text("backup.share.deck"),
                                 systemImage: "square.and.arrow.up"
                             )
-                            .foregroundStyle(.white)
+                            .foregroundStyle(Theme.accent)
                         }
                     } else {
                         HStack {
@@ -60,7 +60,7 @@ struct BackupView: View {
                         Button("Choisir un fichier JSON", systemImage: "doc.badge.plus") {
                             showingFileImporter = true
                         }
-                        .foregroundStyle(.white)
+                        .foregroundStyle(Theme.accent)
                     } header: {
                         Text("Importer")
                     } footer: {

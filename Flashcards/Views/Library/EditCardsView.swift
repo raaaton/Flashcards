@@ -37,9 +37,7 @@ struct EditCardsView: View {
                         deleteCard(card)
                     } label: {
                         Label("Supprimer", systemImage: "trash")
-                            .foregroundStyle(.red)
                     }
-                    .tint(Theme.cardBackground)
                 }
             }
             .onMove(perform: moveCards)
@@ -62,12 +60,12 @@ struct EditCardsView: View {
             ToolbarItem(placement: .topBarTrailing) {
                 Menu {
                     Button("Ajouter une carte", systemImage: "plus") { showingNewCard = true }
-                        .foregroundStyle(.white)
+                        .foregroundStyle(Theme.accent)
                     Button("Importer en masse", systemImage: "text.badge.plus") { showingBulkImport = true }
-                        .foregroundStyle(.white)
+                        .foregroundStyle(Theme.accent)
                 } label: {
                     Label("Ajouter", systemImage: "plus")
-                        .foregroundStyle(.white)
+                        .foregroundStyle(Theme.accent)
                 }
             }
         }

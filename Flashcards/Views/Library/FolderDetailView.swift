@@ -63,11 +63,11 @@ struct FolderDetailView: View {
                 ToolbarItem(placement: .topBarTrailing) {
                     Menu {
                         Button("Modifier", systemImage: "pencil") { showingEditFolder = true }
-                            .foregroundStyle(.white)
+                            .foregroundStyle(Theme.accent)
                         Button("Dupliquer", systemImage: "plus.square.on.square") {
                             LibraryActions.duplicateFolder(folder, in: modelContext)
                         }
-                        .foregroundStyle(.white)
+                        .foregroundStyle(Theme.accent)
                         Button(role: .destructive) {
                             confirmingFolderDeletion = true
                         } label: {
@@ -132,9 +132,7 @@ struct FolderDetailView: View {
         .swipeActions(edge: .trailing) {
             Button(role: .destructive) { deckToDelete = deck } label: {
                 Label("Supprimer", systemImage: "trash")
-                    .foregroundStyle(.red)
             }
-            .tint(Theme.cardBackground)
             Button { LibraryActions.duplicateDeck(deck, in: modelContext) } label: {
                 Label("Dupliquer", systemImage: "plus.square.on.square")
                     .foregroundStyle(.white)
@@ -143,11 +141,11 @@ struct FolderDetailView: View {
         }
         .contextMenu {
             Button("Modifier", systemImage: "pencil") { deckToEdit = deck }
-                .foregroundStyle(.white)
+                .foregroundStyle(Theme.accent)
             Button("Dupliquer", systemImage: "plus.square.on.square") {
                 LibraryActions.duplicateDeck(deck, in: modelContext)
             }
-            .foregroundStyle(.white)
+            .foregroundStyle(Theme.accent)
             Button(role: .destructive) { deckToDelete = deck } label: {
                 Label("Supprimer", systemImage: "trash")
                     .foregroundStyle(.red)
