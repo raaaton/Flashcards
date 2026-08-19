@@ -15,10 +15,14 @@ enum StudySessionSmoke {
         let firstRoundIDs = session.currentRound.map(\.id)
         precondition(Set(firstRoundIDs).count == cards.count)
         precondition(session.roundNumber == 1)
+        precondition(session.totalCards == 4)
+        precondition(session.masteredInSession == 0)
+        precondition(session.visibleItems.map(\.id) == Array(firstRoundIDs.prefix(2)))
 
         let reviewedID = session.currentItem?.id
         session.answer(.review)
         session.answer(.knew)
+        precondition(session.masteredInSession == 1)
         session.answer(.knew)
         session.answer(.knew)
 
@@ -32,6 +36,7 @@ enum StudySessionSmoke {
         precondition(session.cardsSeen == 5)
         precondition(session.correctAnswers == 4)
         precondition(session.successRate == 80)
+        precondition(session.masteredInSession == session.totalCards)
 
         session.restart(with: cards)
         precondition(!session.isComplete)

@@ -56,8 +56,49 @@ struct BackupDeckDTO: Codable, Equatable, Identifiable, Sendable {
     var deckDescription: String?
     var createdAt: Date
     var updatedAt: Date
+    var completedStudySessions: Int
     var folderID: UUID?
     var cards: [BackupCardDTO]
+
+    init(
+        id: UUID,
+        name: String,
+        deckDescription: String?,
+        createdAt: Date,
+        updatedAt: Date,
+        completedStudySessions: Int = 0,
+        folderID: UUID?,
+        cards: [BackupCardDTO]
+    ) {
+        self.id = id
+        self.name = name
+        self.deckDescription = deckDescription
+        self.createdAt = createdAt
+        self.updatedAt = updatedAt
+        self.completedStudySessions = completedStudySessions
+        self.folderID = folderID
+        self.cards = cards
+    }
+
+    private enum CodingKeys: String, CodingKey {
+        case id, name, deckDescription, createdAt, updatedAt
+        case completedStudySessions, folderID, cards
+    }
+
+    init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        id = try container.decode(UUID.self, forKey: .id)
+        name = try container.decode(String.self, forKey: .name)
+        deckDescription = try container.decodeIfPresent(String.self, forKey: .deckDescription)
+        createdAt = try container.decode(Date.self, forKey: .createdAt)
+        updatedAt = try container.decode(Date.self, forKey: .updatedAt)
+        completedStudySessions = try container.decodeIfPresent(
+            Int.self,
+            forKey: .completedStudySessions
+        ) ?? 0
+        folderID = try container.decodeIfPresent(UUID.self, forKey: .folderID)
+        cards = try container.decode([BackupCardDTO].self, forKey: .cards)
+    }
 }
 
 struct BackupEnvelopeV1: Codable, Equatable, Sendable {

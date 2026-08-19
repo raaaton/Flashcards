@@ -59,4 +59,12 @@ enum LibraryActions {
         modelContext.delete(folder)
         try? modelContext.save()
     }
+
+    static func resetStudyProgress(for deck: Deck, in modelContext: ModelContext) {
+        for card in deck.cards {
+            card.mastered = false
+        }
+        deck.updatedAt = .now
+        try? modelContext.save()
+    }
 }

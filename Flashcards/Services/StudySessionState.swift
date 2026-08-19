@@ -16,7 +16,7 @@ enum StudyDirection: String, CaseIterable, Identifiable, Sendable {
     }
 }
 
-enum StudyOutcome: Sendable {
+enum StudyOutcome: Equatable, Sendable {
     case knew
     case review
 }
@@ -39,6 +39,7 @@ struct StudyRoundItem: Identifiable, Equatable, Sendable {
 struct StudySessionState: Equatable, Sendable {
     let direction: StudyDirection
     private let shufflesRounds: Bool
+    private let initialCardCount: Int
 
     private(set) var currentRound: [StudyRoundItem]
     private(set) var nextRound: [StudyCardSnapshot] = []
@@ -51,6 +52,7 @@ struct StudySessionState: Equatable, Sendable {
     init(cards: [StudyCardSnapshot], direction: StudyDirection, shuffle: Bool = true) {
         self.direction = direction
         shufflesRounds = shuffle
+        initialCardCount = cards.count
         currentRound = Self.makeRound(cards: cards, direction: direction, shuffle: shuffle)
         isComplete = cards.isEmpty
     }
@@ -62,6 +64,19 @@ struct StudySessionState: Equatable, Sendable {
 
     var remainingInRound: Int {
         max(currentRound.count - currentIndex, 0)
+    }
+
+    var totalCards: Int {
+        initialCardCount
+    }
+
+    var masteredInSession: Int {
+        correctAnswers
+    }
+
+    var visibleItems: [StudyRoundItem] {
+        guard currentRound.indices.contains(currentIndex) else { return [] }
+        return Array(currentRound[currentIndex...].prefix(2))
     }
 
     var successRate: Int {

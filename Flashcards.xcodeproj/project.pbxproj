@@ -35,6 +35,8 @@
 		B1000000000000000000001A /* LibraryActions.swift in Sources */ = {isa = PBXBuildFile; fileRef = C1000000000000000000001B /* LibraryActions.swift */; };
 		B1000000000000000000001B /* FolderTile.swift in Sources */ = {isa = PBXBuildFile; fileRef = C1000000000000000000001C /* FolderTile.swift */; };
 		B1000000000000000000001C /* FolderDetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C1000000000000000000001D /* FolderDetailView.swift */; };
+		B1000000000000000000001D /* StudyAnimationMetrics.swift in Sources */ = {isa = PBXBuildFile; fileRef = C1000000000000000000001E /* StudyAnimationMetrics.swift */; };
+		B1000000000000000000001E /* StudyCardFace.swift in Sources */ = {isa = PBXBuildFile; fileRef = C1000000000000000000001F /* StudyCardFace.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -67,6 +69,8 @@
 		C1000000000000000000001B /* LibraryActions.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LibraryActions.swift; sourceTree = "<group>"; };
 		C1000000000000000000001C /* FolderTile.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FolderTile.swift; sourceTree = "<group>"; };
 		C1000000000000000000001D /* FolderDetailView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FolderDetailView.swift; sourceTree = "<group>"; };
+		C1000000000000000000001E /* StudyAnimationMetrics.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StudyAnimationMetrics.swift; sourceTree = "<group>"; };
+		C1000000000000000000001F /* StudyCardFace.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StudyCardFace.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -94,6 +98,7 @@
 				C10000000000000000000001 /* FlashcardsApp.swift */,
 				C10000000000000000000002 /* Theme.swift */,
 				C1000000000000000000001A /* FolderAppearance.swift */,
+				C1000000000000000000001E /* StudyAnimationMetrics.swift */,
 				E10000000000000000000003 /* Models */,
 				E10000000000000000000007 /* Services */,
 				E10000000000000000000004 /* Views */,
@@ -165,6 +170,7 @@
 			isa = PBXGroup;
 			children = (
 				C10000000000000000000012 /* StudySetupView.swift */,
+				C1000000000000000000001F /* StudyCardFace.swift */,
 				C10000000000000000000013 /* StudyView.swift */,
 			);
 			path = Study;
@@ -291,6 +297,8 @@
 				B1000000000000000000001A /* LibraryActions.swift in Sources */,
 				B1000000000000000000001B /* FolderTile.swift in Sources */,
 				B1000000000000000000001C /* FolderDetailView.swift in Sources */,
+				B1000000000000000000001D /* StudyAnimationMetrics.swift in Sources */,
+				B1000000000000000000001E /* StudyCardFace.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
