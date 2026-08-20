@@ -395,9 +395,42 @@ jobs:
               uses: actions/upload-artifact@v4
               with:
                   name: ${{ steps.artifact_name.outputs.name }}
-                  path: Flashcards.ipa
+                  path: ${{ env.IPA_NAME }}
                   if-no-files-found: error
                   retention-days: 14
+
+            - name: Publish latest development IPA
+              if: github.event_name == 'push'
+              env:
+                  GH_TOKEN: ${{ github.token }}
+              run: |
+                  set -euo pipefail
+
+                  DEV_TAG="dev"
+                  DEV_ALIAS="Flashcards-latest-dev.ipa"
+
+                  test -s "$IPA_NAME"
+
+                  cp "$IPA_NAME" "$DEV_ALIAS"
+
+                  if gh release view "$DEV_TAG" \
+                    --repo "$GITHUB_REPOSITORY" >/dev/null 2>&1; then
+
+                    gh release delete "$DEV_TAG" \
+                      --repo "$GITHUB_REPOSITORY" \
+                      --cleanup-tag \
+                      --yes
+                  fi
+
+                  gh release create "$DEV_TAG" \
+                    "$IPA_NAME" \
+                    "$DEV_ALIAS" \
+                    --repo "$GITHUB_REPOSITORY" \
+                    --target "$GITHUB_SHA" \
+                    --title "Latest development build" \
+                    --notes "Latest automated development build from main. This build may be unstable." \
+                    --prerelease \
+                    --latest=false
 
             - name: Commit release version
               if: github.event_name == 'workflow_dispatch'

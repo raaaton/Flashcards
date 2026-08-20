@@ -15,6 +15,14 @@ Built entirely with SwiftUI, SwiftData, Apple system APIs and ❤️.
 
 ---
 
+## Development Build
+
+[⬇️ **Download latest development IPA**](https://github.com/raaaton/Flashcards/releases/download/dev/Flashcards-latest-dev.ipa)
+
+> Built automatically from the latest commit on `main`. Development builds may be unstable.
+
+---
+
 ## Preview
 
 <p align="center">
@@ -178,19 +186,23 @@ The application is split around its main domains rather than relying on external
 
 ## Installation
 
-### Releases
+### Stable releases
 
-Prebuilt IPA files are available from the repository's **Releases** section.
+Stable unsigned IPA builds are available from the repository's [Releases](https://github.com/raaaton/Flashcards/releases) page.
 
-Release builds are distributed as IPA packages and may require signing with your own Apple ID or developer certificate before installation.
+Each stable release is versioned individually, for example:
 
-They can be installed using a compatible iOS sideloading solution.
+`Flashcards-v1.8.1.ipa`
 
-### App Store
+### Development builds
 
-Flashcards is not currently distributed through the App Store.
+The latest build from `main` is always available here:
 
----
+[⬇️ **Download latest development IPA**](https://github.com/raaaton/Flashcards/releases/download/dev/Flashcards-latest-dev.ipa)
+
+Development builds are generated automatically and may contain unfinished or unstable changes.
+
+The IPA must be signed before installation using a compatible iOS sideloading solution.
 
 ## Build from source
 
