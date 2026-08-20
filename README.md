@@ -1,5 +1,13 @@
-<img width="1500" height="440" alt="-iMMRBlo" src="https://github.com/user-attachments/assets/765b88df-43a6-46a2-b8c0-efcca870ef2c" />
+![header](https://github.com/user-attachments/assets/f29c4273-db88-47d5-bc5a-139ce66f180f)
 
+<p align="center">
+  <img alt="release" src="https://img.shields.io/github/v/release/raaaton/Flashcards" />
+  <img alt="license" src="https://img.shields.io/github/license/raaaton/Flashcards" />
+  <img alt="stars" src="https://img.shields.io/github/stars/raaaton/Flashcards" />
+  <img alt="forks" src="https://img.shields.io/github/forks/raaaton/Flashcards" />
+  <img alt="issues" src="https://img.shields.io/github/issues/raaaton/Flashcards" />
+  <img alt="downloads" src="https://img.shields.io/github/downloads/raaaton/Flashcards/total" />
+</p>
 
 # Flashcards
 
