@@ -88,6 +88,7 @@ struct DeckDetailView: View {
             } currentValueLabel: {
                 Text("\(masteredCount) / \(deck.cards.count)")
             }
+            .tint(Theme.deckAccent(for: deck))
         }
         .frame(maxWidth: .infinity, alignment: .leading)
         .padding(18)
@@ -130,7 +131,8 @@ struct DeckDetailView: View {
                         .contentShape(.rect)
                 }
                 .buttonStyle(.plain)
-                .normalActionColor()
+                .foregroundStyle(Theme.deckAccent(for: deck))
+                .tint(Theme.deckAccent(for: deck))
 
                 Divider()
 
@@ -183,7 +185,10 @@ struct DeckDetailView: View {
             .font(.headline)
             .foregroundStyle(.white)
             .frame(maxWidth: .infinity, minHeight: 72)
-            .background(Theme.accent, in: .rect(cornerRadius: 18, style: .continuous))
+            .background(
+                Theme.deckAccent(for: deck),
+                in: .rect(cornerRadius: 18, style: .continuous)
+            )
             .contentShape(.rect(cornerRadius: 18, style: .continuous))
         }
         .buttonStyle(.plain)

@@ -4,6 +4,10 @@ import SwiftUI
 enum Theme {
     static let accent = Color.blue
     static let cardBackground = Color(uiColor: .secondarySystemBackground)
+
+    static func deckAccent(for deck: Deck) -> Color {
+        deck.folder.map { Color(folderHex: $0.colorHex) } ?? accent
+    }
 }
 
 @MainActor
