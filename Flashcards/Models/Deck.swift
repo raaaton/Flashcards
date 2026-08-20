@@ -11,6 +11,9 @@ final class Deck {
     var lastOpenedAt: Date?
     var completedStudySessions: Int = 0
     var activeStudySessionData: Data?
+    var studyHistoryData: Data?
+    var lastStudyActivityAt: Date?
+    var isPinned: Bool = false
     var folder: Folder?
 
     @Relationship(deleteRule: .cascade, inverse: \Card.deck)
@@ -25,7 +28,61 @@ final class Deck {
         lastOpenedAt = nil
         completedStudySessions = 0
         activeStudySessionData = nil
+        studyHistoryData = nil
+        lastStudyActivityAt = nil
+        isPinned = false
         self.folder = folder
         cards = []
+    }
+}
+
+enum StudyHistoryMode: String, Codable, Equatable, Sendable {
+    case flashcards
+    case test
+
+    var title: String {
+        switch self {
+        case .flashcards: "Flashcards"
+        case .test: "Test"
+        }
+    }
+}
+
+struct StudyHistoryEntry: Codable, Identifiable, Sendable {
+    let id: UUID
+    let completedAt: Date
+    let mode: StudyHistoryMode
+    let itemCount: Int
+    let correctCount: Int
+    let incorrectCount: Int
+
+    var successRate: Int {
+        guard itemCount > 0 else { return 0 }
+        return Int((Double(correctCount) / Double(itemCount) * 100).rounded())
+    }
+}
+
+extension Deck {
+    var studyHistory: [StudyHistoryEntry] {
+        guard let studyHistoryData else { return [] }
+        return (try? JSONDecoder().decode([StudyHistoryEntry].self, from: studyHistoryData)) ?? []
+    }
+
+    func recordCompletedSession(
+        mode: StudyHistoryMode,
+        itemCount: Int,
+        correctCount: Int,
+        incorrectCount: Int
+    ) {
+        guard itemCount > 0 else { return }
+        let entry = StudyHistoryEntry(
+            id: UUID(),
+            completedAt: .now,
+            mode: mode,
+            itemCount: itemCount,
+            correctCount: correctCount,
+            incorrectCount: incorrectCount
+        )
+        studyHistoryData = try? JSONEncoder().encode(Array(([entry] + studyHistory).prefix(5)))
     }
 }

@@ -16,9 +16,45 @@ enum StudyDirection: String, CaseIterable, Identifiable, Codable, Sendable {
     }
 }
 
-enum StudyOutcome: Equatable, Sendable {
+enum StudyOutcome: String, Equatable, Codable, Sendable {
     case knew
     case review
+}
+
+enum SessionSize: String, CaseIterable, Identifiable, Codable, Equatable, Sendable {
+    case ten
+    case twenty
+    case all
+
+    var id: Self { self }
+
+    var title: String {
+        switch self {
+        case .ten: "10"
+        case .twenty: "20"
+        case .all: L10n.text("session.size.all")
+        }
+    }
+
+    var limit: Int? {
+        switch self {
+        case .ten: 10
+        case .twenty: 20
+        case .all: nil
+        }
+    }
+}
+
+struct StudyCardProgressSnapshot: Equatable, Codable, Sendable {
+    let mastered: Bool
+    let timesStudied: Int
+    let timesCorrect: Int
+}
+
+struct StudyJudgment: Equatable, Codable, Sendable {
+    let cardID: UUID
+    let outcome: StudyOutcome
+    let previousProgress: StudyCardProgressSnapshot
 }
 
 struct StudyCardSnapshot: Identifiable, Equatable, Codable, Sendable {
@@ -39,6 +75,8 @@ struct StudySessionItem: Identifiable, Equatable, Codable, Sendable {
 struct StudySessionState: Equatable, Codable, Sendable {
     let direction: StudyDirection
     let shuffle: Bool
+    let sessionSize: SessionSize?
+    let starredOnly: Bool?
     private let initialCardCount: Int
 
     private(set) var items: [StudySessionItem]
@@ -47,13 +85,23 @@ struct StudySessionState: Equatable, Codable, Sendable {
     private(set) var correctAnswers = 0
     private(set) var reviewAnswers = 0
     private(set) var isComplete = false
+    private(set) var judgments: [StudyJudgment]?
 
-    init(cards: [StudyCardSnapshot], direction: StudyDirection, shuffle: Bool = true) {
+    init(
+        cards: [StudyCardSnapshot],
+        direction: StudyDirection,
+        shuffle: Bool = true,
+        sessionSize: SessionSize = .all,
+        starredOnly: Bool = false
+    ) {
         self.direction = direction
         self.shuffle = shuffle
+        self.sessionSize = sessionSize
+        self.starredOnly = starredOnly
         initialCardCount = cards.count
         items = Self.makeItems(cards: cards, direction: direction, shuffle: shuffle)
         isComplete = cards.isEmpty
+        judgments = []
     }
 
     var currentItem: StudySessionItem? {
@@ -83,9 +131,34 @@ struct StudySessionState: Equatable, Codable, Sendable {
         return Int((Double(correctAnswers) / Double(cardsSeen) * 100).rounded())
     }
 
+    var canUndo: Bool {
+        !isComplete && !(judgments ?? []).isEmpty
+    }
+
+    var reviewedCardIDs: [UUID] {
+        (judgments ?? []).compactMap { judgment in
+            judgment.outcome == .review ? judgment.cardID : nil
+        }
+    }
+
     @discardableResult
-    mutating func answer(_ outcome: StudyOutcome) -> UUID? {
+    mutating func answer(
+        _ outcome: StudyOutcome,
+        previousProgress: StudyCardProgressSnapshot = .init(
+            mastered: false,
+            timesStudied: 0,
+            timesCorrect: 0
+        )
+    ) -> UUID? {
         guard let item = currentItem, !isComplete else { return nil }
+        if judgments == nil { judgments = [] }
+        judgments?.append(
+            StudyJudgment(
+                cardID: item.id,
+                outcome: outcome,
+                previousProgress: previousProgress
+            )
+        )
         cardsSeen += 1
 
         switch outcome {
@@ -98,6 +171,23 @@ struct StudySessionState: Equatable, Codable, Sendable {
         currentIndex += 1
         isComplete = currentIndex >= items.count
         return item.card.id
+    }
+
+    @discardableResult
+    mutating func undoLastAnswer() -> StudyJudgment? {
+        guard !isComplete, let judgment = judgments?.popLast(), currentIndex > 0 else {
+            return nil
+        }
+
+        currentIndex -= 1
+        cardsSeen = max(cardsSeen - 1, 0)
+        switch judgment.outcome {
+        case .knew:
+            correctAnswers = max(correctAnswers - 1, 0)
+        case .review:
+            reviewAnswers = max(reviewAnswers - 1, 0)
+        }
+        return judgment
     }
 
     private static func makeItems(

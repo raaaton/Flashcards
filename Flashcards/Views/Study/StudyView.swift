@@ -7,8 +7,8 @@ struct StudyView: View {
     @Environment(\.modelContext) private var modelContext
 
     let deck: Deck
-    let sessionNumber: Int
 
+    @State private var sessionNumber: Int
     @State private var session: StudySessionState
     @State private var isFlipped = false
     @State private var isFlipAnimating = false
@@ -24,7 +24,7 @@ struct StudyView: View {
 
     init(deck: Deck, snapshot: ActiveStudySessionSnapshot) {
         self.deck = deck
-        sessionNumber = snapshot.sessionNumber
+        _sessionNumber = State(initialValue: snapshot.sessionNumber)
         _session = State(initialValue: snapshot.state)
     }
 
@@ -98,6 +98,17 @@ struct StudyView: View {
                 Text(L10n.format("study.session.number", Int64(sessionNumber)))
                     .font(.subheadline.weight(.semibold))
                 Spacer()
+                Button {
+                    undoLastJudgment()
+                } label: {
+                    Image(systemName: "arrow.uturn.backward")
+                        .neutralIconColor()
+                }
+                .buttonStyle(.plain)
+                .tint(.white)
+                .disabled(!session.canUndo || isCommitting)
+                .accessibilityLabel("study.undo")
+
                 Text("\(session.cardsSeen) / \(session.totalCards)")
                     .font(.subheadline.monospacedDigit())
                     .foregroundStyle(.secondary)
@@ -413,6 +424,14 @@ struct StudyView: View {
             .buttonStyle(.borderedProminent)
             .controlSize(.large)
 
+            if !session.reviewedCardIDs.isEmpty {
+                Button("study.review_mistakes", systemImage: "arrow.counterclockwise") {
+                    startReviewMistakes()
+                }
+                .buttonStyle(.borderedProminent)
+                .controlSize(.large)
+            }
+
             Button(role: .destructive) {
                 confirmingReset = true
             } label: {
@@ -517,23 +536,35 @@ struct StudyView: View {
               session.currentItem?.id == cardID,
               let card = deck.cards.first(where: { $0.id == cardID }) else { return }
 
+        let previousProgress = StudyCardProgressSnapshot(
+            mastered: card.mastered,
+            timesStudied: card.timesStudied,
+            timesCorrect: card.timesCorrect
+        )
         card.timesStudied += 1
         if outcome == .knew {
             card.timesCorrect += 1
             card.mastered = true
         }
 
-        _ = session.answer(outcome)
+        _ = session.answer(outcome, previousProgress: previousProgress)
         if session.isComplete && !didRecordCompletion {
             didRecordCompletion = true
             deck.completedStudySessions = sessionNumber
             deck.activeStudySessionData = nil
+            deck.recordCompletedSession(
+                mode: .flashcards,
+                itemCount: session.cardsSeen,
+                correctCount: session.correctAnswers,
+                incorrectCount: session.reviewAnswers
+            )
             if deck.cards.allSatisfy(\.mastered) {
                 celebrateCompletion()
             }
         } else if !session.isComplete {
             persistActiveSession()
         }
+        deck.lastStudyActivityAt = .now
         deck.updatedAt = .now
         try? modelContext.save()
 
@@ -562,6 +593,66 @@ struct StudyView: View {
             state: session
         )
         deck.activeStudySessionData = try? StudySessionPersistence.encode(snapshot)
+    }
+
+    private func undoLastJudgment() {
+        guard !isCommitting else { return }
+        var undoneJudgment: StudyJudgment?
+        withAnimation(
+            reduceMotion
+                ? .easeOut(duration: 0.12)
+                : .spring(response: 0.32, dampingFraction: 0.82)
+        ) {
+            undoneJudgment = session.undoLastAnswer()
+        }
+        guard let judgment = undoneJudgment,
+              let card = deck.cards.first(where: { $0.id == judgment.cardID }) else { return }
+
+        card.mastered = judgment.previousProgress.mastered
+        card.timesStudied = judgment.previousProgress.timesStudied
+        card.timesCorrect = judgment.previousProgress.timesCorrect
+        isFlipped = false
+        isFlipAnimating = false
+        flipAngle = 0
+        dragOffset = .zero
+        activeOpacity = 1
+        didCrossThreshold = false
+        deck.lastStudyActivityAt = .now
+        deck.updatedAt = .now
+        persistActiveSession()
+        try? modelContext.save()
+        HapticService.play(.selection)
+    }
+
+    private func startReviewMistakes() {
+        let reviewedIDs = session.reviewedCardIDs
+        let cardsByID = Dictionary(uniqueKeysWithValues: deck.cards.map { ($0.id, $0) })
+        let cards = reviewedIDs.compactMap { id -> StudyCardSnapshot? in
+            guard let card = cardsByID[id] else { return nil }
+            return StudyCardSnapshot(id: card.id, term: card.term, definition: card.definition)
+        }
+        guard !cards.isEmpty else { return }
+
+        sessionNumber = deck.completedStudySessions + 1
+        session = StudySessionState(
+            cards: cards,
+            direction: session.direction,
+            shuffle: session.shuffle,
+            sessionSize: .all,
+            starredOnly: session.starredOnly ?? false
+        )
+        didRecordCompletion = false
+        didCelebrate = false
+        showCelebration = false
+        isFlipped = false
+        flipAngle = 0
+        dragOffset = .zero
+        activeOpacity = 1
+        deck.lastStudyActivityAt = .now
+        deck.updatedAt = .now
+        persistActiveSession()
+        try? modelContext.save()
+        HapticService.play(.selection)
     }
 
     private func celebrateCompletion() {
