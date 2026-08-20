@@ -112,8 +112,8 @@ jobs:
           fi
           test "$(grep -c 'isa = PBXNativeTarget;' Flashcards.xcodeproj/project.pbxproj)" -eq 1
           test "$(grep -c 'IPHONEOS_DEPLOYMENT_TARGET = 27.0;' Flashcards.xcodeproj/project.pbxproj)" -eq 2
-          test "$(grep -c 'CURRENT_PROJECT_VERSION = 5;' Flashcards.xcodeproj/project.pbxproj)" -eq 2
-          test "$(grep -c 'MARKETING_VERSION = 1.5;' Flashcards.xcodeproj/project.pbxproj)" -eq 2
+          test "$(grep -c 'CURRENT_PROJECT_VERSION = 6;' Flashcards.xcodeproj/project.pbxproj)" -eq 2
+          test "$(grep -c 'MARKETING_VERSION = 1.6;' Flashcards.xcodeproj/project.pbxproj)" -eq 2
           test "$(grep -c 'PRODUCT_BUNDLE_IDENTIFIER = com.raton.flashcards;' Flashcards.xcodeproj/project.pbxproj)" -eq 2
           test "$(grep -c 'SWIFT_VERSION = 6.0;' Flashcards.xcodeproj/project.pbxproj)" -eq 2
           test -z "$(find Flashcards -name '*.entitlements' -print -quit)"
@@ -204,8 +204,8 @@ jobs:
           test -d "$APP_PATH"
           test -s "$APP_PATH/Assets.car"
           plutil -p "$APP_PATH/Info.plist" | grep -q 'AppIcon'
-          test "$(plutil -extract CFBundleShortVersionString raw "$APP_PATH/Info.plist")" = "1.5"
-          test "$(plutil -extract CFBundleVersion raw "$APP_PATH/Info.plist")" = "5"
+          test "$(plutil -extract CFBundleShortVersionString raw "$APP_PATH/Info.plist")" = "1.6"
+          test "$(plutil -extract CFBundleVersion raw "$APP_PATH/Info.plist")" = "6"
           rm -rf Payload Flashcards.ipa
           mkdir Payload
           cp -R "$APP_PATH" Payload/
