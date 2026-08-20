@@ -135,12 +135,6 @@ struct DeckSearchView: View {
             }
             .navigationTitle("Rechercher")
             .navigationBarTitleDisplayMode(.inline)
-            .searchable(
-                text: $query,
-                isPresented: $searchIsPresented,
-                prompt: "Decks et cartes"
-            )
-            .scrollDismissesKeyboard(.interactively)
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
                     Button {
@@ -153,9 +147,15 @@ struct DeckSearchView: View {
                     .accessibilityLabel("Fermer")
                 }
             }
-            .task {
-                searchIsPresented = true
-            }
+        }
+        .searchable(
+            text: $query,
+            isPresented: $searchIsPresented,
+            prompt: "Decks et cartes"
+        )
+        .scrollDismissesKeyboard(.interactively)
+        .task {
+            searchIsPresented = true
         }
     }
 }
