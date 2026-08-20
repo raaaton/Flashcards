@@ -257,9 +257,6 @@ The interface makes extensive use of:
 
 The app is currently designed around a dark interface.
 
-<img width="197" height="426" src="https://github.com/user-attachments/assets/80b5c341-b13e-49e7-bf96-7a0834ee2dd1" />
-
-
 ---
 
 ## Principles
