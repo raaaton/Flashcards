@@ -432,6 +432,18 @@ jobs:
                     --prerelease \
                     --latest=false
 
+                  gh release edit "$DEV_TAG" \
+                    --repo "$GITHUB_REPOSITORY" \
+                    --draft=false \
+                    --prerelease
+
+                  test "$(
+                    gh release view "$DEV_TAG" \
+                      --repo "$GITHUB_REPOSITORY" \
+                      --json isDraft \
+                      --jq '.isDraft'
+                  )" = "false"
+
             - name: Commit release version
               if: github.event_name == 'workflow_dispatch'
               id: release_commit
