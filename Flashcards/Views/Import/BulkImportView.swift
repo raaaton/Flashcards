@@ -144,6 +144,8 @@ struct BulkImportView: View {
                     } label: {
                         Image(systemName: "checkmark")
                             .neutralIconColor()
+                            .frame(minWidth: 44, minHeight: 44)
+                            .contentShape(.rect)
                     }
                     .tint(.white)
                     .disabled(!canImport)

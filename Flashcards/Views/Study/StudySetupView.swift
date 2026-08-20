@@ -134,11 +134,13 @@ struct StudySetupView: View {
             Text("Toutes les cartes de ce deck redeviendront non maîtrisées.")
         }
         .alert("study.new_series.title", isPresented: $confirmingNewSeries) {
-            Button("Continuer") {
+            Button("Continuer", role: .destructive) {
                 LibraryActions.resetStudyProgress(for: deck, in: modelContext)
                 startNewSession()
             }
+            .destructiveActionColor()
             Button("Annuler", role: .cancel) {}
+                .tint(.gray)
         } message: {
             Text("study.new_series.message")
         }
