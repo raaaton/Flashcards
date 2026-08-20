@@ -84,12 +84,20 @@ jobs:
             Flashcards/Views/Library/DeckDetailView.swift)" -ge 3
           grep -q 'Button("Continuer", role: .destructive)' \
             Flashcards/Views/Study/StudySetupView.swift
-          grep -q 'Button("Annuler")' Flashcards/Views/Library/FolderFormView.swift
-          grep -q 'Button("Enregistrer")' Flashcards/Views/Library/FolderFormView.swift
-          grep -q 'Button("Annuler")' Flashcards/Views/Library/DeckFormView.swift
-          grep -q 'Button("Enregistrer")' Flashcards/Views/Library/DeckFormView.swift
-          grep -q 'Button("Annuler")' Flashcards/Views/Library/CardFormView.swift
-          grep -q 'Button("Enregistrer")' Flashcards/Views/Library/CardFormView.swift
+          for FORM_FILE in \
+            Flashcards/Views/Library/FolderFormView.swift \
+            Flashcards/Views/Library/DeckFormView.swift \
+            Flashcards/Views/Library/CardFormView.swift; do
+            grep -q 'ToolbarItem(placement: .cancellationAction)' "$FORM_FILE"
+            grep -q 'Button("Annuler")' "$FORM_FILE"
+            grep -q 'ToolbarItem(placement: .confirmationAction)' "$FORM_FILE"
+            grep -q 'Button("Enregistrer")' "$FORM_FILE"
+          done
+          grep -q 'private struct CardTransferSheet' Flashcards/Views/Library/EditCardsView.swift
+          grep -A60 'private struct CardTransferSheet' Flashcards/Views/Library/EditCardsView.swift | \
+            grep -q 'Button("Annuler")'
+          grep -A70 'private struct CardTransferSheet' Flashcards/Views/Library/EditCardsView.swift | \
+            grep -q 'Button("Enregistrer")'
           grep -q 'Button("Fermer")' Flashcards/Views/Import/BulkImportView.swift
           grep -q 'Image(systemName: "checkmark")' Flashcards/Views/Import/BulkImportView.swift
           test -s codex.md
