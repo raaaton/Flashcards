@@ -2,7 +2,6 @@
 
 <p align="center">
   <img alt="release" src="https://img.shields.io/github/v/release/raaaton/Flashcards" />
-  <img alt="license" src="https://img.shields.io/github/license/raaaton/Flashcards" />
   <img alt="stars" src="https://img.shields.io/github/stars/raaaton/Flashcards" />
   <img alt="forks" src="https://img.shields.io/github/forks/raaaton/Flashcards" />
   <img alt="issues" src="https://img.shields.io/github/issues/raaaton/Flashcards" />
