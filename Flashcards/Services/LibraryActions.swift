@@ -72,6 +72,49 @@ enum LibraryActions {
         try? modelContext.save()
     }
 
+    static func moveCards(
+        _ cards: [Card],
+        from source: Deck,
+        to destination: Deck,
+        in modelContext: ModelContext
+    ) {
+        guard source.id != destination.id, !cards.isEmpty else { return }
+        let movedIDs = Set(cards.map(\.id))
+        let destinationStart = (destination.cards.map(\.position).max() ?? -1) + 1
+
+        for (offset, card) in cards.sorted(by: { $0.position < $1.position }).enumerated() {
+            card.position = destinationStart + offset
+            card.deck = destination
+        }
+        normalizePositions(source.cards.filter { !movedIDs.contains($0.id) })
+        normalizePositions(destination.cards.filter { !movedIDs.contains($0.id) } + cards)
+        source.updatedAt = .now
+        destination.updatedAt = .now
+        try? modelContext.save()
+    }
+
+    static func copyCards(
+        _ cards: [Card],
+        to destination: Deck,
+        in modelContext: ModelContext
+    ) {
+        guard !cards.isEmpty else { return }
+        let destinationStart = (destination.cards.map(\.position).max() ?? -1) + 1
+
+        for (offset, sourceCard) in cards.sorted(by: { $0.position < $1.position }).enumerated() {
+            let copy = Card(
+                term: sourceCard.term,
+                definition: sourceCard.definition,
+                position: destinationStart + offset
+            )
+            copy.isStarred = sourceCard.isStarred
+            copy.deck = destination
+            modelContext.insert(copy)
+        }
+        destination.updatedAt = .now
+        try? modelContext.save()
+    }
+
     static func deleteCards(
         _ cards: [Card],
         from deck: Deck,
