@@ -14,6 +14,7 @@ struct HomeView: View {
     @State private var folderToDelete: Folder?
     @State private var deckToEdit: Deck?
     @State private var deckToDelete: Deck?
+    @FocusState private var searchIsFocused: Bool
 
     private let columns = [
         GridItem(.flexible(), spacing: 14),
@@ -73,9 +74,9 @@ struct HomeView: View {
                     addMenu
                 }
             }
-            .safeAreaInset(edge: .bottom, spacing: 0) {
-                bottomSearch
-            }
+        }
+        .safeAreaInset(edge: .bottom, spacing: 0) {
+            bottomSearch
         }
         .sheet(isPresented: $showingNewFolder) {
             FolderFormView()
@@ -264,10 +265,13 @@ struct HomeView: View {
             TextField("Rechercher", text: $searchText)
                 .textFieldStyle(.plain)
                 .submitLabel(.search)
+                .focused($searchIsFocused)
+                .onSubmit { searchIsFocused = false }
 
-            if !searchText.isEmpty {
+            if searchIsFocused || !searchText.isEmpty {
                 Button {
                     searchText = ""
+                    searchIsFocused = false
                 } label: {
                     Image(systemName: "xmark.circle.fill")
                         .foregroundStyle(.white)
