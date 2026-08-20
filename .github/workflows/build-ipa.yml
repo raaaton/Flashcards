@@ -464,10 +464,12 @@ jobs:
               run: |
                   set -euo pipefail
 
-                  RELEASE_IPA="Flashcards-${TAG}.ipa"
-                  cp Flashcards.ipa "$RELEASE_IPA"
+                  EXPECTED_IPA="Flashcards-${TAG}.ipa"
 
-                  gh release create "$TAG" "$RELEASE_IPA" \
+                  test "$IPA_NAME" = "$EXPECTED_IPA"
+                  test -s "$IPA_NAME"
+
+                  gh release create "$TAG" "$IPA_NAME" \
                     --repo "$GITHUB_REPOSITORY" \
                     --target "$RELEASE_SHA" \
                     --title "$TAG" \
