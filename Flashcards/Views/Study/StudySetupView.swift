@@ -21,10 +21,6 @@ struct StudySetupView: View {
         resumableSession?.sessionNumber ?? deck.completedStudySessions + 1
     }
 
-    private var remainingCount: Int {
-        resumableSession?.state.remainingCards ?? eligibleCount
-    }
-
     private var resumableSession: ActiveStudySessionSnapshot? {
         guard let data = deck.activeStudySessionData,
               let snapshot = StudySessionPersistence.decode(data, deckID: deck.id) else {
@@ -91,10 +87,6 @@ struct StudySetupView: View {
                         )
                     )
 
-                    LabeledContent(
-                        "Cartes restantes",
-                        value: "\(remainingCount)"
-                    )
                 }
 
                 Section {
