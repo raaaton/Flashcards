@@ -142,7 +142,15 @@ struct DeckFormView: View {
             }
         }
         .sheet(isPresented: $showingBulkAdd) {
-            BulkImportView { parsedCards in
+            BulkImportView(
+                comparisonCards: validDrafts.enumerated().map { index, draft in
+                    ParsedCard(
+                        recordIndex: index,
+                        term: draft.cleanTerm,
+                        definition: draft.cleanDefinition
+                    )
+                }
+            ) { parsedCards in
                 cardDrafts.removeAll(where: \.isEmpty)
                 cardDrafts.append(contentsOf: parsedCards.map {
                     DeckCardDraft(term: $0.term, definition: $0.definition)

@@ -1,5 +1,6 @@
 import SwiftData
 import SwiftUI
+import UIKit
 
 private enum ImportDestination: String, CaseIterable, Identifiable {
     case newDeck
@@ -22,6 +23,7 @@ struct BulkImportView: View {
     @Query(sort: \Folder.name) private var folders: [Folder]
 
     private let draftImportHandler: (([ParsedCard]) -> Void)?
+    private let draftComparisonCards: [(term: String, definition: String)]
 
     @State private var sourceText = ""
     @State private var termOption = TermDefinitionDelimiterOption.colon
@@ -33,18 +35,31 @@ struct BulkImportView: View {
     @State private var selectedDeckID: UUID?
     @State private var newDeckName = ""
     @State private var selectedFolderID: UUID?
+    @State private var showingDuplicateChoice = false
+    @State private var alertTitle = ""
+    @State private var alertMessage = ""
+    @State private var showingAlert = false
 
     init(
         deck: Deck? = nil,
+        comparisonCards: [ParsedCard] = [],
         onDraftImport: (([ParsedCard]) -> Void)? = nil
     ) {
         draftImportHandler = onDraftImport
+        draftComparisonCards = comparisonCards.map { ($0.term, $0.definition) }
         _destination = State(initialValue: deck == nil ? .newDeck : .existingDeck)
         _selectedDeckID = State(initialValue: deck?.id)
     }
 
-    init(onDraftImport: @escaping ([ParsedCard]) -> Void) {
-        self.init(deck: nil, onDraftImport: onDraftImport)
+    init(
+        comparisonCards: [ParsedCard] = [],
+        onDraftImport: @escaping ([ParsedCard]) -> Void
+    ) {
+        self.init(
+            deck: nil,
+            comparisonCards: comparisonCards,
+            onDraftImport: onDraftImport
+        )
     }
 
     private var termDelimiter: String {
@@ -83,6 +98,22 @@ struct BulkImportView: View {
         delimitersAreValid && destinationIsValid && !preview.cards.isEmpty
     }
 
+    private var destinationCards: [(term: String, definition: String)] {
+        if draftImportHandler != nil { return draftComparisonCards }
+        guard destination == .existingDeck,
+              let deck = decks.first(where: { $0.id == selectedDeckID }) else {
+            return []
+        }
+        return deck.cards.map { ($0.term, $0.definition) }
+    }
+
+    private var duplicateAnalysis: BulkDuplicateAnalysis {
+        BulkDuplicateDetector.analyze(
+            candidates: preview.cards,
+            existingCards: destinationCards
+        )
+    }
+
     var body: some View {
         NavigationStack {
             Form {
@@ -91,6 +122,11 @@ struct BulkImportView: View {
                         .font(.body.monospaced())
                         .frame(minHeight: 220)
                         .accessibilityLabel("Texte brut à importer")
+
+                    Button("Coller", systemImage: "doc.on.clipboard") {
+                        pasteFromClipboard()
+                    }
+                    .normalActionColor()
                 }
 
                 Section("Entre terme et définition") {
@@ -140,7 +176,7 @@ struct BulkImportView: View {
                 }
                 ToolbarItem(placement: .confirmationAction) {
                     Button {
-                        importCards()
+                        prepareImport()
                     } label: {
                         Image(systemName: "checkmark")
                             .neutralIconColor()
@@ -166,6 +202,28 @@ struct BulkImportView: View {
                 if decks.isEmpty {
                     destination = .newDeck
                 }
+            }
+            .confirmationDialog(
+                "Doublons exacts détectés",
+                isPresented: $showingDuplicateChoice,
+                titleVisibility: .visible
+            ) {
+                Button("Ignorer les doublons") {
+                    importCards(skipExactDuplicates: true)
+                }
+                Button("Importer quand même") {
+                    importCards(skipExactDuplicates: false)
+                }
+                Button("Annuler", role: .cancel) {}
+            } message: {
+                Text(
+                    "\(duplicateAnalysis.exactCount) carte(s) correspondent exactement à une carte déjà présente ou à une ligne précédente."
+                )
+            }
+            .alert(alertTitle, isPresented: $showingAlert) {
+                Button("OK", role: .cancel) {}
+            } message: {
+                Text(alertMessage)
             }
         }
     }
@@ -222,7 +280,20 @@ struct BulkImportView: View {
 
             ForEach(preview.cards) { card in
                 VStack(alignment: .leading, spacing: 4) {
-                    Text(card.term).font(.headline)
+                    HStack(alignment: .firstTextBaseline) {
+                        Text(card.term).font(.headline)
+                        Spacer()
+                        if let kind = duplicateAnalysis.kind(for: card.recordIndex) {
+                            Label(
+                                kind == .exact ? "Doublon exact" : "Doublon possible",
+                                systemImage: kind == .exact
+                                    ? "exclamationmark.octagon.fill"
+                                    : "exclamationmark.triangle.fill"
+                            )
+                            .font(.caption.weight(.semibold))
+                            .foregroundStyle(kind == .exact ? .red : .orange)
+                        }
+                    }
                     Label(card.definition, systemImage: "arrow.right")
                         .foregroundStyle(.secondary)
                 }
@@ -246,17 +317,71 @@ struct BulkImportView: View {
         } header: {
             Text(L10n.format("import.preview.count", Int64(preview.cards.count)))
         } footer: {
-            if !preview.invalidRecords.isEmpty {
+            if duplicateAnalysis.exactCount > 0 || duplicateAnalysis.possibleCount > 0 {
+                Text(
+                    "\(duplicateAnalysis.exactCount) doublon(s) exact(s), \(duplicateAnalysis.possibleCount) possible(s). Les doublons possibles restent toujours importés."
+                )
+            } else if !preview.invalidRecords.isEmpty {
                 Text("Les lignes signalées seront ignorées ; les autres seront importées.")
             }
         }
     }
 
-    private func importCards() {
+    private func pasteFromClipboard() {
+        guard let clipboardText = UIPasteboard.general.string, !clipboardText.isEmpty else {
+            showAlert(
+                title: "Presse-papiers vide",
+                message: "Aucun texte n’est disponible à coller."
+            )
+            return
+        }
+
+        let pastedResult = BulkImportParser.parse(
+            BulkImportInput(
+                text: clipboardText,
+                termDelimiter: termDelimiter,
+                cardDelimiter: cardDelimiter
+            )
+        )
+        guard delimitersAreValid, !pastedResult.cards.isEmpty else {
+            showAlert(
+                title: "Texte non reconnu",
+                message: "Le presse-papiers ne contient aucune carte valide avec les délimiteurs actuels. Le texte existant a été conservé."
+            )
+            return
+        }
+        sourceText = clipboardText
+        preview = pastedResult
+        HapticService.play(.selection)
+    }
+
+    private func prepareImport() {
         guard canImport else { return }
+        if duplicateAnalysis.exactCount > 0 {
+            showingDuplicateChoice = true
+        } else {
+            importCards(skipExactDuplicates: false)
+        }
+    }
+
+    private func importCards(skipExactDuplicates: Bool) {
+        guard canImport else { return }
+        let cardsToImport = skipExactDuplicates
+            ? preview.cards.filter {
+                !duplicateAnalysis.exactRecordIndexes.contains($0.recordIndex)
+            }
+            : preview.cards
+
+        guard !cardsToImport.isEmpty else {
+            showAlert(
+                title: "Aucune nouvelle carte",
+                message: "Toutes les cartes détectées sont déjà présentes."
+            )
+            return
+        }
 
         if let draftImportHandler {
-            draftImportHandler(preview.cards)
+            draftImportHandler(cardsToImport)
             dismiss()
             return
         }
@@ -275,7 +400,7 @@ struct BulkImportView: View {
         }
 
         let startPosition = (targetDeck.cards.map(\.position).max() ?? -1) + 1
-        for (offset, parsedCard) in preview.cards.enumerated() {
+        for (offset, parsedCard) in cardsToImport.enumerated() {
             let card = Card(
                 term: parsedCard.term,
                 definition: parsedCard.definition,
@@ -287,5 +412,11 @@ struct BulkImportView: View {
         targetDeck.updatedAt = .now
         try? modelContext.save()
         dismiss()
+    }
+
+    private func showAlert(title: String, message: String) {
+        alertTitle = title
+        alertMessage = message
+        showingAlert = true
     }
 }

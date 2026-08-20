@@ -81,6 +81,77 @@ struct BulkImportResult: Equatable, Sendable {
     static let empty = BulkImportResult(cards: [], invalidRecords: [], ignoredEmptyRecords: 0)
 }
 
+enum BulkDuplicateKind: String, Sendable {
+    case exact
+    case possible
+}
+
+struct BulkDuplicateMatch: Identifiable, Equatable, Sendable {
+    let recordIndex: Int
+    let kind: BulkDuplicateKind
+
+    var id: Int { recordIndex }
+}
+
+struct BulkDuplicateAnalysis: Equatable, Sendable {
+    var matches: [BulkDuplicateMatch]
+
+    var exactRecordIndexes: Set<Int> {
+        Set(matches.lazy.filter { $0.kind == .exact }.map(\.recordIndex))
+    }
+
+    var exactCount: Int { matches.count { $0.kind == .exact } }
+    var possibleCount: Int { matches.count { $0.kind == .possible } }
+
+    func kind(for recordIndex: Int) -> BulkDuplicateKind? {
+        matches.first { $0.recordIndex == recordIndex }?.kind
+    }
+}
+
+enum BulkDuplicateDetector {
+    /// Compares each candidate with the destination and with every earlier candidate.
+    /// Exact duplicates share a normalized term and definition. A matching term with a
+    /// different definition is reported as a possible duplicate and is never skipped.
+    static func analyze(
+        candidates: [ParsedCard],
+        existingCards: [(term: String, definition: String)]
+    ) -> BulkDuplicateAnalysis {
+        var knownDefinitionsByTerm: [String: Set<String>] = [:]
+        for card in existingCards {
+            let term = normalize(card.term)
+            let definition = normalize(card.definition)
+            guard !term.isEmpty, !definition.isEmpty else { continue }
+            knownDefinitionsByTerm[term, default: []].insert(definition)
+        }
+
+        var matches: [BulkDuplicateMatch] = []
+        for card in candidates {
+            let term = normalize(card.term)
+            let definition = normalize(card.definition)
+            let knownDefinitions = knownDefinitionsByTerm[term, default: []]
+
+            if knownDefinitions.contains(definition) {
+                matches.append(
+                    BulkDuplicateMatch(recordIndex: card.recordIndex, kind: .exact)
+                )
+            } else if !knownDefinitions.isEmpty {
+                matches.append(
+                    BulkDuplicateMatch(recordIndex: card.recordIndex, kind: .possible)
+                )
+            }
+
+            knownDefinitionsByTerm[term, default: []].insert(definition)
+        }
+        return BulkDuplicateAnalysis(matches: matches)
+    }
+
+    private static func normalize(_ value: String) -> String {
+        value
+            .trimmingCharacters(in: .whitespacesAndNewlines)
+            .folding(options: [.caseInsensitive, .diacriticInsensitive], locale: .current)
+    }
+}
+
 enum BulkImportParser {
     static func parse(_ input: BulkImportInput) -> BulkImportResult {
         guard !input.termDelimiter.isEmpty, !input.cardDelimiter.isEmpty else {

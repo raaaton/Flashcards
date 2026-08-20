@@ -32,6 +32,32 @@ enum BulkImportParserSmoke {
         precondition(blankResult.cards.isEmpty)
         precondition(blankResult.ignoredEmptyRecords == 3)
 
+        let duplicateCandidates = BulkImportParser.parse(
+            BulkImportInput(
+                text: "  Paris : France\nPARIS:france\nParis:Texas\nLyon:France\nLyon:France",
+                termDelimiter: ":",
+                cardDelimiter: "\n"
+            )
+        ).cards
+        let duplicates = BulkDuplicateDetector.analyze(
+            candidates: duplicateCandidates,
+            existingCards: [(term: "paris", definition: "FRANCE")]
+        )
+        precondition(duplicates.exactCount == 3)
+        precondition(duplicates.possibleCount == 1)
+        precondition(duplicates.kind(for: 0) == .exact)
+        precondition(duplicates.kind(for: 2) == .possible)
+        precondition(duplicates.kind(for: 4) == .exact)
+
+        let internalOnly = BulkDuplicateDetector.analyze(
+            candidates: [
+                ParsedCard(recordIndex: 0, term: "Un", definition: "One"),
+                ParsedCard(recordIndex: 1, term: "un", definition: "one")
+            ],
+            existingCards: []
+        )
+        precondition(internalOnly.exactRecordIndexes == [1])
+
         print("BulkImportParser smoke tests passed")
     }
 }
