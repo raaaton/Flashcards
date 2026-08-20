@@ -110,6 +110,38 @@ jobs:
                   print(f"CURRENT_PROJECT_VERSION = {build}")
                   PY
 
+                  python3 <<'PY'
+                  import os
+                  import re
+                  from pathlib import Path
+
+                  version = os.environ["MARKETING_VERSION"]
+                  path = Path("README.md")
+                  text = path.read_text()
+
+                  replacement = (
+                      "<!-- DEV_IPA_START -->\n"
+                      "[⬇️ **Download latest development IPA**]"
+                      f"(https://github.com/raaaton/Flashcards/releases/download/dev/Flashcards-v{version}.ipa)\n"
+                      "<!-- DEV_IPA_END -->"
+                  )
+
+                  text, count = re.subn(
+                      r"<!-- DEV_IPA_START -->.*?<!-- DEV_IPA_END -->",
+                      replacement,
+                      text,
+                      flags=re.DOTALL,
+                  )
+
+                  if count != 1:
+                      raise SystemExit(
+                          f"Expected one DEV_IPA block in README, found {count}"
+                      )
+
+                  path.write_text(text)
+                  print(f"README development IPA -> Flashcards-v{version}.ipa")
+                  PY
+
             - name: Read project version
               id: project_version
               run: |
@@ -401,18 +433,14 @@ jobs:
                   retention-days: 14
 
             - name: Publish latest development IPA
-              if: github.event_name == 'push'
               env:
                   GH_TOKEN: ${{ github.token }}
               run: |
                   set -euo pipefail
 
                   DEV_TAG="dev"
-                  DEV_ALIAS="Flashcards-latest-dev.ipa"
 
                   test -s "$IPA_NAME"
-
-                  cp "$IPA_NAME" "$DEV_ALIAS"
 
                   if gh release view "$DEV_TAG" \
                     --repo "$GITHUB_REPOSITORY" >/dev/null 2>&1; then
@@ -425,7 +453,6 @@ jobs:
 
                   gh release create "$DEV_TAG" \
                     "$IPA_NAME" \
-                    "$DEV_ALIAS" \
                     --repo "$GITHUB_REPOSITORY" \
                     --target "$GITHUB_SHA" \
                     --title "Latest development build" \
@@ -456,8 +483,8 @@ jobs:
                   git config user.name "github-actions[bot]"
                   git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
 
-                  git add Flashcards.xcodeproj/project.pbxproj
-
+                  git add Flashcards.xcodeproj/project.pbxproj README.md
+                  
                   if ! git diff --cached --quiet; then
                     git commit -m "chore: release ${TAG} [skip ci]"
                     git push origin HEAD:main
