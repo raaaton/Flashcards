@@ -55,23 +55,47 @@ jobs:
             exit 1
           fi
           grep -q 'ToolbarItem(placement: .topBarLeading)' Flashcards/Views/HomeView.swift
-          grep -q 'ToolbarItem(placement: .topBarTrailing)' Flashcards/Views/HomeView.swift
-          grep -q 'safeAreaInset(edge: .bottom' Flashcards/Views/HomeView.swift
-          grep -q 'private var bottomSearch' Flashcards/Views/HomeView.swift
+          grep -q 'ToolbarItemGroup(placement: .topBarTrailing)' Flashcards/Views/HomeView.swift
+          grep -q 'Image(systemName: "magnifyingglass")' Flashcards/Views/HomeView.swift
+          grep -q 'DeckSearchView(decks: decks, showsFolderContext: true)' Flashcards/Views/HomeView.swift
+          grep -q 'DeckSearchView(decks: decks, showsFolderContext: false)' \
+            Flashcards/Views/Library/FolderDetailView.swift
+          test -z "$(grep -E 'safeAreaInset\(edge: \.bottom|private var bottomSearch|searchText' \
+            Flashcards/Views/HomeView.swift Flashcards/Views/Library/FolderDetailView.swift || true)"
+          test "$(grep -R -l '\.searchable' Flashcards/Views | paste -sd ' ' -)" = \
+            "Flashcards/Views/Library/DeckRow.swift"
           grep -q '\.prefix(2)' Flashcards/Views/HomeView.swift
+          RECENT_LINE="$(grep -n 'Text("Récents")' Flashcards/Views/HomeView.swift | cut -d: -f1)"
+          FOLDERS_LINE="$(grep -n 'Text("Dossiers")' Flashcards/Views/HomeView.swift | cut -d: -f1)"
+          test "$RECENT_LINE" -lt "$FOLDERS_LINE"
           grep -q '@State private var termOption = TermDefinitionDelimiterOption.colon' \
             Flashcards/Views/Import/BulkImportView.swift
           grep -q 'var activeStudySessionData: Data?' Flashcards/Models/Deck.swift
           grep -q 'var lastOpenedAt: Date?' Flashcards/Models/Deck.swift
           grep -q 'allowsHitTesting(!isCommitting)' Flashcards/Views/Study/StudyView.swift
           grep -q 'onSubmit { submitWrittenAnswer() }' Flashcards/Views/Test/TestRunView.swift
-          grep -q '@FocusState private var searchIsFocused: Bool' Flashcards/Views/HomeView.swift
           grep -q 'DeckTile(deck: deck)' Flashcards/Views/HomeView.swift
           grep -q 'GridItem(.adaptive' Flashcards/Views/Library/FolderDetailView.swift
           grep -q 'deck.folder?.iconName' Flashcards/Views/Library/DeckRow.swift
+          grep -q 'static func deckAccent(for deck: Deck)' Flashcards/Theme.swift
+          grep -q '\.tint(Theme.deckAccent(for: deck))' \
+            Flashcards/Views/Library/DeckDetailView.swift
+          test "$(grep -c 'Theme.deckAccent(for: deck)' \
+            Flashcards/Views/Library/DeckDetailView.swift)" -ge 3
+          grep -q 'Button("Continuer", role: .destructive)' \
+            Flashcards/Views/Study/StudySetupView.swift
+          grep -q 'Button("Annuler")' Flashcards/Views/Library/FolderFormView.swift
+          grep -q 'Button("Enregistrer")' Flashcards/Views/Library/FolderFormView.swift
+          grep -q 'Button("Annuler")' Flashcards/Views/Library/DeckFormView.swift
+          grep -q 'Button("Enregistrer")' Flashcards/Views/Library/DeckFormView.swift
+          grep -q 'Button("Annuler")' Flashcards/Views/Library/CardFormView.swift
+          grep -q 'Button("Enregistrer")' Flashcards/Views/Library/CardFormView.swift
+          grep -q 'Button("Fermer")' Flashcards/Views/Import/BulkImportView.swift
+          grep -q 'Image(systemName: "checkmark")' Flashcards/Views/Import/BulkImportView.swift
+          test -s codex.md
+          grep -q '^## DO NOT BREAK$' codex.md
           grep -q 'import CoreHaptics' Flashcards/Services/HapticService.swift
           test -z "$(grep -R -l 'LabeledContent("Cartes restantes"' Flashcards || true)"
-          grep -q '\.tint(.red)' Flashcards/Views/HomeView.swift
           grep -q '\.tint(.red)' Flashcards/Views/Library/EditCardsView.swift
           grep -q 'cloudKitDatabase: .none' Flashcards/FlashcardsApp.swift
           if grep -n -E 'XCRemoteSwiftPackageReference|packageProductDependencies|SystemCapabilities' \
@@ -80,8 +104,8 @@ jobs:
           fi
           test "$(grep -c 'isa = PBXNativeTarget;' Flashcards.xcodeproj/project.pbxproj)" -eq 1
           test "$(grep -c 'IPHONEOS_DEPLOYMENT_TARGET = 27.0;' Flashcards.xcodeproj/project.pbxproj)" -eq 2
-          test "$(grep -c 'CURRENT_PROJECT_VERSION = 4;' Flashcards.xcodeproj/project.pbxproj)" -eq 2
-          test "$(grep -c 'MARKETING_VERSION = 1.4;' Flashcards.xcodeproj/project.pbxproj)" -eq 2
+          test "$(grep -c 'CURRENT_PROJECT_VERSION = 5;' Flashcards.xcodeproj/project.pbxproj)" -eq 2
+          test "$(grep -c 'MARKETING_VERSION = 1.5;' Flashcards.xcodeproj/project.pbxproj)" -eq 2
           test "$(grep -c 'PRODUCT_BUNDLE_IDENTIFIER = com.raton.flashcards;' Flashcards.xcodeproj/project.pbxproj)" -eq 2
           test "$(grep -c 'SWIFT_VERSION = 6.0;' Flashcards.xcodeproj/project.pbxproj)" -eq 2
           test -z "$(find Flashcards -name '*.entitlements' -print -quit)"
@@ -172,8 +196,8 @@ jobs:
           test -d "$APP_PATH"
           test -s "$APP_PATH/Assets.car"
           plutil -p "$APP_PATH/Info.plist" | grep -q 'AppIcon'
-          test "$(plutil -extract CFBundleShortVersionString raw "$APP_PATH/Info.plist")" = "1.4"
-          test "$(plutil -extract CFBundleVersion raw "$APP_PATH/Info.plist")" = "4"
+          test "$(plutil -extract CFBundleShortVersionString raw "$APP_PATH/Info.plist")" = "1.5"
+          test "$(plutil -extract CFBundleVersion raw "$APP_PATH/Info.plist")" = "5"
           rm -rf Payload Flashcards.ipa
           mkdir Payload
           cp -R "$APP_PATH" Payload/

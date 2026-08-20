@@ -89,6 +89,7 @@
     "Sauvegarde" : { "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "Backup" } } } },
     "Decks et cartes" : { "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "Decks and cards" } } } },
     "Rechercher" : { "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "Search" } } } },
+    "Recherchez un deck ou le contenu d’une carte." : { "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "Search for a deck or card content." } } } },
     "Dossiers" : { "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "Folders" } } } },
     "Récents" : { "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "Recent" } } } },
     "Aucun dossier pour le moment" : { "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "No folders yet" } } } },
