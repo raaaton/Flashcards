@@ -304,6 +304,7 @@ struct HomeView: View {
             Image(systemName: "plus")
                 .neutralIconColor()
         }
+        .tint(.white)
         .accessibilityLabel("Ajouter")
         .accessibilityHint("Créer un deck ou un dossier")
     }

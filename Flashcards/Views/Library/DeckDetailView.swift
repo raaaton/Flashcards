@@ -52,6 +52,7 @@ struct DeckDetailView: View {
                     Image(systemName: "ellipsis")
                         .neutralIconColor()
                 }
+                .tint(.white)
                 .accessibilityLabel("Actions")
             }
         }

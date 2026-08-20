@@ -68,6 +68,7 @@ struct EditCardsView: View {
                     Image(systemName: "plus")
                         .neutralIconColor()
                 }
+                .tint(.white)
                 .accessibilityLabel("Ajouter")
             }
         }
