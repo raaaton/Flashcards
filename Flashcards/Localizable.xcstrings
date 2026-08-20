@@ -216,6 +216,17 @@
     "Créer un nouveau deck dans ce dossier" : { "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "Create a new deck in this folder" } } } },
     "Cartes initiales" : { "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "Initial Cards" } } } },
     "Chaque carte commencée doit avoir un terme et une définition." : { "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "Each started card must have a term and a definition." } } } },
+    "Coller" : { "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "Paste" } } } },
+    "Reprendre" : { "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "Resume" } } } },
+    "Épinglés" : { "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "Pinned" } } } },
+    "Épingler" : { "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "Pin" } } } },
+    "Désépingler" : { "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "Unpin" } } } },
+    "Ajouter aux favoris" : { "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "Add to favorites" } } } },
+    "Retirer des favoris" : { "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "Remove from favorites" } } } },
+    "Déplacer vers un deck" : { "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "Move to deck" } } } },
+    "Copier vers un deck" : { "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "Copy to deck" } } } },
+    "Sélectionner" : { "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "Select" } } } },
+    "Désélectionner" : { "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "Deselect" } } } },
     "Ajoutez au moins une carte pour créer le deck." : { "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "Add at least one card to create the deck." } } } }
   },
   "version" : "1.0"
