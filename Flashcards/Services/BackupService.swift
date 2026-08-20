@@ -109,6 +109,9 @@ enum BackupService {
                 deck.lastOpenedAt = dto.lastOpenedAt ?? deck.lastOpenedAt
                 deck.completedStudySessions = dto.completedStudySessions
                 deck.activeStudySessionData = dto.activeStudySessionData
+                deck.studyHistoryData = dto.studyHistoryData
+                deck.lastStudyActivityAt = dto.lastStudyActivityAt
+                deck.isPinned = dto.isPinned
                 deck.folder = dto.folderID.flatMap { foldersByID[$0] }
 
                 for cardDTO in dto.cards {
@@ -134,6 +137,7 @@ enum BackupService {
                     card.mastered = cardDTO.mastered
                     card.timesStudied = cardDTO.timesStudied
                     card.timesCorrect = cardDTO.timesCorrect
+                    card.isStarred = cardDTO.isStarred
                     card.deck = deck
                 }
             }
@@ -166,6 +170,9 @@ enum BackupService {
             lastOpenedAt: deck.lastOpenedAt,
             completedStudySessions: deck.completedStudySessions,
             activeStudySessionData: deck.activeStudySessionData,
+            studyHistoryData: deck.studyHistoryData,
+            lastStudyActivityAt: deck.lastStudyActivityAt,
+            isPinned: deck.isPinned,
             folderID: deck.folder?.id,
             cards: deck.cards
                 .sorted { $0.position < $1.position }
@@ -177,7 +184,8 @@ enum BackupService {
                         position: $0.position,
                         mastered: $0.mastered,
                         timesStudied: $0.timesStudied,
-                        timesCorrect: $0.timesCorrect
+                        timesCorrect: $0.timesCorrect,
+                        isStarred: $0.isStarred
                     )
                 }
         )

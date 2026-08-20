@@ -24,6 +24,9 @@ struct DeckDetailView: View {
             LazyVStack(alignment: .leading, spacing: 24) {
                 deckSummary
                 studySection
+                if !deck.studyHistory.isEmpty {
+                    studyHistorySection
+                }
                 cardsSection
             }
             .padding(.horizontal)
@@ -168,6 +171,57 @@ struct DeckDetailView: View {
             .padding(.horizontal, 18)
             .background(Theme.cardBackground, in: .rect(cornerRadius: 20, style: .continuous))
         }
+    }
+
+    private var studyHistorySection: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            Text("study.history.title")
+                .font(.title2.bold())
+
+            VStack(spacing: 0) {
+                ForEach(Array(deck.studyHistory.prefix(5))) { entry in
+                    HStack(alignment: .top, spacing: 12) {
+                        Image(systemName: entry.mode == .flashcards ? "rectangle.stack" : "checklist")
+                            .foregroundStyle(Theme.deckAccent(for: deck))
+                            .frame(width: 28)
+
+                        VStack(alignment: .leading, spacing: 4) {
+                            HStack {
+                                Text(entry.mode.title)
+                                    .font(.headline)
+                                Spacer()
+                                Text(entry.completedAt, style: .relative)
+                                    .font(.caption)
+                                    .foregroundStyle(.secondary)
+                            }
+                            Text(historySummary(entry))
+                                .font(.subheadline)
+                                .foregroundStyle(.secondary)
+                        }
+                    }
+                    .padding(.vertical, 12)
+
+                    if entry.id != deck.studyHistory.prefix(5).last?.id {
+                        Divider()
+                    }
+                }
+            }
+            .padding(.horizontal, 16)
+            .background(Theme.cardBackground, in: .rect(cornerRadius: 20, style: .continuous))
+        }
+    }
+
+    private func historySummary(_ entry: StudyHistoryEntry) -> String {
+        let itemLabel = entry.mode == .flashcards
+            ? L10n.cards(entry.itemCount)
+            : L10n.questions(entry.itemCount)
+        return L10n.format(
+            "study.history.summary",
+            itemLabel,
+            Int64(entry.correctCount),
+            Int64(entry.incorrectCount),
+            Int64(entry.successRate)
+        )
     }
 
     private func studyTile<Destination: View>(

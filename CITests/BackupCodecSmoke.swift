@@ -23,7 +23,8 @@ enum BackupCodecSmoke {
             position: 0,
             mastered: true,
             timesStudied: 4,
-            timesCorrect: 3
+            timesCorrect: 3,
+            isStarred: true
         )
         let envelope = BackupEnvelopeV1(
             exportedAt: date,
@@ -47,6 +48,9 @@ enum BackupCodecSmoke {
                     lastOpenedAt: date.addingTimeInterval(120),
                     completedStudySessions: 7,
                     activeStudySessionData: Data("resume".utf8),
+                    studyHistoryData: Data("history".utf8),
+                    lastStudyActivityAt: date.addingTimeInterval(180),
+                    isPinned: true,
                     folderID: folderID,
                     cards: [originalCard]
                 )
@@ -60,6 +64,9 @@ enum BackupCodecSmoke {
         precondition(decoded.decks[0].completedStudySessions == 7)
         precondition(decoded.decks[0].activeStudySessionData == Data("resume".utf8))
         precondition(decoded.decks[0].lastOpenedAt == date.addingTimeInterval(120))
+        precondition(decoded.decks[0].lastStudyActivityAt == date.addingTimeInterval(180))
+        precondition(decoded.decks[0].isPinned)
+        precondition(decoded.decks[0].cards[0].isStarred)
 
         var legacyJSON = try JSONSerialization.jsonObject(
             with: BackupCodec.encode(envelope)
@@ -72,6 +79,12 @@ enum BackupCodecSmoke {
         legacyDecks[0].removeValue(forKey: "completedStudySessions")
         legacyDecks[0].removeValue(forKey: "activeStudySessionData")
         legacyDecks[0].removeValue(forKey: "lastOpenedAt")
+        legacyDecks[0].removeValue(forKey: "studyHistoryData")
+        legacyDecks[0].removeValue(forKey: "lastStudyActivityAt")
+        legacyDecks[0].removeValue(forKey: "isPinned")
+        var legacyCards = legacyDecks[0]["cards"] as! [[String: Any]]
+        legacyCards[0].removeValue(forKey: "isStarred")
+        legacyDecks[0]["cards"] = legacyCards
         legacyJSON["decks"] = legacyDecks
         let legacyData = try JSONSerialization.data(withJSONObject: legacyJSON)
         let decodedLegacy = try BackupCodec.decode(legacyData)
@@ -80,6 +93,9 @@ enum BackupCodecSmoke {
         precondition(decodedLegacy.decks[0].completedStudySessions == 0)
         precondition(decodedLegacy.decks[0].activeStudySessionData == nil)
         precondition(decodedLegacy.decks[0].lastOpenedAt == nil)
+        precondition(decodedLegacy.decks[0].lastStudyActivityAt == nil)
+        precondition(!decodedLegacy.decks[0].isPinned)
+        precondition(!decodedLegacy.decks[0].cards[0].isStarred)
 
         var local = envelope
         local.decks[0].cards.append(localOnlyCard)
