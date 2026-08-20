@@ -179,7 +179,7 @@ struct HomeView: View {
                             NavigationLink {
                                 DeckDetailView(deck: deck)
                             } label: {
-                                RecentDeckTile(deck: deck)
+                                DeckTile(deck: deck)
                             }
                             .buttonStyle(.plain)
                         }
@@ -340,35 +340,5 @@ struct HomeView: View {
         modelContext.delete(deck)
         try? modelContext.save()
         deckToDelete = nil
-    }
-}
-
-private struct RecentDeckTile: View {
-    let deck: Deck
-
-    var body: some View {
-        VStack(alignment: .leading, spacing: 16) {
-            Image(systemName: "rectangle.stack.fill")
-                .font(.title2.weight(.semibold))
-                .foregroundStyle(.white)
-                .frame(width: 44, height: 44)
-                .background(.white.opacity(0.1), in: .circle)
-
-            VStack(alignment: .leading, spacing: 3) {
-                Text(deck.name)
-                    .font(.headline)
-                    .foregroundStyle(.primary)
-                    .lineLimit(2)
-                Text(L10n.cards(deck.cards.count))
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
-            }
-        }
-        .frame(maxWidth: .infinity, minHeight: 112, alignment: .leading)
-        .padding(16)
-        .background(Theme.cardBackground, in: .rect(cornerRadius: 22, style: .continuous))
-        .contentShape(.rect(cornerRadius: 22, style: .continuous))
-        .accessibilityElement(children: .combine)
-        .accessibilityHint("Ouvrir ce deck")
     }
 }

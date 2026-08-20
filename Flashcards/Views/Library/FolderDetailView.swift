@@ -15,6 +15,10 @@ struct FolderDetailView: View {
     @State private var deckToEdit: Deck?
     @State private var deckToDelete: Deck?
 
+    private let columns = [
+        GridItem(.adaptive(minimum: 150, maximum: 220), spacing: 14)
+    ]
+
     private var decks: [Deck] {
         let scoped = allDecks.filter { deck in
             if let folder {
@@ -46,12 +50,17 @@ struct FolderDetailView: View {
             } else if decks.isEmpty {
                 ContentUnavailableView.search(text: searchText)
             } else {
-                List {
-                    ForEach(decks) { deck in
-                        deckLink(deck)
+                ScrollView {
+                    LazyVGrid(columns: columns, spacing: 14) {
+                        ForEach(decks) { deck in
+                            deckTileLink(deck)
+                        }
                     }
+                    .padding(.horizontal)
+                    .padding(.top, 8)
+                    .padding(.bottom, 96)
                 }
-                .animation(.default, value: decks.map(\.id))
+                .animation(.spring(duration: 0.35), value: decks.map(\.id))
             }
         }
         .navigationTitle(folder?.name ?? L10n.text("folder.unfiled"))
@@ -126,23 +135,13 @@ struct FolderDetailView: View {
         }
     }
 
-    private func deckLink(_ deck: Deck) -> some View {
+    private func deckTileLink(_ deck: Deck) -> some View {
         NavigationLink {
             DeckDetailView(deck: deck)
         } label: {
-            DeckRow(deck: deck)
+            DeckTile(deck: deck)
         }
-        .swipeActions(edge: .trailing) {
-            Button(role: .destructive) { deckToDelete = deck } label: {
-                Label("Supprimer", systemImage: "trash")
-            }
-            .tint(.red)
-            Button { LibraryActions.duplicateDeck(deck, in: modelContext) } label: {
-                Label("Dupliquer", systemImage: "plus.square.on.square")
-                    .foregroundStyle(.white)
-            }
-            .tint(Theme.accent)
-        }
+        .buttonStyle(.plain)
         .contextMenu {
             Button("Modifier", systemImage: "pencil") { deckToEdit = deck }
                 .normalActionColor()
