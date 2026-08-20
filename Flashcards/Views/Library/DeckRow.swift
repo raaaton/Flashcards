@@ -1,3 +1,4 @@
+import SwiftData
 import SwiftUI
 
 struct DeckRow: View {
@@ -78,8 +79,16 @@ struct DeckTile: View {
     }
 }
 
+private struct CardSearchMatch: Identifiable {
+    let card: Card
+    let deck: Deck
+
+    var id: UUID { card.id }
+}
+
 struct DeckSearchView: View {
     @Environment(\.dismiss) private var dismiss
+    @Query(sort: \Folder.name) private var folders: [Folder]
 
     let decks: [Deck]
     let showsFolderContext: Bool
@@ -87,50 +96,111 @@ struct DeckSearchView: View {
     @State private var query = ""
     @State private var searchIsPresented = false
 
-    private var matchingDecks: [Deck] {
-        let cleanQuery = query.trimmingCharacters(in: .whitespacesAndNewlines)
-        guard !cleanQuery.isEmpty else { return [] }
+    private let columns = [
+        GridItem(.adaptive(minimum: 150, maximum: 220), spacing: 14)
+    ]
 
+    private var cleanQuery: String {
+        query.trimmingCharacters(in: .whitespacesAndNewlines)
+    }
+
+    private var matchingFolders: [Folder] {
+        guard showsFolderContext, !cleanQuery.isEmpty else { return [] }
+        return folders.filter { $0.name.localizedCaseInsensitiveContains(cleanQuery) }
+    }
+
+    private var matchingDecks: [Deck] {
+        guard !cleanQuery.isEmpty else { return [] }
         return decks.filter { deck in
             deck.name.localizedCaseInsensitiveContains(cleanQuery)
                 || (deck.deckDescription?.localizedCaseInsensitiveContains(cleanQuery) ?? false)
-                || deck.cards.contains { card in
-                    card.term.localizedCaseInsensitiveContains(cleanQuery)
-                        || card.definition.localizedCaseInsensitiveContains(cleanQuery)
-                }
         }
+    }
+
+    private var matchingCards: [CardSearchMatch] {
+        guard showsFolderContext, !cleanQuery.isEmpty else { return [] }
+        return decks.flatMap { deck in
+            deck.cards
+                .filter {
+                    $0.term.localizedCaseInsensitiveContains(cleanQuery)
+                        || $0.definition.localizedCaseInsensitiveContains(cleanQuery)
+                }
+                .sorted { $0.position < $1.position }
+                .map { CardSearchMatch(card: $0, deck: deck) }
+        }
+    }
+
+    private var hasResults: Bool {
+        !matchingFolders.isEmpty || !matchingDecks.isEmpty || !matchingCards.isEmpty
     }
 
     var body: some View {
         NavigationStack {
             Group {
-                if query.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+                if cleanQuery.isEmpty {
                     ContentUnavailableView(
                         "Rechercher",
                         systemImage: "magnifyingglass",
-                        description: Text("Recherchez un deck ou le contenu d’une carte.")
+                        description: Text("Recherchez un dossier, un deck ou le contenu d’une carte.")
                     )
-                } else if matchingDecks.isEmpty {
+                } else if !hasResults {
                     ContentUnavailableView.search(text: query)
                 } else {
-                    List(matchingDecks) { deck in
-                        NavigationLink {
-                            DeckDetailView(deck: deck)
-                        } label: {
-                            VStack(alignment: .leading, spacing: 4) {
-                                DeckRow(deck: deck)
-                                if showsFolderContext {
-                                    Label(
-                                        deck.folder?.name ?? L10n.text("folder.unfiled"),
-                                        systemImage: deck.folder?.iconName ?? "tray.fill"
-                                    )
-                                    .font(.caption)
-                                    .foregroundStyle(.tertiary)
+                    ScrollView {
+                        LazyVStack(alignment: .leading, spacing: 22) {
+                            if !matchingFolders.isEmpty {
+                                resultHeader("Dossiers", systemImage: "folder")
+                                LazyVGrid(columns: columns, spacing: 14) {
+                                    ForEach(matchingFolders) { folder in
+                                        NavigationLink {
+                                            FolderDetailView(folder: folder)
+                                        } label: {
+                                            FolderTile(
+                                                name: folder.name,
+                                                systemImage: folder.iconName,
+                                                color: Color(folderHex: folder.colorHex),
+                                                deckCount: folder.decks.count
+                                            )
+                                        }
+                                        .buttonStyle(.plain)
+                                    }
+                                }
+                            }
+
+                            if !matchingDecks.isEmpty {
+                                resultHeader("Decks", systemImage: "rectangle.stack")
+                                LazyVGrid(columns: columns, spacing: 14) {
+                                    ForEach(matchingDecks) { deck in
+                                        NavigationLink {
+                                            DeckDetailView(deck: deck)
+                                        } label: {
+                                            DeckTile(deck: deck)
+                                        }
+                                        .buttonStyle(.plain)
+                                    }
+                                }
+                            }
+
+                            if !matchingCards.isEmpty {
+                                resultHeader("Cartes", systemImage: "rectangle.on.rectangle")
+                                LazyVStack(spacing: 10) {
+                                    ForEach(matchingCards) { match in
+                                        NavigationLink {
+                                            DeckDetailView(deck: match.deck)
+                                        } label: {
+                                            cardPreview(match)
+                                        }
+                                        .buttonStyle(.plain)
+                                    }
                                 }
                             }
                         }
+                        .padding(.horizontal)
+                        .padding(.top, 8)
+                        .padding(.bottom, 28)
                     }
                     .animation(.default, value: matchingDecks.map(\.id))
+                    .animation(.default, value: matchingCards.map(\.id))
                 }
             }
             .navigationTitle("Rechercher")
@@ -151,11 +221,42 @@ struct DeckSearchView: View {
         .searchable(
             text: $query,
             isPresented: $searchIsPresented,
-            prompt: "Decks et cartes"
+            prompt: showsFolderContext ? "Dossiers, decks et cartes" : "Decks"
         )
         .scrollDismissesKeyboard(.interactively)
         .task {
             searchIsPresented = true
         }
+    }
+
+    private func resultHeader(_ title: String, systemImage: String) -> some View {
+        Label(title, systemImage: systemImage)
+            .font(.title2.bold())
+            .foregroundStyle(.primary)
+    }
+
+    private func cardPreview(_ match: CardSearchMatch) -> some View {
+        VStack(alignment: .leading, spacing: 7) {
+            Text(match.card.term)
+                .font(.headline)
+                .foregroundStyle(.primary)
+                .lineLimit(2)
+            Text(match.card.definition)
+                .font(.subheadline)
+                .foregroundStyle(.secondary)
+                .lineLimit(3)
+            Label(
+                "\(match.deck.folder?.name ?? L10n.text("folder.unfiled")) › \(match.deck.name)",
+                systemImage: match.deck.folder?.iconName ?? "tray.fill"
+            )
+            .font(.caption.weight(.medium))
+            .foregroundStyle(Theme.deckAccent(for: match.deck))
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .padding(15)
+        .background(Theme.cardBackground, in: .rect(cornerRadius: 18, style: .continuous))
+        .contentShape(.rect(cornerRadius: 18, style: .continuous))
+        .accessibilityElement(children: .combine)
+        .accessibilityHint("Ouvrir le deck \(match.deck.name)")
     }
 }
