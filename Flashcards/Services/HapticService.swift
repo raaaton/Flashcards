@@ -1,3 +1,4 @@
+import CoreHaptics
 import UIKit
 
 enum HapticEvent {
@@ -11,6 +12,8 @@ enum HapticEvent {
 
 @MainActor
 enum HapticService {
+    private static var completionEngine: CHHapticEngine?
+
     static func play(_ event: HapticEvent) {
         guard AppPreferences.hapticsEnabled else { return }
 
@@ -36,23 +39,87 @@ enum HapticService {
     }
 
     private static func playCompletionSequence() {
-        let notification = UINotificationFeedbackGenerator()
-        let rigidImpact = UIImpactFeedbackGenerator(style: .rigid)
-        let heavyImpact = UIImpactFeedbackGenerator(style: .heavy)
+        guard completionEngine == nil else { return }
 
-        notification.prepare()
-        rigidImpact.prepare()
-        heavyImpact.prepare()
-        notification.notificationOccurred(.success)
+        if CHHapticEngine.capabilitiesForHardware().supportsHaptics {
+            do {
+                let engine = try CHHapticEngine()
+                let maximumIntensity = CHHapticEventParameter(
+                    parameterID: .hapticIntensity,
+                    value: 1
+                )
+                let sharpImpact = CHHapticEventParameter(
+                    parameterID: .hapticSharpness,
+                    value: 0.9
+                )
+                let broadImpact = CHHapticEventParameter(
+                    parameterID: .hapticSharpness,
+                    value: 0.45
+                )
+                let events = [
+                    CHHapticEvent(
+                        eventType: .hapticContinuous,
+                        parameters: [maximumIntensity, broadImpact],
+                        relativeTime: 0,
+                        duration: 0.065
+                    ),
+                    CHHapticEvent(
+                        eventType: .hapticTransient,
+                        parameters: [maximumIntensity, sharpImpact],
+                        relativeTime: 0
+                    ),
+                    CHHapticEvent(
+                        eventType: .hapticTransient,
+                        parameters: [maximumIntensity, sharpImpact],
+                        relativeTime: 0.085
+                    ),
+                    CHHapticEvent(
+                        eventType: .hapticTransient,
+                        parameters: [maximumIntensity, broadImpact],
+                        relativeTime: 0.18
+                    )
+                ]
+                let pattern = try CHHapticPattern(events: events, parameters: [])
+                let player = try engine.makePlayer(with: pattern)
+
+                completionEngine = engine
+                try engine.start()
+                try player.start(atTime: CHHapticTimeImmediate)
+
+                Task { @MainActor in
+                    try? await Task.sleep(for: .milliseconds(320))
+                    engine.stop(completionHandler: nil)
+                    if completionEngine === engine {
+                        completionEngine = nil
+                    }
+                }
+                return
+            } catch {
+                completionEngine = nil
+            }
+        }
+
+        playCompletionFallback()
+    }
+
+    private static func playCompletionFallback() {
+        let firstImpact = UIImpactFeedbackGenerator(style: .heavy)
+        let secondImpact = UIImpactFeedbackGenerator(style: .rigid)
+        let finalImpact = UIImpactFeedbackGenerator(style: .heavy)
+
+        firstImpact.prepare()
+        secondImpact.prepare()
+        finalImpact.prepare()
+        firstImpact.impactOccurred(intensity: 1)
 
         Task { @MainActor in
-            try? await Task.sleep(for: .milliseconds(90))
+            try? await Task.sleep(for: .milliseconds(75))
             guard AppPreferences.hapticsEnabled else { return }
-            rigidImpact.impactOccurred(intensity: 1)
+            secondImpact.impactOccurred(intensity: 1)
 
-            try? await Task.sleep(for: .milliseconds(105))
+            try? await Task.sleep(for: .milliseconds(85))
             guard AppPreferences.hapticsEnabled else { return }
-            heavyImpact.impactOccurred(intensity: 1)
+            finalImpact.impactOccurred(intensity: 1)
         }
     }
 }
