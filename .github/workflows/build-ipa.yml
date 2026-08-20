@@ -233,12 +233,12 @@ jobs:
           test -d "$APP_PATH"
           test -s "$APP_PATH/Assets.car"
           plutil -p "$APP_PATH/Info.plist" | grep -q 'AppIcon'
-          test "$(plutil -extract CFBundleShortVersionString raw "$APP_PATH/Info.plist")" = "1.6"
-          test "$(plutil -extract CFBundleVersion raw "$APP_PATH/Info.plist")" = "6"
+          test "$(plutil -extract CFBundleShortVersionString raw "$APP_PATH/Info.plist")" = "1.7"
+          test "$(plutil -extract CFBundleVersion raw "$APP_PATH/Info.plist")" = "7"
           rm -rf Payload Flashcards.ipa
           mkdir Payload
           cp -R "$APP_PATH" Payload/
-          /usr/bin/zip -qry Flashcards.ipa Payload
+          /usr/bin/zip -X -qry Flashcards.ipa Payload
           test -s Flashcards.ipa
 
       - name: Publish GitHub Release
