@@ -160,6 +160,7 @@ jobs:
             -swift-version 6 \
             Flashcards/AppPreferences.swift \
             Flashcards/L10n.swift \
+            Flashcards/Services/StudySessionState.swift \
             Flashcards/Services/BulkImportParser.swift \
             CITests/BulkImportParserSmoke.swift \
             -o "$RUNNER_TEMP/bulk-import-smoke"
@@ -185,6 +186,7 @@ jobs:
             -swift-version 6 \
             Flashcards/AppPreferences.swift \
             Flashcards/L10n.swift \
+            Flashcards/Services/StudySessionState.swift \
             Flashcards/Services/BackupModels.swift \
             CITests/BackupCodecSmoke.swift \
             -o "$RUNNER_TEMP/backup-codec-smoke"
