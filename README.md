@@ -182,8 +182,6 @@ The application is split around its main domains rather than relying on external
 
 Prebuilt IPA files are available from the repository's **Releases** section.
 
-[Image du bouton ou de la section Releases GitHub]
-
 Release builds are distributed as IPA packages and may require signing with your own Apple ID or developer certificate before installation.
 
 They can be installed using a compatible iOS sideloading solution.
