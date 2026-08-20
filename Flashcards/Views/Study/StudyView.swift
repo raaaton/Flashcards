@@ -84,7 +84,8 @@ struct StudyView: View {
                     Button("Afficher la réponse", systemImage: "arrow.2.circlepath") {
                         flipCard()
                     }
-                    .buttonStyle(.glassProminent)
+                    .buttonStyle(.glass)
+                    .tint(.clear)
                     .foregroundStyle(.white)
                     .disabled(isCommitting)
                 }
@@ -137,7 +138,7 @@ struct StudyView: View {
                 value: Double(session.cardsSeen),
                 total: Double(max(session.totalCards, 1))
             )
-            .tint(accent)
+            .tint(.white.opacity(0.65))
             .animation(
                 reduceMotion ? nil : .easeOut(duration: 0.22),
                 value: session.cardsSeen

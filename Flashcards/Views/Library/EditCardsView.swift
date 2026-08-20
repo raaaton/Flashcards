@@ -204,6 +204,7 @@ struct EditCardsView: View {
                     showingDeleteConfirmation = true
                 } label: {
                     Label("Supprimer", systemImage: "trash")
+                        .foregroundStyle(.red)
                 }
                 .disabled(selectedCardIDs.isEmpty)
 
