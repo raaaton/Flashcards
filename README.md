@@ -5,7 +5,6 @@
   <img alt="stars" src="https://img.shields.io/github/stars/raaaton/Flashcards" />
   <img alt="forks" src="https://img.shields.io/github/forks/raaaton/Flashcards" />
   <img alt="issues" src="https://img.shields.io/github/issues/raaaton/Flashcards" />
-  <img alt="downloads" src="https://img.shields.io/github/downloads/raaaton/Flashcards/total" />
 </p>
 
 # Flashcards
