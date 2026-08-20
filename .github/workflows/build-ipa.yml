@@ -352,19 +352,33 @@ jobs:
             - name: Package IPA
               run: |
                   set -euxo pipefail
+
                   APP_PATH="$(find "$RUNNER_TEMP/DerivedData/Build/Products/Release-iphoneos" \
                     -maxdepth 1 -type d -name '*.app' -print -quit)"
+
                   test -n "$APP_PATH"
                   test -d "$APP_PATH"
                   test -s "$APP_PATH/Assets.car"
                   plutil -p "$APP_PATH/Info.plist" | grep -q 'AppIcon'
-                  test "$(plutil -extract CFBundleShortVersionString raw "$APP_PATH/Info.plist")" = "${{ steps.project_version.outputs.version }}"
-                  test "$(plutil -extract CFBundleVersion raw "$APP_PATH/Info.plist")" = "${{ steps.project_version.outputs.build }}"
-                  rm -rf Payload Flashcards.ipa
+
+                  APP_VERSION="$(plutil -extract CFBundleShortVersionString raw "$APP_PATH/Info.plist")"
+                  APP_BUILD="$(plutil -extract CFBundleVersion raw "$APP_PATH/Info.plist")"
+
+                  test "$APP_VERSION" = "${{ steps.project_version.outputs.version }}"
+                  test "$APP_BUILD" = "${{ steps.project_version.outputs.build }}"
+
+                  IPA_NAME="Flashcards-v${APP_VERSION}.ipa"
+
+                  rm -rf Payload "$IPA_NAME"
                   mkdir Payload
                   cp -R "$APP_PATH" Payload/
-                  /usr/bin/zip -X -qry Flashcards.ipa Payload
-                  test -s Flashcards.ipa
+                  /usr/bin/zip -X -qry "$IPA_NAME" Payload
+
+                  test -s "$IPA_NAME"
+                  /usr/bin/unzip -t "$IPA_NAME"
+
+                  echo "IPA_NAME=$IPA_NAME" >> "$GITHUB_ENV"
+                  echo "Created $IPA_NAME"
 
             - name: Set artifact name
               id: artifact_name
