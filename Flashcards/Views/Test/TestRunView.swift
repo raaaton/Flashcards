@@ -46,6 +46,8 @@ struct TestRunView: View {
         _session = State(initialValue: TestSessionState(questions: questions))
     }
 
+    private var accent: Color { Theme.deckAccent(for: deck) }
+
     var body: some View {
         ZStack {
             if session.isComplete {
@@ -58,6 +60,7 @@ struct TestRunView: View {
             }
         }
         .navigationBarBackButtonHidden()
+        .tint(accent)
         .toolbar {
             ToolbarItem(placement: .topBarLeading) {
                 Button { dismiss() } label: {
@@ -95,7 +98,7 @@ struct TestRunView: View {
 
                 Text(question.type.title.uppercased())
                     .font(.caption.weight(.bold))
-                    .foregroundStyle(Theme.accent)
+                    .foregroundStyle(accent)
 
                 Text(question.prompt)
                     .font(.largeTitle.bold())
@@ -131,7 +134,7 @@ struct TestRunView: View {
                             .frame(maxWidth: .infinity)
                             .padding(.vertical, 14)
                             .background(
-                                Theme.accent,
+                                accent,
                                 in: .rect(cornerRadius: 16, style: .continuous)
                             )
                             .contentShape(.rect(cornerRadius: 16, style: .continuous))
@@ -293,7 +296,7 @@ struct TestRunView: View {
                 VStack(spacing: 12) {
                     Image(systemName: session.score == 100 ? "checkmark.seal.fill" : "chart.bar.fill")
                         .font(.system(size: 54))
-                        .foregroundStyle(Theme.accent)
+                        .foregroundStyle(accent)
                     Text("\(session.score) %")
                         .font(.largeTitle.bold())
                     Text(L10n.format(
@@ -318,10 +321,10 @@ struct TestRunView: View {
                     Button("Refaire uniquement les erreurs", systemImage: "arrow.counterclockwise") {
                         retryErrors()
                     }
-                    .normalActionColor()
+                    .normalActionColor(accent)
                 }
                 Button("Terminer", systemImage: "checkmark") { dismiss() }
-                    .normalActionColor()
+                    .normalActionColor(accent)
             }
         }
         .navigationTitle("Résultats")
@@ -355,7 +358,7 @@ struct TestRunView: View {
             if record.wasOverridden {
                 Text("Correction validée manuellement")
                     .font(.caption)
-                    .foregroundStyle(Theme.accent)
+                    .foregroundStyle(accent)
             } else if !record.isCorrect && record.question.type == .written {
                 Button("C’était correct en fait") {
                     override(record)

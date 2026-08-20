@@ -55,6 +55,8 @@ struct StudySetupView: View {
         deck.cards.count(where: \.mastered)
     }
 
+    private var accent: Color { Theme.deckAccent(for: deck) }
+
     var body: some View {
         VStack(spacing: 0) {
             Form {
@@ -64,7 +66,7 @@ struct StudySetupView: View {
                         systemImage: "rectangle.stack.fill"
                     )
                         .font(.title2.bold())
-                        .foregroundStyle(Theme.accent)
+                        .foregroundStyle(accent)
                         .accessibilityAddTraits(.isHeader)
                     if resumableSession != nil {
                         Text("study.session.in_progress")
@@ -75,7 +77,7 @@ struct StudySetupView: View {
 
                 Section("Sens") {
                     LabeledContent("Sens") {
-                        StudyDirectionMenu(selection: $direction)
+                        StudyDirectionMenu(selection: $direction, accent: accent)
                     }
                 }
                 .disabled(resumableSession != nil)
@@ -118,6 +120,7 @@ struct StudySetupView: View {
                             Int64(deck.cards.count)
                         )
                     )
+                    .tint(accent)
 
                 }
 
@@ -138,7 +141,8 @@ struct StudySetupView: View {
 
             PrimaryStartButton(
                 title: resumableSession == nil ? "common.start" : "study.resume",
-                isEnabled: canStart
+                isEnabled: canStart,
+                accent: accent
             ) {
                 if let resumableSession {
                     resume(resumableSession)
@@ -152,6 +156,7 @@ struct StudySetupView: View {
             .padding(.vertical, 12)
         }
         .navigationTitle("Flashcards")
+        .tint(accent)
         .navigationDestination(isPresented: $showingSession) {
             if let launchedSession {
                 StudyView(deck: deck, snapshot: launchedSession)

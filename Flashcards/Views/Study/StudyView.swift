@@ -28,6 +28,8 @@ struct StudyView: View {
         _session = State(initialValue: snapshot.state)
     }
 
+    private var accent: Color { Theme.deckAccent(for: deck) }
+
     var body: some View {
         Group {
             if session.isComplete {
@@ -37,6 +39,7 @@ struct StudyView: View {
             }
         }
         .navigationBarBackButtonHidden()
+        .tint(accent)
         .toolbar {
             ToolbarItem(placement: .topBarLeading) {
                 Button { dismiss() } label: {
@@ -134,6 +137,7 @@ struct StudyView: View {
                 value: Double(session.cardsSeen),
                 total: Double(max(session.totalCards, 1))
             )
+            .tint(accent)
             .animation(
                 reduceMotion ? nil : .easeOut(duration: 0.22),
                 value: session.cardsSeen
@@ -402,7 +406,7 @@ struct StudyView: View {
                     : "clock.arrow.circlepath"
             )
                 .font(.system(size: 72))
-                .foregroundStyle(Theme.accent)
+                .foregroundStyle(accent)
             Text(L10n.format("study.session.complete", Int64(sessionNumber)))
                 .font(.largeTitle.bold())
                 .multilineTextAlignment(.center)

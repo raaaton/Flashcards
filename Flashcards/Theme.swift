@@ -17,9 +17,9 @@ extension View {
             .tint(Color.white)
     }
 
-    func normalActionColor() -> some View {
-        foregroundStyle(Theme.accent)
-            .tint(Theme.accent)
+    func normalActionColor(_ color: Color = Theme.accent) -> some View {
+        foregroundStyle(color)
+            .tint(color)
     }
 
     func destructiveActionColor() -> some View {
@@ -31,15 +31,18 @@ extension View {
 struct PrimaryStartButton: View {
     let title: LocalizedStringKey
     let isEnabled: Bool
+    let accent: Color
     let action: () -> Void
 
     init(
         title: LocalizedStringKey = "common.start",
         isEnabled: Bool = true,
+        accent: Color = Theme.accent,
         action: @escaping () -> Void
     ) {
         self.title = title
         self.isEnabled = isEnabled
+        self.accent = accent
         self.action = action
     }
 
@@ -53,7 +56,7 @@ struct PrimaryStartButton: View {
                 .foregroundStyle(.white)
                 .frame(maxWidth: .infinity)
                 .padding(.vertical, 15)
-                .background(Theme.accent, in: .rect(cornerRadius: 16, style: .continuous))
+                .background(accent, in: .rect(cornerRadius: 16, style: .continuous))
                 .contentShape(.rect(cornerRadius: 16, style: .continuous))
         }
         .buttonStyle(.plain)
@@ -64,6 +67,12 @@ struct PrimaryStartButton: View {
 
 struct StudyDirectionMenu: View {
     @Binding var selection: StudyDirection
+    let accent: Color
+
+    init(selection: Binding<StudyDirection>, accent: Color = Theme.accent) {
+        _selection = selection
+        self.accent = accent
+    }
 
     var body: some View {
         Menu {
@@ -79,7 +88,7 @@ struct StudyDirectionMenu: View {
                     .font(.caption.weight(.semibold))
             }
         }
-        .normalActionColor()
+        .normalActionColor(accent)
         .accessibilityLabel("Sens")
         .accessibilityValue(selection.title)
     }

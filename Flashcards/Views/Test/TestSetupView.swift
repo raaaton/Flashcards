@@ -28,6 +28,8 @@ struct TestSetupView: View {
         deck.cards.contains(where: \.isStarred)
     }
 
+    private var accent: Color { Theme.deckAccent(for: deck) }
+
     var body: some View {
         VStack(spacing: 0) {
             Form {
@@ -45,7 +47,7 @@ struct TestSetupView: View {
 
                 Section("Sens") {
                     LabeledContent("Sens") {
-                        StudyDirectionMenu(selection: $direction)
+                        StudyDirectionMenu(selection: $direction, accent: accent)
                     }
                 }
 
@@ -73,7 +75,8 @@ struct TestSetupView: View {
             }
 
             PrimaryStartButton(
-                isEnabled: !selectedTypes.isEmpty && effectiveCount > 0
+                isEnabled: !selectedTypes.isEmpty && effectiveCount > 0,
+                accent: accent
             ) {
                 deck.lastStudyActivityAt = .now
                 try? modelContext.save()
@@ -93,6 +96,7 @@ struct TestSetupView: View {
             )
         }
         .navigationTitle("Configurer le test")
+        .tint(accent)
     }
 
     private func typeBinding(_ type: TestQuestionType) -> Binding<Bool> {
