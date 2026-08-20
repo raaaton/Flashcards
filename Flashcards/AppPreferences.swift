@@ -28,6 +28,9 @@ enum AppPreferences {
     static let hapticsKey = "settings.hapticsEnabled"
     static let celebrationsKey = "settings.celebrationsEnabled"
     static let searchScopeKey = "settings.searchScopeEnabled"
+    static let studyDirectionKey = "study.direction"
+    static let studyShuffleKey = "study.shuffle"
+    static let studyStarredOnlyKey = "study.starredOnly"
     static let languageKey = "settings.language"
 
     static var hapticsEnabled: Bool {
@@ -43,6 +46,30 @@ enum AppPreferences {
     static var searchScopeEnabled: Bool {
         get { storedBool(forKey: searchScopeKey, defaultValue: true) }
         set { UserDefaults.standard.set(newValue, forKey: searchScopeKey) }
+    }
+
+    static var studyDirection: StudyDirection {
+        get {
+            guard let data = UserDefaults.standard.data(forKey: studyDirectionKey),
+                  let value = try? JSONDecoder().decode(StudyDirection.self, from: data) else {
+                return .termToDefinition
+            }
+            return value
+        }
+        set {
+            guard let data = try? JSONEncoder().encode(newValue) else { return }
+            UserDefaults.standard.set(data, forKey: studyDirectionKey)
+        }
+    }
+
+    static var studyShuffle: Bool {
+        get { storedBool(forKey: studyShuffleKey, defaultValue: true) }
+        set { UserDefaults.standard.set(newValue, forKey: studyShuffleKey) }
+    }
+
+    static var studyStarredOnly: Bool {
+        get { storedBool(forKey: studyStarredOnlyKey, defaultValue: false) }
+        set { UserDefaults.standard.set(newValue, forKey: studyStarredOnlyKey) }
     }
 
     static var language: AppLanguage {

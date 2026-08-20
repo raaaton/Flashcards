@@ -6,9 +6,9 @@ struct TestSetupView: View {
     let deck: Deck
 
     @State private var selectedTypes = Set(TestQuestionType.allCases)
-    @State private var direction = StudyDirection.termToDefinition
-    @State private var shuffle = true
-    @State private var starredOnly = false
+    @State private var direction = AppPreferences.studyDirection
+    @State private var shuffle = AppPreferences.studyShuffle
+    @State private var starredOnly = AppPreferences.studyStarredOnly
     @State private var sessionSize = SessionSize.all
     @State private var showingTest = false
 
@@ -48,12 +48,21 @@ struct TestSetupView: View {
                 Section("Sens") {
                     LabeledContent("Sens") {
                         StudyDirectionMenu(selection: $direction, accent: accent)
+                            .onChange(of: direction) { _, newValue in
+                                AppPreferences.studyDirection = newValue
+                            }
                     }
                 }
 
                 Section("Options") {
                     Toggle("Mélanger", isOn: $shuffle)
+                        .onChange(of: shuffle) { _, newValue in
+                            AppPreferences.studyShuffle = newValue
+                        }
                     Toggle("study.starred_only", isOn: $starredOnly)
+                        .onChange(of: starredOnly) { _, newValue in
+                            AppPreferences.studyStarredOnly = newValue
+                        }
                 }
 
                 Section("session.size.title") {

@@ -48,8 +48,9 @@ struct HomeView: View {
         decks
             .compactMap { deck -> (Deck, ActiveStudySessionSnapshot)? in
                 guard let data = deck.activeStudySessionData,
-                      let snapshot = StudySessionPersistence.decode(data, deckID: deck.id),
-                      snapshot.state.currentIndex < snapshot.state.items.count else {
+                        let snapshot = StudySessionPersistence.decode(data, deckID: deck.id),
+                        snapshot.state.currentIndex > 0,
+                        snapshot.state.currentIndex < snapshot.state.items.count else {
                     return nil
                 }
                 let deckCardIDs = Set(deck.cards.map(\.id))

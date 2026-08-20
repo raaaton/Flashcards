@@ -624,7 +624,13 @@ struct StudyView: View {
         didCrossThreshold = false
         deck.lastStudyActivityAt = .now
         deck.updatedAt = .now
-        persistActiveSession()
+
+        if session.currentIndex > 0 {
+            persistActiveSession()
+        } else {
+            deck.activeStudySessionData = nil
+        }
+
         try? modelContext.save()
         HapticService.play(.selection)
     }
@@ -653,9 +659,9 @@ struct StudyView: View {
         flipAngle = 0
         dragOffset = .zero
         activeOpacity = 1
+        deck.activeStudySessionData = nil
         deck.lastStudyActivityAt = .now
         deck.updatedAt = .now
-        persistActiveSession()
         try? modelContext.save()
         HapticService.play(.selection)
     }

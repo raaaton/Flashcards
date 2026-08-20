@@ -6,9 +6,9 @@ struct StudySetupView: View {
 
     let deck: Deck
 
-    @State private var direction = StudyDirection.termToDefinition
-    @State private var shuffle = true
-    @State private var starredOnly = false
+    @State private var direction = AppPreferences.studyDirection
+    @State private var shuffle = AppPreferences.studyShuffle
+    @State private var starredOnly = AppPreferences.studyStarredOnly
     @State private var sessionSize = SessionSize.all
     @State private var showingSession = false
     @State private var confirmingReset = false
@@ -40,7 +40,8 @@ struct StudySetupView: View {
 
     private var resumableSession: ActiveStudySessionSnapshot? {
         guard let data = deck.activeStudySessionData,
-              let snapshot = StudySessionPersistence.decode(data, deckID: deck.id) else {
+                let snapshot = StudySessionPersistence.decode(data, deckID: deck.id),
+                snapshot.state.currentIndex > 0 else {
             return nil
         }
         let deckCardIDs = Set(deck.cards.map(\.id))
@@ -78,13 +79,26 @@ struct StudySetupView: View {
                 Section("Sens") {
                     LabeledContent("Sens") {
                         StudyDirectionMenu(selection: $direction, accent: accent)
+                            .onChange(of: direction) { _, newValue in
+                                guard resumableSession == nil else { return }
+                                AppPreferences.studyDirection = newValue
+                            }
                     }
                 }
                 .disabled(resumableSession != nil)
 
                 Section("Options") {
                     Toggle("Mélanger", isOn: $shuffle)
+                        .onChange(of: shuffle) { _, newValue in
+                            guard resumableSession == nil else { return }
+                            AppPreferences.studyShuffle = newValue
+                        }
+
                     Toggle("study.starred_only", isOn: $starredOnly)
+                        .onChange(of: starredOnly) { _, newValue in
+                            guard resumableSession == nil else { return }
+                            AppPreferences.studyStarredOnly = newValue
+                        }
 
                     Picker("session.size.title", selection: $sessionSize) {
                         ForEach(SessionSize.allCases) { size in
@@ -216,11 +230,6 @@ struct StudySetupView: View {
                 starredOnly: starredOnly
             )
         )
-        guard let data = try? StudySessionPersistence.encode(snapshot) else { return }
-        deck.activeStudySessionData = data
-        deck.lastStudyActivityAt = .now
-        deck.updatedAt = .now
-        try? modelContext.save()
         launchedSession = snapshot
         showingSession = true
     }
