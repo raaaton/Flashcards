@@ -39,8 +39,12 @@ struct StudyView: View {
         .navigationBarBackButtonHidden()
         .toolbar {
             ToolbarItem(placement: .topBarLeading) {
-                Button("Retour", systemImage: "chevron.left") { dismiss() }
-                    .foregroundStyle(.white)
+                Button { dismiss() } label: {
+                    Image(systemName: "chevron.left")
+                        .neutralIconColor()
+                }
+                    .tint(.white)
+                    .accessibilityLabel("Retour")
                     .accessibilityHint("La progression déjà enregistrée sera conservée")
             }
         }
@@ -413,7 +417,6 @@ struct StudyView: View {
                 confirmingReset = true
             } label: {
                 Label("Réinitialiser la progression du deck", systemImage: "trash")
-                    .foregroundStyle(.red)
                     .padding(.horizontal, 18)
                     .padding(.vertical, 12)
                     .background(
@@ -422,6 +425,7 @@ struct StudyView: View {
                     )
                     .contentShape(.rect)
             }
+            .destructiveActionColor()
             .buttonStyle(.plain)
         }
         .padding()

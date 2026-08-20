@@ -52,8 +52,12 @@ struct TestRunView: View {
         .navigationBarBackButtonHidden()
         .toolbar {
             ToolbarItem(placement: .topBarLeading) {
-                Button("Quitter", systemImage: "xmark") { dismiss() }
-                    .foregroundStyle(.white)
+                Button { dismiss() } label: {
+                    Image(systemName: "xmark")
+                        .neutralIconColor()
+                }
+                .tint(.white)
+                .accessibilityLabel("Quitter")
             }
         }
         .overlay {
@@ -306,10 +310,10 @@ struct TestRunView: View {
                     Button("Refaire uniquement les erreurs", systemImage: "arrow.counterclockwise") {
                         retryErrors()
                     }
-                    .foregroundStyle(.white)
+                    .normalActionColor()
                 }
                 Button("Terminer", systemImage: "checkmark") { dismiss() }
-                    .foregroundStyle(.white)
+                    .normalActionColor()
             }
         }
         .navigationTitle("Résultats")

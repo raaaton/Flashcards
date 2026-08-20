@@ -37,21 +37,22 @@ struct DeckDetailView: View {
             ToolbarItem(placement: .topBarTrailing) {
                 Menu {
                     Button("Modifier le deck", systemImage: "pencil") { showingEditDeck = true }
-                        .foregroundStyle(Theme.accent)
+                        .normalActionColor()
                     Button("Exporter en JSON", systemImage: "square.and.arrow.up") {
                         showingExport = true
                     }
-                    .foregroundStyle(Theme.accent)
+                    .normalActionColor()
                     Button(role: .destructive) {
                         confirmingDeletion = true
                     } label: {
                         Label("Supprimer", systemImage: "trash")
-                            .foregroundStyle(.red)
                     }
+                    .destructiveActionColor()
                 } label: {
-                    Label("Actions", systemImage: "ellipsis")
-                        .foregroundStyle(.white)
+                    Image(systemName: "ellipsis")
+                        .neutralIconColor()
                 }
+                .accessibilityLabel("Actions")
             }
         }
         .sheet(isPresented: $showingEditDeck) {
@@ -123,12 +124,12 @@ struct DeckDetailView: View {
                 } label: {
                     Label("Modifier les cartes", systemImage: "square.and.pencil")
                         .font(.headline)
-                        .foregroundStyle(Theme.accent)
                         .frame(maxWidth: .infinity, alignment: .leading)
                         .padding(.vertical, 15)
                         .contentShape(.rect)
                 }
                 .buttonStyle(.plain)
+                .normalActionColor()
 
                 Divider()
 

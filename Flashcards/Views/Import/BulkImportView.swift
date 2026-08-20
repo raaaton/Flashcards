@@ -143,8 +143,9 @@ struct BulkImportView: View {
                         importCards()
                     } label: {
                         Image(systemName: "checkmark")
-                            .foregroundStyle(.white)
+                            .neutralIconColor()
                     }
+                    .tint(.white)
                     .disabled(!canImport)
                     .accessibilityLabel(
                         L10n.format("import.action.cards", Int64(preview.cards.count))

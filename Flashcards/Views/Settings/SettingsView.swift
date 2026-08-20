@@ -27,7 +27,7 @@ struct SettingsView: View {
                     Button("settings.backup", systemImage: "externaldrive") {
                         showingBackup = true
                     }
-                    .foregroundStyle(Theme.accent)
+                    .normalActionColor()
                 }
             }
             .navigationTitle("settings.title")

@@ -64,21 +64,22 @@ struct FolderDetailView: View {
                 ToolbarItem(placement: .topBarTrailing) {
                     Menu {
                         Button("Modifier", systemImage: "pencil") { showingEditFolder = true }
-                            .foregroundStyle(Theme.accent)
+                            .normalActionColor()
                         Button("Dupliquer", systemImage: "plus.square.on.square") {
                             LibraryActions.duplicateFolder(folder, in: modelContext)
                         }
-                        .foregroundStyle(Theme.accent)
+                        .normalActionColor()
                         Button(role: .destructive) {
                             confirmingFolderDeletion = true
                         } label: {
                             Label("Supprimer", systemImage: "trash")
-                                .foregroundStyle(.red)
                         }
+                        .destructiveActionColor()
                     } label: {
-                        Label("Actions", systemImage: "ellipsis")
-                            .foregroundStyle(.white)
+                        Image(systemName: "ellipsis")
+                            .neutralIconColor()
                     }
+                    .accessibilityLabel("Actions")
                 }
             }
 
@@ -88,8 +89,9 @@ struct FolderDetailView: View {
                     showingNewDeck = true
                 } label: {
                     Image(systemName: "rectangle.stack.badge.plus")
-                        .foregroundStyle(.white)
+                        .neutralIconColor()
                 }
+                .tint(.white)
                 .accessibilityLabel("Nouveau deck")
                 .accessibilityHint("Créer un nouveau deck dans ce dossier")
             }
@@ -134,6 +136,7 @@ struct FolderDetailView: View {
             Button(role: .destructive) { deckToDelete = deck } label: {
                 Label("Supprimer", systemImage: "trash")
             }
+            .tint(.red)
             Button { LibraryActions.duplicateDeck(deck, in: modelContext) } label: {
                 Label("Dupliquer", systemImage: "plus.square.on.square")
                     .foregroundStyle(.white)
@@ -142,15 +145,15 @@ struct FolderDetailView: View {
         }
         .contextMenu {
             Button("Modifier", systemImage: "pencil") { deckToEdit = deck }
-                .foregroundStyle(Theme.accent)
+                .normalActionColor()
             Button("Dupliquer", systemImage: "plus.square.on.square") {
                 LibraryActions.duplicateDeck(deck, in: modelContext)
             }
-            .foregroundStyle(Theme.accent)
+            .normalActionColor()
             Button(role: .destructive) { deckToDelete = deck } label: {
                 Label("Supprimer", systemImage: "trash")
-                    .foregroundStyle(.red)
             }
+            .destructiveActionColor()
         }
     }
 

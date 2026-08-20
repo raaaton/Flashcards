@@ -38,6 +38,7 @@ struct EditCardsView: View {
                     } label: {
                         Label("Supprimer", systemImage: "trash")
                     }
+                    .tint(.red)
                 }
             }
             .onMove(perform: moveCards)
@@ -55,18 +56,19 @@ struct EditCardsView: View {
         .toolbar {
             ToolbarItem(placement: .topBarTrailing) {
                 EditButton()
-                    .foregroundStyle(.white)
+                    .tint(.white)
             }
             ToolbarItem(placement: .topBarTrailing) {
                 Menu {
                     Button("Ajouter une carte", systemImage: "plus") { showingNewCard = true }
-                        .foregroundStyle(Theme.accent)
+                        .normalActionColor()
                     Button("Importer en masse", systemImage: "text.badge.plus") { showingBulkImport = true }
-                        .foregroundStyle(Theme.accent)
+                        .normalActionColor()
                 } label: {
-                    Label("Ajouter", systemImage: "plus")
-                        .foregroundStyle(Theme.accent)
+                    Image(systemName: "plus")
+                        .neutralIconColor()
                 }
+                .accessibilityLabel("Ajouter")
             }
         }
         .sheet(isPresented: $showingNewCard) {

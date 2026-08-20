@@ -66,8 +66,9 @@ struct HomeView: View {
                         showingSettings = true
                     } label: {
                         Image(systemName: "gearshape")
-                            .foregroundStyle(.white)
+                            .neutralIconColor()
                     }
+                    .tint(.white)
                     .accessibilityLabel("settings.title")
                 }
                 ToolbarItem(placement: .topBarTrailing) {
@@ -138,15 +139,15 @@ struct HomeView: View {
                         .buttonStyle(.plain)
                         .contextMenu {
                             Button("Modifier", systemImage: "pencil") { folderToEdit = folder }
-                                .foregroundStyle(Theme.accent)
+                                .normalActionColor()
                             Button("Dupliquer", systemImage: "plus.square.on.square") {
                                 LibraryActions.duplicateFolder(folder, in: modelContext)
                             }
-                            .foregroundStyle(Theme.accent)
+                            .normalActionColor()
                             Button(role: .destructive) { folderToDelete = folder } label: {
                                 Label("Supprimer", systemImage: "trash")
-                                    .foregroundStyle(.red)
                             }
+                            .destructiveActionColor()
                         }
                     }
 
@@ -205,7 +206,7 @@ struct HomeView: View {
             Button("Créer un dossier", systemImage: "folder.badge.plus") {
                 showingNewFolder = true
             }
-            .foregroundStyle(Theme.accent)
+            .normalActionColor()
             .padding(.top, 2)
         }
         .frame(maxWidth: .infinity, alignment: .leading)
@@ -232,6 +233,7 @@ struct HomeView: View {
                         Button(role: .destructive) { deckToDelete = deck } label: {
                             Label("Supprimer", systemImage: "trash")
                         }
+                        .tint(.red)
                         Button { LibraryActions.duplicateDeck(deck, in: modelContext) } label: {
                             Label("Dupliquer", systemImage: "plus.square.on.square")
                                 .foregroundStyle(.white)
@@ -240,15 +242,15 @@ struct HomeView: View {
                     }
                     .contextMenu {
                         Button("Modifier", systemImage: "pencil") { deckToEdit = deck }
-                            .foregroundStyle(Theme.accent)
+                            .normalActionColor()
                         Button("Dupliquer", systemImage: "plus.square.on.square") {
                             LibraryActions.duplicateDeck(deck, in: modelContext)
                         }
-                        .foregroundStyle(Theme.accent)
+                        .normalActionColor()
                         Button(role: .destructive) { deckToDelete = deck } label: {
                             Label("Supprimer", systemImage: "trash")
-                                .foregroundStyle(.red)
                         }
+                        .destructiveActionColor()
                     }
                 }
             }
@@ -260,7 +262,7 @@ struct HomeView: View {
     private var bottomSearch: some View {
         HStack(spacing: 10) {
             Image(systemName: "magnifyingglass")
-                .foregroundStyle(.white)
+                .neutralIconColor()
 
             TextField("Rechercher", text: $searchText)
                 .textFieldStyle(.plain)
@@ -274,9 +276,10 @@ struct HomeView: View {
                     searchIsFocused = false
                 } label: {
                     Image(systemName: "xmark.circle.fill")
-                        .foregroundStyle(.white)
+                        .neutralIconColor()
                 }
                 .buttonStyle(.plain)
+                .tint(.white)
                 .accessibilityLabel("Effacer la recherche")
             }
         }
@@ -292,14 +295,14 @@ struct HomeView: View {
             Button("Nouveau deck", systemImage: "rectangle.stack.badge.plus") {
                 showingNewDeck = true
             }
-            .foregroundStyle(Theme.accent)
+            .normalActionColor()
             Button("Nouveau dossier", systemImage: "folder.badge.plus") {
                 showingNewFolder = true
             }
-            .foregroundStyle(Theme.accent)
+            .normalActionColor()
         } label: {
             Image(systemName: "plus")
-                .foregroundStyle(.white)
+                .neutralIconColor()
         }
         .accessibilityLabel("Ajouter")
         .accessibilityHint("Créer un deck ou un dossier")

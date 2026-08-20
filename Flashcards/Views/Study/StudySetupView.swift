@@ -102,8 +102,8 @@ struct StudySetupView: View {
                         confirmingReset = true
                     } label: {
                         Label("Réinitialiser la progression", systemImage: "arrow.counterclockwise")
-                            .foregroundStyle(.red)
                     }
+                    .destructiveActionColor()
                     .disabled(
                         deck.completedStudySessions == 0
                             && deck.cards.allSatisfy { !$0.mastered }

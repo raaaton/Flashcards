@@ -95,8 +95,8 @@ struct DeckFormView: View {
                                     removeDraft(draft.id)
                                 } label: {
                                     Image(systemName: "trash")
-                                        .foregroundStyle(.red)
                                 }
+                                .destructiveActionColor()
                                 .buttonStyle(.plain)
                                 .accessibilityLabel("Supprimer")
                             }
@@ -106,12 +106,12 @@ struct DeckFormView: View {
                         Button("Ajouter une carte", systemImage: "plus") {
                             cardDrafts.append(DeckCardDraft())
                         }
-                        .foregroundStyle(Theme.accent)
+                        .normalActionColor()
 
                         Button("Ajout en masse", systemImage: "text.badge.plus") {
                             showingBulkAdd = true
                         }
-                        .foregroundStyle(Theme.accent)
+                        .normalActionColor()
                     } header: {
                         Text("Cartes initiales")
                     } footer: {

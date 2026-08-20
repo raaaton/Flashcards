@@ -6,6 +6,24 @@ enum Theme {
     static let cardBackground = Color(uiColor: .secondarySystemBackground)
 }
 
+@MainActor
+extension View {
+    func neutralIconColor() -> some View {
+        foregroundStyle(Color.white)
+            .tint(Color.white)
+    }
+
+    func normalActionColor() -> some View {
+        foregroundStyle(Theme.accent)
+            .tint(Theme.accent)
+    }
+
+    func destructiveActionColor() -> some View {
+        foregroundStyle(Color.red)
+            .tint(Color.red)
+    }
+}
+
 struct PrimaryStartButton: View {
     let title: LocalizedStringKey
     let isEnabled: Bool
@@ -53,12 +71,11 @@ struct StudyDirectionMenu: View {
         } label: {
             HStack(spacing: 8) {
                 Text(selection.title)
-                    .foregroundStyle(.primary)
                 Image(systemName: "chevron.up.chevron.down")
                     .font(.caption.weight(.semibold))
-                    .foregroundStyle(.white)
             }
         }
+        .normalActionColor()
         .accessibilityLabel("Sens")
         .accessibilityValue(selection.title)
     }
