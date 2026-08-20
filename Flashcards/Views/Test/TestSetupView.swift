@@ -1,22 +1,31 @@
+import SwiftData
 import SwiftUI
 
 struct TestSetupView: View {
+    @Environment(\.modelContext) private var modelContext
     let deck: Deck
 
     @State private var selectedTypes = Set(TestQuestionType.allCases)
     @State private var direction = StudyDirection.termToDefinition
     @State private var shuffle = true
-    @State private var useAllCards = true
-    @State private var questionCount: Int
+    @State private var starredOnly = false
+    @State private var sessionSize = SessionSize.all
     @State private var showingTest = false
 
     init(deck: Deck) {
         self.deck = deck
-        _questionCount = State(initialValue: min(max(deck.cards.count, 1), 10))
+    }
+
+    private var eligibleCards: [Card] {
+        deck.cards.filter { !starredOnly || $0.isStarred }
     }
 
     private var effectiveCount: Int {
-        useAllCards ? deck.cards.count : min(questionCount, deck.cards.count)
+        min(sessionSize.limit ?? eligibleCards.count, eligibleCards.count)
+    }
+
+    private var hasStarredCards: Bool {
+        deck.cards.contains(where: \.isStarred)
     }
 
     var body: some View {
@@ -42,24 +51,32 @@ struct TestSetupView: View {
 
                 Section("Options") {
                     Toggle("Mélanger", isOn: $shuffle)
+                    Toggle("study.starred_only", isOn: $starredOnly)
                 }
 
-                Section("Nombre de questions") {
-                    Toggle("Tout le deck", isOn: $useAllCards)
-                    if !useAllCards {
-                        Stepper(
-                            L10n.questions(questionCount),
-                            value: $questionCount,
-                            in: 1...max(deck.cards.count, 1)
-                        )
+                Section("session.size.title") {
+                    Picker("session.size.title", selection: $sessionSize) {
+                        ForEach(SessionSize.allCases) { size in
+                            Text(size.title).tag(size)
+                        }
                     }
+                    .pickerStyle(.segmented)
                     LabeledContent("Test prévu", value: L10n.questions(effectiveCount))
+                }
+
+                if starredOnly && !hasStarredCards {
+                    Section {
+                        Label("study.no_starred", systemImage: "star.slash")
+                            .foregroundStyle(.secondary)
+                    }
                 }
             }
 
             PrimaryStartButton(
                 isEnabled: !selectedTypes.isEmpty && effectiveCount > 0
             ) {
+                deck.lastStudyActivityAt = .now
+                try? modelContext.save()
                 showingTest = true
             }
             .padding(.horizontal)
@@ -69,9 +86,10 @@ struct TestSetupView: View {
             TestRunView(
                 deck: deck,
                 types: selectedTypes,
-                questionCount: effectiveCount,
                 direction: direction,
-                shuffle: shuffle
+                shuffle: shuffle,
+                starredOnly: starredOnly,
+                sessionSize: sessionSize
             )
         }
         .navigationTitle("Configurer le test")

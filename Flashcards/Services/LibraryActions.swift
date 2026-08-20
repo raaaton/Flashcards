@@ -14,6 +14,7 @@ enum LibraryActions {
                 definition: sourceCard.definition,
                 position: sourceCard.position
             )
+            card.isStarred = sourceCard.isStarred
             card.deck = copy
             modelContext.insert(card)
         }
@@ -42,6 +43,7 @@ enum LibraryActions {
                     definition: sourceCard.definition,
                     position: sourceCard.position
                 )
+                card.isStarred = sourceCard.isStarred
                 card.deck = deck
                 modelContext.insert(card)
             }

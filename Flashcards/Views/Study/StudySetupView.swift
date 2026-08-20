@@ -8,13 +8,30 @@ struct StudySetupView: View {
 
     @State private var direction = StudyDirection.termToDefinition
     @State private var shuffle = true
+    @State private var starredOnly = false
+    @State private var sessionSize = SessionSize.all
     @State private var showingSession = false
     @State private var confirmingReset = false
     @State private var confirmingNewSeries = false
     @State private var launchedSession: ActiveStudySessionSnapshot?
 
     private var eligibleCount: Int {
-        deck.cards.count(where: { !$0.mastered })
+        eligibleCards.count
+    }
+
+    private var eligibleCards: [Card] {
+        deck.cards.filter { card in
+            !card.mastered && (!starredOnly || card.isStarred)
+        }
+    }
+
+    private var hasStarredCards: Bool {
+        deck.cards.contains(where: \.isStarred)
+    }
+
+    private var canStart: Bool {
+        if resumableSession != nil { return true }
+        return !deck.cards.isEmpty && (!starredOnly || hasStarredCards)
     }
 
     private var nextSessionNumber: Int {
@@ -65,8 +82,23 @@ struct StudySetupView: View {
 
                 Section("Options") {
                     Toggle("Mélanger", isOn: $shuffle)
+                    Toggle("study.starred_only", isOn: $starredOnly)
+
+                    Picker("session.size.title", selection: $sessionSize) {
+                        ForEach(SessionSize.allCases) { size in
+                            Text(size.title).tag(size)
+                        }
+                    }
+                    .pickerStyle(.segmented)
                 }
                 .disabled(resumableSession != nil)
+
+                if starredOnly && !hasStarredCards && resumableSession == nil {
+                    Section {
+                        Label("study.no_starred", systemImage: "star.slash")
+                            .foregroundStyle(.secondary)
+                    }
+                }
 
                 Section("Progression") {
                     ProgressView(
@@ -106,7 +138,7 @@ struct StudySetupView: View {
 
             PrimaryStartButton(
                 title: resumableSession == nil ? "common.start" : "study.resume",
-                isEnabled: !deck.cards.isEmpty
+                isEnabled: canStart
             ) {
                 if let resumableSession {
                     resume(resumableSession)
@@ -148,6 +180,8 @@ struct StudySetupView: View {
             if let resumableSession {
                 direction = resumableSession.state.direction
                 shuffle = resumableSession.state.shuffle
+                starredOnly = resumableSession.state.starredOnly ?? false
+                sessionSize = resumableSession.state.sessionSize ?? .all
             }
         }
     }
@@ -157,19 +191,29 @@ struct StudySetupView: View {
     }
 
     private func startNewSession() {
-        let cards = deck.cards
-            .filter { !$0.mastered }
-            .sorted { $0.position < $1.position }
+        var selectedCards = eligibleCards.sorted { $0.position < $1.position }
+        if shuffle { selectedCards.shuffle() }
+        if let limit = sessionSize.limit {
+            selectedCards = Array(selectedCards.prefix(limit))
+        }
+        let cards = selectedCards
             .map { StudyCardSnapshot(id: $0.id, term: $0.term, definition: $0.definition) }
         guard !cards.isEmpty else { return }
 
         let snapshot = ActiveStudySessionSnapshot(
             deckID: deck.id,
             sessionNumber: deck.completedStudySessions + 1,
-            state: StudySessionState(cards: cards, direction: direction, shuffle: shuffle)
+            state: StudySessionState(
+                cards: cards,
+                direction: direction,
+                shuffle: shuffle,
+                sessionSize: sessionSize,
+                starredOnly: starredOnly
+            )
         )
         guard let data = try? StudySessionPersistence.encode(snapshot) else { return }
         deck.activeStudySessionData = data
+        deck.lastStudyActivityAt = .now
         deck.updatedAt = .now
         try? modelContext.save()
         launchedSession = snapshot
@@ -177,6 +221,8 @@ struct StudySetupView: View {
     }
 
     private func resume(_ snapshot: ActiveStudySessionSnapshot) {
+        deck.lastStudyActivityAt = .now
+        try? modelContext.save()
         launchedSession = snapshot
         showingSession = true
     }

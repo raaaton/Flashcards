@@ -14,24 +14,32 @@ struct TestRunView: View {
     @State private var feedbackIsCorrect: Bool?
     @State private var isTransitioning = false
     @State private var didCelebrate = false
+    @State private var didRecordCompletion = false
     @State private var showCelebration = false
     @FocusState private var writtenFieldIsFocused: Bool
 
     init(
         deck: Deck,
         types: Set<TestQuestionType>,
-        questionCount: Int,
         direction: StudyDirection,
-        shuffle: Bool
+        shuffle: Bool,
+        starredOnly: Bool,
+        sessionSize: SessionSize
     ) {
         self.deck = deck
-        let cards = deck.cards
+        var selectedCards = deck.cards
+            .filter { !starredOnly || $0.isStarred }
             .sorted { $0.position < $1.position }
+        if shuffle { selectedCards.shuffle() }
+        if let limit = sessionSize.limit {
+            selectedCards = Array(selectedCards.prefix(limit))
+        }
+        let cards = selectedCards
             .map { TestCardSnapshot(id: $0.id, term: $0.term, definition: $0.definition) }
         let questions = TestQuestionFactory.makeQuestions(
             cards: cards,
             types: types,
-            count: questionCount,
+            count: cards.count,
             direction: direction,
             shuffle: shuffle
         )
@@ -436,6 +444,9 @@ struct TestRunView: View {
         if completesTest && session.score == 100 {
             celebratePerfectScore()
         }
+        if completesTest {
+            recordCompletedTestSession()
+        }
 
         Task { @MainActor in
             try? await Task.sleep(for: .milliseconds(TestAnimationMetrics.transitionMilliseconds))
@@ -450,6 +461,7 @@ struct TestRunView: View {
             card.timesCorrect += 1
         }
         deck.updatedAt = .now
+        deck.lastStudyActivityAt = .now
         try? modelContext.save()
     }
 
@@ -467,6 +479,7 @@ struct TestRunView: View {
     }
 
     private func retryErrors() {
+        didRecordCompletion = false
         didCelebrate = false
         showCelebration = false
         writtenAnswer = ""
@@ -482,6 +495,20 @@ struct TestRunView: View {
         ) {
             session.retryErrors()
         }
+    }
+
+    private func recordCompletedTestSession() {
+        guard !didRecordCompletion else { return }
+        didRecordCompletion = true
+        deck.recordCompletedSession(
+            mode: .test,
+            itemCount: session.answers.count,
+            correctCount: session.correctCount,
+            incorrectCount: session.answers.count - session.correctCount
+        )
+        deck.lastStudyActivityAt = .now
+        deck.updatedAt = .now
+        try? modelContext.save()
     }
 
     private func celebratePerfectScore() {

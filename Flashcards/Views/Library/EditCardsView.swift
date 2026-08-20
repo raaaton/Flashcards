@@ -16,22 +16,39 @@ struct EditCardsView: View {
     var body: some View {
         List {
             ForEach(orderedCards) { card in
-                Button {
-                    cardToEdit = card
-                } label: {
-                    VStack(alignment: .leading, spacing: 6) {
-                        Text(card.term)
-                            .font(.headline)
-                            .foregroundStyle(.primary)
-                        Text(card.definition)
-                            .foregroundStyle(.secondary)
-                            .lineLimit(3)
+                HStack(spacing: 12) {
+                    Button {
+                        cardToEdit = card
+                    } label: {
+                        VStack(alignment: .leading, spacing: 6) {
+                            Text(card.term)
+                                .font(.headline)
+                                .foregroundStyle(.primary)
+                            Text(card.definition)
+                                .foregroundStyle(.secondary)
+                                .lineLimit(3)
+                        }
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                        .contentShape(.rect)
                     }
-                    .frame(maxWidth: .infinity, alignment: .leading)
-                    .contentShape(.rect)
+                    .buttonStyle(.plain)
+                    .accessibilityHint("Modifier cette carte")
+
+                    Button {
+                        toggleStar(card)
+                    } label: {
+                        Image(systemName: card.isStarred ? "star.fill" : "star")
+                            .foregroundStyle(card.isStarred ? .yellow : .secondary)
+                            .frame(width: 44, height: 44)
+                            .contentShape(.rect)
+                    }
+                    .buttonStyle(.plain)
+                    .accessibilityLabel(
+                        card.isStarred
+                            ? L10n.text("card.unstar")
+                            : L10n.text("card.star")
+                    )
                 }
-                .buttonStyle(.plain)
-                .accessibilityHint("Modifier cette carte")
                 .swipeActions(edge: .trailing) {
                     Button(role: .destructive) {
                         deleteCard(card)
@@ -91,6 +108,13 @@ struct EditCardsView: View {
         }
         deck.updatedAt = .now
         try? modelContext.save()
+    }
+
+    private func toggleStar(_ card: Card) {
+        card.isStarred.toggle()
+        deck.updatedAt = .now
+        try? modelContext.save()
+        HapticService.play(.selection)
     }
 
     private func moveCards(from source: IndexSet, to destination: Int) {

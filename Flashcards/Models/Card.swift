@@ -10,6 +10,7 @@ final class Card {
     var mastered: Bool
     var timesStudied: Int
     var timesCorrect: Int
+    var isStarred: Bool = false
     var deck: Deck?
 
     init(term: String, definition: String, position: Int) {
@@ -20,5 +21,6 @@ final class Card {
         mastered = false
         timesStudied = 0
         timesCorrect = 0
+        isStarred = false
     }
 }
