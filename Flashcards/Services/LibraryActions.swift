@@ -71,4 +71,39 @@ enum LibraryActions {
         deck.updatedAt = .now
         try? modelContext.save()
     }
+
+    static func deleteCards(
+        _ cards: [Card],
+        from deck: Deck,
+        in modelContext: ModelContext
+    ) {
+        guard !cards.isEmpty else { return }
+        let deletedIDs = Set(cards.map(\.id))
+        for card in cards {
+            modelContext.delete(card)
+        }
+        normalizePositions(deck.cards.filter { !deletedIDs.contains($0.id) })
+        deck.updatedAt = .now
+        try? modelContext.save()
+    }
+
+    static func setStarred(
+        _ isStarred: Bool,
+        for cards: [Card],
+        in deck: Deck,
+        modelContext: ModelContext
+    ) {
+        guard !cards.isEmpty else { return }
+        for card in cards {
+            card.isStarred = isStarred
+        }
+        deck.updatedAt = .now
+        try? modelContext.save()
+    }
+
+    private static func normalizePositions(_ cards: [Card]) {
+        for (position, card) in cards.sorted(by: { $0.position < $1.position }).enumerated() {
+            card.position = position
+        }
+    }
 }
