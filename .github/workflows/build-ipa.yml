@@ -1,271 +1,428 @@
-name: Build unsigned IPA
+name: Build Flashcards IPA
 
 on:
-  push:
-    branches: [main]
-    tags: ['v*']
-  workflow_dispatch:
+    push:
+        branches:
+            - main
+    workflow_dispatch:
 
 permissions:
-  contents: write
+    contents: write
 
 jobs:
-  build:
-    runs-on: xcode-27
+    build:
+        runs-on: xcode-27
 
-    steps:
-      - uses: actions/checkout@v6
+        steps:
+            - uses: actions/checkout@v6
+              with:
+                  fetch-depth: 0
 
-      - name: Verify toolchain
-        run: |
-          set -euxo pipefail
-          xcodebuild -version
-          swift --version
-          xcrun --sdk iphoneos --show-sdk-version
-          gh --version
+            - name: Compute release version
+              if: github.event_name == 'workflow_dispatch'
+              id: release_version
+              run: |
+                  set -euo pipefail
 
-      - name: Verify app icon
-        run: |
-          set -euxo pipefail
-          SOURCE_ICON="Flashcards/icon.png"
-          CATALOG_ICON="Flashcards/Assets.xcassets/AppIcon.appiconset/AppIcon.png"
-          test -f "$SOURCE_ICON"
-          test -f "$CATALOG_ICON"
-          test "$(sips -g pixelWidth "$SOURCE_ICON" | awk '/pixelWidth/ {print $2}')" = "1024"
-          test "$(sips -g pixelHeight "$SOURCE_ICON" | awk '/pixelHeight/ {print $2}')" = "1024"
-          cmp "$SOURCE_ICON" "$CATALOG_ICON"
-          jq -e '.images == [{"filename":"AppIcon.png","idiom":"universal","platform":"ios","size":"1024x1024"}]' \
-            Flashcards/Assets.xcassets/AppIcon.appiconset/Contents.json
-          test "$(grep -c 'ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;' \
-            Flashcards.xcodeproj/project.pbxproj)" -eq 2
+                  if [ "$GITHUB_REF" != "refs/heads/main" ]; then
+                    echo "Releases must be created from main."
+                    exit 1
+                  fi
 
-      - name: Audit offline single-target project
-        run: |
-          set -euxo pipefail
-          if grep -R -n -E 'URLSession|import (Network|CloudKit)|NSPersistentCloudKitContainer|Analytics|Tracking' Flashcards; then
-            exit 1
-          fi
-          if grep -R -n -E 'cloudKitDatabase:[[:space:]]+\.(automatic|private)' Flashcards; then
-            exit 1
-          fi
-          grep -q 'static let accent = Color.blue' Flashcards/Theme.swift
-          test -z "$(find Flashcards/Assets.xcassets -name 'AccentColor.colorset' -print -quit)"
-          if grep -R -n -E 'StudyRound|currentRound|nextRound|roundNumber|feedbackMilliseconds|card\(s\)|carte\(s\)|Tabulation|accentHex' \
-            Flashcards CITests; then
-            exit 1
-          fi
-          grep -q 'ToolbarItem(placement: .topBarLeading)' Flashcards/Views/HomeView.swift
-          grep -q 'ToolbarItemGroup(placement: .topBarTrailing)' Flashcards/Views/HomeView.swift
-          grep -q 'Image(systemName: "magnifyingglass")' Flashcards/Views/HomeView.swift
-          grep -q 'DeckSearchView(decks: decks, showsFolderContext: true)' Flashcards/Views/HomeView.swift
-          grep -q 'DeckSearchView(decks: decks, showsFolderContext: false)' \
-            Flashcards/Views/Library/FolderDetailView.swift
-          test -z "$(grep -E 'safeAreaInset\(edge: \.bottom|private var bottomSearch|searchText' \
-            Flashcards/Views/HomeView.swift Flashcards/Views/Library/FolderDetailView.swift || true)"
-          test "$(grep -R -l '\.searchable' Flashcards/Views | paste -sd ' ' -)" = \
-            "Flashcards/Views/Library/DeckRow.swift"
-          grep -q '\.prefix(2)' Flashcards/Views/HomeView.swift
-          RESUME_LINE="$(grep -n 'Text("Reprendre")' Flashcards/Views/HomeView.swift | cut -d: -f1)"
-          RECENT_LINE="$(grep -n 'Text("Récents")' Flashcards/Views/HomeView.swift | cut -d: -f1)"
-          PINNED_LINE="$(grep -n 'Text("Épinglés")' Flashcards/Views/HomeView.swift | cut -d: -f1)"
-          FOLDERS_LINE="$(grep -n 'Text("Dossiers")' Flashcards/Views/HomeView.swift | cut -d: -f1)"
-          test "$RESUME_LINE" -lt "$RECENT_LINE"
-          test "$RECENT_LINE" -lt "$PINNED_LINE"
-          test "$PINNED_LINE" -lt "$FOLDERS_LINE"
-          grep -q '@State private var termOption = TermDefinitionDelimiterOption.colon' \
-            Flashcards/Views/Import/BulkImportView.swift
-          grep -q 'var activeStudySessionData: Data?' Flashcards/Models/Deck.swift
-          grep -q 'var lastOpenedAt: Date?' Flashcards/Models/Deck.swift
-          grep -q 'var studyHistoryData: Data?' Flashcards/Models/Deck.swift
-          grep -q 'var isPinned: Bool = false' Flashcards/Models/Deck.swift
-          grep -q 'var isStarred: Bool = false' Flashcards/Models/Card.swift
-          grep -q 'func undoLastAnswer()' Flashcards/Services/StudySessionState.swift
-          grep -q 'StudyCardProgressSnapshot' Flashcards/Services/StudySessionState.swift
-          grep -q 'Button("study.review_mistakes"' Flashcards/Views/Study/StudyView.swift
-          grep -q 'enum BulkDuplicateDetector' Flashcards/Services/BulkImportParser.swift
-          grep -q 'UIPasteboard.general.string' Flashcards/Views/Import/BulkImportView.swift
-          grep -q 'Button("Ignorer les doublons")' Flashcards/Views/Import/BulkImportView.swift
-          grep -q 'Button("Importer quand même")' Flashcards/Views/Import/BulkImportView.swift
-          grep -q 'private var pinnedDecks: \[Deck\]' Flashcards/Views/HomeView.swift
-          grep -q 'allowsHitTesting(!isCommitting)' Flashcards/Views/Study/StudyView.swift
-          grep -q 'onSubmit { submitWrittenAnswer() }' Flashcards/Views/Test/TestRunView.swift
-          grep -q 'DeckTile(deck: deck)' Flashcards/Views/HomeView.swift
-          grep -q 'GridItem(.adaptive' Flashcards/Views/Library/FolderDetailView.swift
-          grep -q 'deck.folder?.iconName' Flashcards/Views/Library/DeckRow.swift
-          test -z "$(grep -n 'DeckRow(deck:' Flashcards/Views/Library/DeckRow.swift || true)"
-          grep -q 'private func cardPreview' Flashcards/Views/Library/DeckRow.swift
-          grep -q 'static func deckAccent(for deck: Deck)' Flashcards/Theme.swift
-          grep -q '\.tint(Theme.deckAccent(for: deck))' \
-            Flashcards/Views/Library/DeckDetailView.swift
-          test "$(grep -c 'Theme.deckAccent(for: deck)' \
-            Flashcards/Views/Library/DeckDetailView.swift)" -ge 3
-          grep -q 'private var accent: Color { Theme.deckAccent(for: deck) }' \
-            Flashcards/Views/Study/StudySetupView.swift
-          grep -q 'private var accent: Color { Theme.deckAccent(for: deck) }' \
-            Flashcards/Views/Study/StudyView.swift
-          grep -q 'private var accent: Color { Theme.deckAccent(for: deck) }' \
-            Flashcards/Views/Test/TestSetupView.swift
-          grep -q 'private var accent: Color { Theme.deckAccent(for: deck) }' \
-            Flashcards/Views/Test/TestRunView.swift
-          test -z "$(grep -n 'FF3B30' Flashcards/FolderAppearance.swift || true)"
-          grep -q '"FF2D55"' Flashcards/FolderAppearance.swift
-          grep -q 'Button("Continuer", role: .destructive)' \
-            Flashcards/Views/Study/StudySetupView.swift
-          for FORM_FILE in \
-            Flashcards/Views/Library/FolderFormView.swift \
-            Flashcards/Views/Library/DeckFormView.swift \
-            Flashcards/Views/Library/CardFormView.swift; do
-            grep -q 'ToolbarItem(placement: .cancellationAction)' "$FORM_FILE"
-            grep -q 'Button("Annuler")' "$FORM_FILE"
-            grep -q 'ToolbarItem(placement: .confirmationAction)' "$FORM_FILE"
-            grep -q 'Button("Enregistrer")' "$FORM_FILE"
-          done
-          grep -q 'private struct CardTransferSheet' Flashcards/Views/Library/EditCardsView.swift
-          grep -q 'static func moveCards(' Flashcards/Services/LibraryActions.swift
-          grep -q 'static func copyCards(' Flashcards/Services/LibraryActions.swift
-          grep -A60 'private struct CardTransferSheet' Flashcards/Views/Library/EditCardsView.swift | \
-            grep -q 'Button("Annuler")'
-          grep -A70 'private struct CardTransferSheet' Flashcards/Views/Library/EditCardsView.swift | \
-            grep -q 'Button("Enregistrer")'
-          grep -q 'Button("Fermer")' Flashcards/Views/Import/BulkImportView.swift
-          grep -q 'Image(systemName: "checkmark")' Flashcards/Views/Import/BulkImportView.swift
-          test -s codex.md
-          grep -q '^## DO NOT BREAK$' codex.md
-          grep -q 'import CoreHaptics' Flashcards/Services/HapticService.swift
-          test -z "$(grep -R -l 'LabeledContent("Cartes restantes"' Flashcards || true)"
-          grep -q '\.tint(.red)' Flashcards/Views/Library/EditCardsView.swift
-          grep -q 'cloudKitDatabase: .none' Flashcards/FlashcardsApp.swift
-          if grep -n -E 'XCRemoteSwiftPackageReference|packageProductDependencies|SystemCapabilities' \
-            Flashcards.xcodeproj/project.pbxproj; then
-            exit 1
-          fi
-          test "$(grep -c 'isa = PBXNativeTarget;' Flashcards.xcodeproj/project.pbxproj)" -eq 1
-          test "$(grep -c 'IPHONEOS_DEPLOYMENT_TARGET = 27.0;' Flashcards.xcodeproj/project.pbxproj)" -eq 2
-          test "$(grep -c 'CURRENT_PROJECT_VERSION = 8;' Flashcards.xcodeproj/project.pbxproj)" -eq 2
-          test "$(grep -c 'MARKETING_VERSION = 1.8;' Flashcards.xcodeproj/project.pbxproj)" -eq 2
-          test "$(grep -c 'PRODUCT_BUNDLE_IDENTIFIER = com.raton.flashcards;' Flashcards.xcodeproj/project.pbxproj)" -eq 2
-          test "$(grep -c 'SWIFT_VERSION = 6.0;' Flashcards.xcodeproj/project.pbxproj)" -eq 2
-          test -z "$(find Flashcards -name '*.entitlements' -print -quit)"
-          test -z "$(find . \( -name Package.resolved -o -name Package.swift \) -print -quit)"
-          jq -e '
-            .sourceLanguage == "fr"
-            and .version == "1.0"
-            and all(.strings[]; .localizations.en.stringUnit.state == "translated")
-          ' Flashcards/Localizable.xcstrings
+                  MINOR="${{ vars.RELEASE_MINOR }}"
 
-      - name: Run Foundation smoke tests
-        run: |
-          set -euxo pipefail
-          xcrun swiftc \
-            -swift-version 6 \
-            Flashcards/AppPreferences.swift \
-            Flashcards/L10n.swift \
-            Flashcards/Services/StudySessionState.swift \
-            Flashcards/Services/BulkImportParser.swift \
-            CITests/BulkImportParserSmoke.swift \
-            -o "$RUNNER_TEMP/bulk-import-smoke"
-          "$RUNNER_TEMP/bulk-import-smoke"
-          xcrun swiftc \
-            -swift-version 6 \
-            Flashcards/AppPreferences.swift \
-            Flashcards/L10n.swift \
-            Flashcards/Services/StudySessionState.swift \
-            CITests/StudySessionSmoke.swift \
-            -o "$RUNNER_TEMP/study-session-smoke"
-          "$RUNNER_TEMP/study-session-smoke"
-          xcrun swiftc \
-            -swift-version 6 \
-            Flashcards/AppPreferences.swift \
-            Flashcards/L10n.swift \
-            Flashcards/Services/StudySessionState.swift \
-            Flashcards/Services/TestSessionState.swift \
-            CITests/TestSessionSmoke.swift \
-            -o "$RUNNER_TEMP/test-session-smoke"
-          "$RUNNER_TEMP/test-session-smoke"
-          xcrun swiftc \
-            -swift-version 6 \
-            Flashcards/AppPreferences.swift \
-            Flashcards/L10n.swift \
-            Flashcards/Services/StudySessionState.swift \
-            Flashcards/Services/BackupModels.swift \
-            CITests/BackupCodecSmoke.swift \
-            -o "$RUNNER_TEMP/backup-codec-smoke"
-          "$RUNNER_TEMP/backup-codec-smoke"
+                  if ! echo "$MINOR" | grep -Eq '^[0-9]+$'; then
+                    echo "RELEASE_MINOR must be an integer."
+                    exit 1
+                  fi
 
-      - name: Build app for iPhone
-        run: |
-          set -euxo pipefail
-          xcodebuild \
-            -project Flashcards.xcodeproj \
-            -scheme Flashcards \
-            -configuration Release \
-            -sdk iphoneos \
-            -destination 'generic/platform=iOS' \
-            -derivedDataPath "$RUNNER_TEMP/DerivedData" \
-            CODE_SIGNING_ALLOWED=NO \
-            CODE_SIGNING_REQUIRED=NO \
-            build
+                  git fetch origin --tags --force
 
-      - name: Simulator launch smoke test
-        run: |
-          set -euxo pipefail
-          xcrun simctl shutdown all || true
-          xcodebuild \
-            -project Flashcards.xcodeproj \
-            -scheme Flashcards \
-            -configuration Debug \
-            -sdk iphonesimulator \
-            -destination 'platform=iOS Simulator,name=iPhone 17 Pro,OS=latest' \
-            -derivedDataPath "$RUNNER_TEMP/SimulatorData" \
-            CODE_SIGNING_ALLOWED=NO \
-            build
-          xcrun simctl boot 'iPhone 17 Pro'
-          xcrun simctl bootstatus booted -b
-          SIM_APP="$RUNNER_TEMP/SimulatorData/Build/Products/Debug-iphonesimulator/Flashcards.app"
-          test -d "$SIM_APP"
-          xcrun simctl install booted "$SIM_APP"
-          xcrun simctl launch booted com.raton.flashcards
+                  LAST_TAG="$(
+                    git tag -l "v1.${MINOR}.*" --sort=-version:refname \
+                      | grep -E "^v1\.${MINOR}\.[0-9]+$" \
+                      | head -n 1 \
+                      || true
+                  )"
 
-      - name: Package IPA
-        run: |
-          set -euxo pipefail
-          APP_PATH="$(find "$RUNNER_TEMP/DerivedData/Build/Products/Release-iphoneos" \
-            -maxdepth 1 -type d -name '*.app' -print -quit)"
-          test -n "$APP_PATH"
-          test -d "$APP_PATH"
-          test -s "$APP_PATH/Assets.car"
-          plutil -p "$APP_PATH/Info.plist" | grep -q 'AppIcon'
-          test "$(plutil -extract CFBundleShortVersionString raw "$APP_PATH/Info.plist")" = "1.8"
-          test "$(plutil -extract CFBundleVersion raw "$APP_PATH/Info.plist")" = "8"
-          rm -rf Payload Flashcards.ipa
-          mkdir Payload
-          cp -R "$APP_PATH" Payload/
-          /usr/bin/zip -X -qry Flashcards.ipa Payload
-          test -s Flashcards.ipa
+                  if [ -z "$LAST_TAG" ]; then
+                    PATCH=0
+                  else
+                    PATCH="${LAST_TAG##*.}"
+                    PATCH=$((PATCH + 1))
+                  fi
 
-      - name: Publish GitHub Release
-        env:
-          GH_TOKEN: ${{ github.token }}
-        run: |
-          set -euxo pipefail
-          if test "$GITHUB_REF_TYPE" = "tag"; then
-            APP_PATH="$(find "$RUNNER_TEMP/DerivedData/Build/Products/Release-iphoneos" \
-              -maxdepth 1 -type d -name '*.app' -print -quit)"
-            APP_VERSION="$(plutil -extract CFBundleShortVersionString raw "$APP_PATH/Info.plist")"
-            test "$GITHUB_REF_NAME" = "v$APP_VERSION"
-            TAG="$GITHUB_REF_NAME"
-            TITLE="$TAG"
-            NOTES="Official unsigned IPA for Flashcards $APP_VERSION."
-          else
-            TAG="build-${{ github.run_number }}"
-            TITLE="Flashcards build ${{ github.run_number }}"
-            NOTES="Automated unsigned IPA build."
-          fi
-          if gh release view "$TAG" >/dev/null 2>&1; then
-            gh release upload "$TAG" Flashcards.ipa --clobber
-          else
-            gh release create "$TAG" Flashcards.ipa \
-              --target "$GITHUB_SHA" \
-              --title "$TITLE" \
-              --notes "$NOTES"
-          fi
+                  VERSION="1.${MINOR}.${PATCH}"
+                  TAG="v${VERSION}"
+                  BUILD_VERSION="${MINOR}.${PATCH}"
+
+                  echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+                  echo "tag=$TAG" >> "$GITHUB_OUTPUT"
+                  echo "build=$BUILD_VERSION" >> "$GITHUB_OUTPUT"
+
+                  echo "Next release: $TAG"
+                  echo "Build version: $BUILD_VERSION"
+
+            - name: Apply release version
+              if: github.event_name == 'workflow_dispatch'
+              env:
+                  MARKETING_VERSION: ${{ steps.release_version.outputs.version }}
+                  BUILD_VERSION: ${{ steps.release_version.outputs.build }}
+              run: |
+                  set -euo pipefail
+
+                  python3 <<'PY'
+                  import os
+                  import re
+                  from pathlib import Path
+
+                  path = Path("Flashcards.xcodeproj/project.pbxproj")
+                  text = path.read_text()
+
+                  marketing = os.environ["MARKETING_VERSION"]
+                  build = os.environ["BUILD_VERSION"]
+
+                  text, marketing_count = re.subn(
+                      r"MARKETING_VERSION = [^;]+;",
+                      f"MARKETING_VERSION = {marketing};",
+                      text,
+                  )
+
+                  text, build_count = re.subn(
+                      r"CURRENT_PROJECT_VERSION = [^;]+;",
+                      f"CURRENT_PROJECT_VERSION = {build};",
+                      text,
+                  )
+
+                  if marketing_count != 2:
+                      raise SystemExit(
+                          f"Expected 2 MARKETING_VERSION entries, found {marketing_count}"
+                      )
+
+                  if build_count != 2:
+                      raise SystemExit(
+                          f"Expected 2 CURRENT_PROJECT_VERSION entries, found {build_count}"
+                      )
+
+                  path.write_text(text)
+
+                  print(f"MARKETING_VERSION = {marketing}")
+                  print(f"CURRENT_PROJECT_VERSION = {build}")
+                  PY
+
+            - name: Read project version
+              id: project_version
+              run: |
+                  set -euo pipefail
+
+                  MARKETING_VERSION="$(
+                    sed -n 's/^[[:space:]]*MARKETING_VERSION = \([^;]*\);/\1/p' \
+                      Flashcards.xcodeproj/project.pbxproj \
+                      | sort -u
+                  )"
+
+                  BUILD_VERSION="$(
+                    sed -n 's/^[[:space:]]*CURRENT_PROJECT_VERSION = \([^;]*\);/\1/p' \
+                      Flashcards.xcodeproj/project.pbxproj \
+                      | sort -u
+                  )"
+
+                  test "$(printf '%s\n' "$MARKETING_VERSION" | sed '/^$/d' | wc -l | tr -d ' ')" = "1"
+                  test "$(printf '%s\n' "$BUILD_VERSION" | sed '/^$/d' | wc -l | tr -d ' ')" = "1"
+
+                  echo "$MARKETING_VERSION" | grep -Eq '^[0-9]+\.[0-9]+(\.[0-9]+)?$'
+                  echo "$BUILD_VERSION" | grep -Eq '^[0-9]+(\.[0-9]+){0,2}$'
+
+                  echo "version=$MARKETING_VERSION" >> "$GITHUB_OUTPUT"
+                  echo "build=$BUILD_VERSION" >> "$GITHUB_OUTPUT"
+
+                  echo "Project version: $MARKETING_VERSION"
+                  echo "Project build: $BUILD_VERSION"
+
+            - name: Verify toolchain
+              run: |
+                  set -euxo pipefail
+                  xcodebuild -version
+                  swift --version
+                  xcrun --sdk iphoneos --show-sdk-version
+                  gh --version
+
+            - name: Verify app icon
+              run: |
+                  set -euxo pipefail
+                  SOURCE_ICON="Flashcards/icon.png"
+                  CATALOG_ICON="Flashcards/Assets.xcassets/AppIcon.appiconset/AppIcon.png"
+                  test -f "$SOURCE_ICON"
+                  test -f "$CATALOG_ICON"
+                  test "$(sips -g pixelWidth "$SOURCE_ICON" | awk '/pixelWidth/ {print $2}')" = "1024"
+                  test "$(sips -g pixelHeight "$SOURCE_ICON" | awk '/pixelHeight/ {print $2}')" = "1024"
+                  cmp "$SOURCE_ICON" "$CATALOG_ICON"
+                  jq -e '.images == [{"filename":"AppIcon.png","idiom":"universal","platform":"ios","size":"1024x1024"}]' \
+                    Flashcards/Assets.xcassets/AppIcon.appiconset/Contents.json
+                  test "$(grep -c 'ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;' \
+                    Flashcards.xcodeproj/project.pbxproj)" -eq 2
+
+            - name: Audit offline single-target project
+              run: |
+                  set -euxo pipefail
+                  if grep -R -n -E 'URLSession|import (Network|CloudKit)|NSPersistentCloudKitContainer|Analytics|Tracking' Flashcards; then
+                    exit 1
+                  fi
+                  if grep -R -n -E 'cloudKitDatabase:[[:space:]]+\.(automatic|private)' Flashcards; then
+                    exit 1
+                  fi
+                  grep -q 'static let accent = Color.blue' Flashcards/Theme.swift
+                  test -z "$(find Flashcards/Assets.xcassets -name 'AccentColor.colorset' -print -quit)"
+                  if grep -R -n -E 'StudyRound|currentRound|nextRound|roundNumber|feedbackMilliseconds|card\(s\)|carte\(s\)|Tabulation|accentHex' \
+                    Flashcards CITests; then
+                    exit 1
+                  fi
+                  grep -q 'ToolbarItem(placement: .topBarLeading)' Flashcards/Views/HomeView.swift
+                  grep -q 'ToolbarItemGroup(placement: .topBarTrailing)' Flashcards/Views/HomeView.swift
+                  grep -q 'Image(systemName: "magnifyingglass")' Flashcards/Views/HomeView.swift
+                  grep -q 'DeckSearchView(decks: decks, showsFolderContext: true)' Flashcards/Views/HomeView.swift
+                  grep -q 'DeckSearchView(decks: decks, showsFolderContext: false)' \
+                    Flashcards/Views/Library/FolderDetailView.swift
+                  test -z "$(grep -E 'safeAreaInset\(edge: \.bottom|private var bottomSearch|searchText' \
+                    Flashcards/Views/HomeView.swift Flashcards/Views/Library/FolderDetailView.swift || true)"
+                  test "$(grep -R -l '\.searchable' Flashcards/Views | paste -sd ' ' -)" = \
+                    "Flashcards/Views/Library/DeckRow.swift"
+                  grep -q '\.prefix(2)' Flashcards/Views/HomeView.swift
+                  RESUME_LINE="$(grep -n 'Text("Reprendre")' Flashcards/Views/HomeView.swift | cut -d: -f1)"
+                  RECENT_LINE="$(grep -n 'Text("Récents")' Flashcards/Views/HomeView.swift | cut -d: -f1)"
+                  PINNED_LINE="$(grep -n 'Text("Épinglés")' Flashcards/Views/HomeView.swift | cut -d: -f1)"
+                  FOLDERS_LINE="$(grep -n 'Text("Dossiers")' Flashcards/Views/HomeView.swift | cut -d: -f1)"
+                  test "$RESUME_LINE" -lt "$RECENT_LINE"
+                  test "$RECENT_LINE" -lt "$PINNED_LINE"
+                  test "$PINNED_LINE" -lt "$FOLDERS_LINE"
+                  grep -q '@State private var termOption = TermDefinitionDelimiterOption.colon' \
+                    Flashcards/Views/Import/BulkImportView.swift
+                  grep -q 'var activeStudySessionData: Data?' Flashcards/Models/Deck.swift
+                  grep -q 'var lastOpenedAt: Date?' Flashcards/Models/Deck.swift
+                  grep -q 'var studyHistoryData: Data?' Flashcards/Models/Deck.swift
+                  grep -q 'var isPinned: Bool = false' Flashcards/Models/Deck.swift
+                  grep -q 'var isStarred: Bool = false' Flashcards/Models/Card.swift
+                  grep -q 'func undoLastAnswer()' Flashcards/Services/StudySessionState.swift
+                  grep -q 'StudyCardProgressSnapshot' Flashcards/Services/StudySessionState.swift
+                  grep -q 'Button("study.review_mistakes"' Flashcards/Views/Study/StudyView.swift
+                  grep -q 'enum BulkDuplicateDetector' Flashcards/Services/BulkImportParser.swift
+                  grep -q 'UIPasteboard.general.string' Flashcards/Views/Import/BulkImportView.swift
+                  grep -q 'Button("Ignorer les doublons")' Flashcards/Views/Import/BulkImportView.swift
+                  grep -q 'Button("Importer quand même")' Flashcards/Views/Import/BulkImportView.swift
+                  grep -q 'private var pinnedDecks: \[Deck\]' Flashcards/Views/HomeView.swift
+                  grep -q 'allowsHitTesting(!isCommitting)' Flashcards/Views/Study/StudyView.swift
+                  grep -q 'onSubmit { submitWrittenAnswer() }' Flashcards/Views/Test/TestRunView.swift
+                  grep -q 'DeckTile(deck: deck)' Flashcards/Views/HomeView.swift
+                  grep -q 'GridItem(.adaptive' Flashcards/Views/Library/FolderDetailView.swift
+                  grep -q 'deck.folder?.iconName' Flashcards/Views/Library/DeckRow.swift
+                  test -z "$(grep -n 'DeckRow(deck:' Flashcards/Views/Library/DeckRow.swift || true)"
+                  grep -q 'private func cardPreview' Flashcards/Views/Library/DeckRow.swift
+                  grep -q 'static func deckAccent(for deck: Deck)' Flashcards/Theme.swift
+                  grep -q '\.tint(Theme.deckAccent(for: deck))' \
+                    Flashcards/Views/Library/DeckDetailView.swift
+                  test "$(grep -c 'Theme.deckAccent(for: deck)' \
+                    Flashcards/Views/Library/DeckDetailView.swift)" -ge 3
+                  grep -q 'private var accent: Color { Theme.deckAccent(for: deck) }' \
+                    Flashcards/Views/Study/StudySetupView.swift
+                  grep -q 'private var accent: Color { Theme.deckAccent(for: deck) }' \
+                    Flashcards/Views/Study/StudyView.swift
+                  grep -q 'private var accent: Color { Theme.deckAccent(for: deck) }' \
+                    Flashcards/Views/Test/TestSetupView.swift
+                  grep -q 'private var accent: Color { Theme.deckAccent(for: deck) }' \
+                    Flashcards/Views/Test/TestRunView.swift
+                  test -z "$(grep -n 'FF3B30' Flashcards/FolderAppearance.swift || true)"
+                  grep -q '"FF2D55"' Flashcards/FolderAppearance.swift
+                  grep -q 'Button("Continuer", role: .destructive)' \
+                    Flashcards/Views/Study/StudySetupView.swift
+                  for FORM_FILE in \
+                    Flashcards/Views/Library/FolderFormView.swift \
+                    Flashcards/Views/Library/DeckFormView.swift \
+                    Flashcards/Views/Library/CardFormView.swift; do
+                    grep -q 'ToolbarItem(placement: .cancellationAction)' "$FORM_FILE"
+                    grep -q 'Button("Annuler")' "$FORM_FILE"
+                    grep -q 'ToolbarItem(placement: .confirmationAction)' "$FORM_FILE"
+                    grep -q 'Button("Enregistrer")' "$FORM_FILE"
+                  done
+                  grep -q 'private struct CardTransferSheet' Flashcards/Views/Library/EditCardsView.swift
+                  grep -q 'static func moveCards(' Flashcards/Services/LibraryActions.swift
+                  grep -q 'static func copyCards(' Flashcards/Services/LibraryActions.swift
+                  grep -A60 'private struct CardTransferSheet' Flashcards/Views/Library/EditCardsView.swift | \
+                    grep -q 'Button("Annuler")'
+                  grep -A70 'private struct CardTransferSheet' Flashcards/Views/Library/EditCardsView.swift | \
+                    grep -q 'Button("Enregistrer")'
+                  grep -q 'Button("Fermer")' Flashcards/Views/Import/BulkImportView.swift
+                  grep -q 'Image(systemName: "checkmark")' Flashcards/Views/Import/BulkImportView.swift
+                  test -s codex.md
+                  grep -q '^## DO NOT BREAK$' codex.md
+                  grep -q 'import CoreHaptics' Flashcards/Services/HapticService.swift
+                  test -z "$(grep -R -l 'LabeledContent("Cartes restantes"' Flashcards || true)"
+                  grep -q '\.tint(.red)' Flashcards/Views/Library/EditCardsView.swift
+                  grep -q 'cloudKitDatabase: .none' Flashcards/FlashcardsApp.swift
+                  if grep -n -E 'XCRemoteSwiftPackageReference|packageProductDependencies|SystemCapabilities' \
+                    Flashcards.xcodeproj/project.pbxproj; then
+                    exit 1
+                  fi
+                  test "$(grep -c 'isa = PBXNativeTarget;' Flashcards.xcodeproj/project.pbxproj)" -eq 1
+                  test "$(grep -c 'IPHONEOS_DEPLOYMENT_TARGET = 27.0;' Flashcards.xcodeproj/project.pbxproj)" -eq 2
+                  test "$(grep -F -c "CURRENT_PROJECT_VERSION = ${{ steps.project_version.outputs.build }};" Flashcards.xcodeproj/project.pbxproj)" -eq 2
+                  test "$(grep -F -c "MARKETING_VERSION = ${{ steps.project_version.outputs.version }};" Flashcards.xcodeproj/project.pbxproj)" -eq 2
+                  test "$(grep -c 'PRODUCT_BUNDLE_IDENTIFIER = com.raton.flashcards;' Flashcards.xcodeproj/project.pbxproj)" -eq 2
+                  test "$(grep -c 'SWIFT_VERSION = 6.0;' Flashcards.xcodeproj/project.pbxproj)" -eq 2
+                  test -z "$(find Flashcards -name '*.entitlements' -print -quit)"
+                  test -z "$(find . \( -name Package.resolved -o -name Package.swift \) -print -quit)"
+                  jq -e '
+                    .sourceLanguage == "fr"
+                    and .version == "1.0"
+                    and all(.strings[]; .localizations.en.stringUnit.state == "translated")
+                  ' Flashcards/Localizable.xcstrings
+
+            - name: Run Foundation smoke tests
+              run: |
+                  set -euxo pipefail
+                  xcrun swiftc \
+                    -swift-version 6 \
+                    Flashcards/AppPreferences.swift \
+                    Flashcards/L10n.swift \
+                    Flashcards/Services/StudySessionState.swift \
+                    Flashcards/Services/BulkImportParser.swift \
+                    CITests/BulkImportParserSmoke.swift \
+                    -o "$RUNNER_TEMP/bulk-import-smoke"
+                  "$RUNNER_TEMP/bulk-import-smoke"
+                  xcrun swiftc \
+                    -swift-version 6 \
+                    Flashcards/AppPreferences.swift \
+                    Flashcards/L10n.swift \
+                    Flashcards/Services/StudySessionState.swift \
+                    CITests/StudySessionSmoke.swift \
+                    -o "$RUNNER_TEMP/study-session-smoke"
+                  "$RUNNER_TEMP/study-session-smoke"
+                  xcrun swiftc \
+                    -swift-version 6 \
+                    Flashcards/AppPreferences.swift \
+                    Flashcards/L10n.swift \
+                    Flashcards/Services/StudySessionState.swift \
+                    Flashcards/Services/TestSessionState.swift \
+                    CITests/TestSessionSmoke.swift \
+                    -o "$RUNNER_TEMP/test-session-smoke"
+                  "$RUNNER_TEMP/test-session-smoke"
+                  xcrun swiftc \
+                    -swift-version 6 \
+                    Flashcards/AppPreferences.swift \
+                    Flashcards/L10n.swift \
+                    Flashcards/Services/StudySessionState.swift \
+                    Flashcards/Services/BackupModels.swift \
+                    CITests/BackupCodecSmoke.swift \
+                    -o "$RUNNER_TEMP/backup-codec-smoke"
+                  "$RUNNER_TEMP/backup-codec-smoke"
+
+            - name: Build app for iPhone
+              run: |
+                  set -euxo pipefail
+                  xcodebuild \
+                    -project Flashcards.xcodeproj \
+                    -scheme Flashcards \
+                    -configuration Release \
+                    -sdk iphoneos \
+                    -destination 'generic/platform=iOS' \
+                    -derivedDataPath "$RUNNER_TEMP/DerivedData" \
+                    CODE_SIGNING_ALLOWED=NO \
+                    CODE_SIGNING_REQUIRED=NO \
+                    build
+
+            - name: Simulator launch smoke test
+              run: |
+                  set -euxo pipefail
+                  xcrun simctl shutdown all || true
+                  xcodebuild \
+                    -project Flashcards.xcodeproj \
+                    -scheme Flashcards \
+                    -configuration Debug \
+                    -sdk iphonesimulator \
+                    -destination 'platform=iOS Simulator,name=iPhone 17 Pro,OS=latest' \
+                    -derivedDataPath "$RUNNER_TEMP/SimulatorData" \
+                    CODE_SIGNING_ALLOWED=NO \
+                    build
+                  xcrun simctl boot 'iPhone 17 Pro'
+                  xcrun simctl bootstatus booted -b
+                  SIM_APP="$RUNNER_TEMP/SimulatorData/Build/Products/Debug-iphonesimulator/Flashcards.app"
+                  test -d "$SIM_APP"
+                  xcrun simctl install booted "$SIM_APP"
+                  xcrun simctl launch booted com.raton.flashcards
+
+            - name: Package IPA
+              run: |
+                  set -euxo pipefail
+                  APP_PATH="$(find "$RUNNER_TEMP/DerivedData/Build/Products/Release-iphoneos" \
+                    -maxdepth 1 -type d -name '*.app' -print -quit)"
+                  test -n "$APP_PATH"
+                  test -d "$APP_PATH"
+                  test -s "$APP_PATH/Assets.car"
+                  plutil -p "$APP_PATH/Info.plist" | grep -q 'AppIcon'
+                  test "$(plutil -extract CFBundleShortVersionString raw "$APP_PATH/Info.plist")" = "${{ steps.project_version.outputs.version }}"
+                  test "$(plutil -extract CFBundleVersion raw "$APP_PATH/Info.plist")" = "${{ steps.project_version.outputs.build }}"
+                  rm -rf Payload Flashcards.ipa
+                  mkdir Payload
+                  cp -R "$APP_PATH" Payload/
+                  /usr/bin/zip -X -qry Flashcards.ipa Payload
+                  test -s Flashcards.ipa
+
+            - name: Set artifact name
+              id: artifact_name
+              run: |
+                  set -euo pipefail
+
+                  if [ "$GITHUB_EVENT_NAME" = "workflow_dispatch" ]; then
+                    echo "name=Flashcards-${{ steps.release_version.outputs.tag }}" >> "$GITHUB_OUTPUT"
+                  else
+                    echo "name=Flashcards-dev-${GITHUB_RUN_NUMBER}" >> "$GITHUB_OUTPUT"
+                  fi
+
+            - name: Upload IPA artifact
+              uses: actions/upload-artifact@v4
+              with:
+                  name: ${{ steps.artifact_name.outputs.name }}
+                  path: Flashcards.ipa
+                  if-no-files-found: error
+                  retention-days: 14
+
+            - name: Commit release version
+              if: github.event_name == 'workflow_dispatch'
+              id: release_commit
+              env:
+                  TAG: ${{ steps.release_version.outputs.tag }}
+              run: |
+                  set -euo pipefail
+
+                  git config user.name "github-actions[bot]"
+                  git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
+                  git add Flashcards.xcodeproj/project.pbxproj
+
+                  if ! git diff --cached --quiet; then
+                    git commit -m "chore: release ${TAG} [skip ci]"
+                    git push origin HEAD:main
+                  fi
+
+                  RELEASE_SHA="$(git rev-parse HEAD)"
+
+                  echo "sha=$RELEASE_SHA" >> "$GITHUB_OUTPUT"
+                  echo "Release commit: $RELEASE_SHA"
+
+            - name: Publish official GitHub Release
+              if: github.event_name == 'workflow_dispatch'
+              env:
+                  GH_TOKEN: ${{ github.token }}
+                  TAG: ${{ steps.release_version.outputs.tag }}
+                  RELEASE_SHA: ${{ steps.release_commit.outputs.sha }}
+              run: |
+                  set -euo pipefail
+
+                  RELEASE_IPA="Flashcards-${TAG}.ipa"
+                  cp Flashcards.ipa "$RELEASE_IPA"
+
+                  gh release create "$TAG" "$RELEASE_IPA" \
+                    --repo "$GITHUB_REPOSITORY" \
+                    --target "$RELEASE_SHA" \
+                    --title "$TAG" \
+                    --generate-notes \
+                    --latest
