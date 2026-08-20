@@ -278,25 +278,6 @@ Your study library should remain usable and exportable independently of any serv
 
 ---
 
-## Roadmap
-
-Flashcards is actively evolving.
-
-Current development focuses on refining:
-
-* Study session management
-* Search and navigation
-* Library organization
-* Import workflows
-* Localization
-* Accessibility
-* UI polish
-* Backup and restore
-
-The project deliberately avoids adding features that require unnecessary online infrastructure.
-
----
-
 ## Contributing
 
 Issues are welcome, but not Pull Requests.
