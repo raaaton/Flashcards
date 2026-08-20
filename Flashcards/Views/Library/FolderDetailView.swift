@@ -8,7 +8,7 @@ struct FolderDetailView: View {
 
     let folder: Folder?
 
-    @State private var searchText = ""
+    @State private var showingSearch = false
     @State private var showingNewDeck = false
     @State private var showingEditFolder = false
     @State private var confirmingFolderDeletion = false
@@ -28,27 +28,17 @@ struct FolderDetailView: View {
             }
         }
 
-        guard !searchText.isEmpty else { return scoped }
-        return scoped.filter { deck in
-            deck.name.localizedCaseInsensitiveContains(searchText)
-                || (deck.deckDescription?.localizedCaseInsensitiveContains(searchText) ?? false)
-                || deck.cards.contains { card in
-                    card.term.localizedCaseInsensitiveContains(searchText)
-                        || card.definition.localizedCaseInsensitiveContains(searchText)
-                }
-        }
+        return scoped
     }
 
     var body: some View {
         Group {
-            if decks.isEmpty && searchText.isEmpty {
+            if decks.isEmpty {
                 ContentUnavailableView(
                     "Aucun deck",
                     systemImage: folder?.iconName ?? "tray",
                     description: Text("Ajoutez un deck pour commencer à organiser vos cartes.")
                 )
-            } else if decks.isEmpty {
-                ContentUnavailableView.search(text: searchText)
             } else {
                 ScrollView {
                     LazyVGrid(columns: columns, spacing: 14) {
@@ -65,12 +55,18 @@ struct FolderDetailView: View {
         }
         .navigationTitle(folder?.name ?? L10n.text("folder.unfiled"))
         .navigationBarTitleDisplayMode(.large)
-        .searchable(text: $searchText, prompt: "Decks et cartes")
-        .searchToolbarBehavior(.minimize)
-        .scrollDismissesKeyboard(.interactively)
         .toolbar {
-            if let folder {
-                ToolbarItem(placement: .topBarTrailing) {
+            ToolbarItemGroup(placement: .topBarTrailing) {
+                Button {
+                    showingSearch = true
+                } label: {
+                    Image(systemName: "magnifyingglass")
+                        .neutralIconColor()
+                }
+                .tint(.white)
+                .accessibilityLabel("Rechercher")
+
+                if let folder {
                     Menu {
                         Button("Modifier", systemImage: "pencil") { showingEditFolder = true }
                             .normalActionColor()
@@ -108,6 +104,9 @@ struct FolderDetailView: View {
         }
         .sheet(isPresented: $showingNewDeck) {
             DeckFormView(initialFolder: folder)
+        }
+        .sheet(isPresented: $showingSearch) {
+            DeckSearchView(decks: decks, showsFolderContext: false)
         }
         .sheet(isPresented: $showingEditFolder) {
             if let folder {

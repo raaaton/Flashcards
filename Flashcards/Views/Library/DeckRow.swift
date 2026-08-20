@@ -77,3 +77,85 @@ struct DeckTile: View {
         .accessibilityHint("Ouvrir ce deck")
     }
 }
+
+struct DeckSearchView: View {
+    @Environment(\.dismiss) private var dismiss
+
+    let decks: [Deck]
+    let showsFolderContext: Bool
+
+    @State private var query = ""
+    @State private var searchIsPresented = false
+
+    private var matchingDecks: [Deck] {
+        let cleanQuery = query.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !cleanQuery.isEmpty else { return [] }
+
+        return decks.filter { deck in
+            deck.name.localizedCaseInsensitiveContains(cleanQuery)
+                || (deck.deckDescription?.localizedCaseInsensitiveContains(cleanQuery) ?? false)
+                || deck.cards.contains { card in
+                    card.term.localizedCaseInsensitiveContains(cleanQuery)
+                        || card.definition.localizedCaseInsensitiveContains(cleanQuery)
+                }
+        }
+    }
+
+    var body: some View {
+        NavigationStack {
+            Group {
+                if query.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+                    ContentUnavailableView(
+                        "Rechercher",
+                        systemImage: "magnifyingglass",
+                        description: Text("Recherchez un deck ou le contenu d’une carte.")
+                    )
+                } else if matchingDecks.isEmpty {
+                    ContentUnavailableView.search(text: query)
+                } else {
+                    List(matchingDecks) { deck in
+                        NavigationLink {
+                            DeckDetailView(deck: deck)
+                        } label: {
+                            VStack(alignment: .leading, spacing: 4) {
+                                DeckRow(deck: deck)
+                                if showsFolderContext {
+                                    Label(
+                                        deck.folder?.name ?? L10n.text("folder.unfiled"),
+                                        systemImage: deck.folder?.iconName ?? "tray.fill"
+                                    )
+                                    .font(.caption)
+                                    .foregroundStyle(.tertiary)
+                                }
+                            }
+                        }
+                    }
+                    .animation(.default, value: matchingDecks.map(\.id))
+                }
+            }
+            .navigationTitle("Rechercher")
+            .navigationBarTitleDisplayMode(.inline)
+            .searchable(
+                text: $query,
+                isPresented: $searchIsPresented,
+                prompt: "Decks et cartes"
+            )
+            .scrollDismissesKeyboard(.interactively)
+            .toolbar {
+                ToolbarItem(placement: .cancellationAction) {
+                    Button {
+                        dismiss()
+                    } label: {
+                        Image(systemName: "xmark")
+                            .neutralIconColor()
+                    }
+                    .tint(.white)
+                    .accessibilityLabel("Fermer")
+                }
+            }
+            .task {
+                searchIsPresented = true
+            }
+        }
+    }
+}
