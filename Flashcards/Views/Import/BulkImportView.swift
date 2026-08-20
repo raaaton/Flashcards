@@ -217,7 +217,7 @@ struct BulkImportView: View {
                 Button("Annuler", role: .cancel) {}
             } message: {
                 Text(
-                    "\(duplicateAnalysis.exactCount) carte(s) correspondent exactement à une carte déjà présente ou à une ligne précédente."
+                    "\(L10n.cards(duplicateAnalysis.exactCount)) correspondent exactement à une carte déjà présente ou à une ligne précédente."
                 )
             }
             .alert(alertTitle, isPresented: $showingAlert) {

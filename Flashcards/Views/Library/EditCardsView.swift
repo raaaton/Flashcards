@@ -119,7 +119,7 @@ struct EditCardsView: View {
                 endSelection()
             }
         } message: {
-            Text("Cette action supprimera définitivement \(selectedCardIDs.count) carte(s).")
+            Text("Cette action supprimera définitivement \(L10n.cards(selectedCardIDs.count)).")
         }
     }
 
@@ -345,7 +345,7 @@ private struct CardTransferSheet: View {
                 }
 
                 Section {
-                    Label("\(cards.count) carte(s)", systemImage: "rectangle.stack")
+                    Label(L10n.cards(cards.count), systemImage: "rectangle.stack")
                     if mode == .copy {
                         Text("Les favoris sont conservés. La progression des copies repart à zéro.")
                             .font(.footnote)
