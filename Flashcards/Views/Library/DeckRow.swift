@@ -88,7 +88,9 @@ private struct CardSearchMatch: Identifiable {
 
 struct DeckSearchView: View {
     @Environment(\.dismiss) private var dismiss
+    @Environment(AppSettings.self) private var settings
     @Query(sort: \Folder.name) private var folders: [Folder]
+    @Query(sort: \Deck.name) private var allDecks: [Deck]
 
     let decks: [Deck]
     let showsFolderContext: Bool
@@ -104,22 +106,30 @@ struct DeckSearchView: View {
         query.trimmingCharacters(in: .whitespacesAndNewlines)
     }
 
+    private var usesGlobalScope: Bool {
+        showsFolderContext || !settings.searchScopeEnabled
+    }
+
+    private var searchableDecks: [Deck] {
+        usesGlobalScope ? allDecks : decks
+    }
+
     private var matchingFolders: [Folder] {
-        guard showsFolderContext, !cleanQuery.isEmpty else { return [] }
+        guard usesGlobalScope, !cleanQuery.isEmpty else { return [] }
         return folders.filter { $0.name.localizedCaseInsensitiveContains(cleanQuery) }
     }
 
     private var matchingDecks: [Deck] {
         guard !cleanQuery.isEmpty else { return [] }
-        return decks.filter { deck in
+        return searchableDecks.filter { deck in
             deck.name.localizedCaseInsensitiveContains(cleanQuery)
                 || (deck.deckDescription?.localizedCaseInsensitiveContains(cleanQuery) ?? false)
         }
     }
 
     private var matchingCards: [CardSearchMatch] {
-        guard showsFolderContext, !cleanQuery.isEmpty else { return [] }
-        return decks.flatMap { deck in
+        guard usesGlobalScope, !cleanQuery.isEmpty else { return [] }
+        return searchableDecks.flatMap { deck in
             deck.cards
                 .filter {
                     $0.term.localizedCaseInsensitiveContains(cleanQuery)
@@ -221,7 +231,7 @@ struct DeckSearchView: View {
         .searchable(
             text: $query,
             isPresented: $searchIsPresented,
-            prompt: showsFolderContext ? "Dossiers, decks et cartes" : "Decks"
+            prompt: usesGlobalScope ? "Dossiers, decks et cartes" : "Decks"
         )
         .scrollDismissesKeyboard(.interactively)
         .task {

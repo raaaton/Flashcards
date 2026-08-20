@@ -27,6 +27,7 @@ enum AppLanguage: String, CaseIterable, Identifiable, Sendable {
 enum AppPreferences {
     static let hapticsKey = "settings.hapticsEnabled"
     static let celebrationsKey = "settings.celebrationsEnabled"
+    static let searchScopeKey = "settings.searchScopeEnabled"
     static let languageKey = "settings.language"
 
     static var hapticsEnabled: Bool {
@@ -37,6 +38,11 @@ enum AppPreferences {
     static var celebrationsEnabled: Bool {
         get { storedBool(forKey: celebrationsKey, defaultValue: true) }
         set { UserDefaults.standard.set(newValue, forKey: celebrationsKey) }
+    }
+
+    static var searchScopeEnabled: Bool {
+        get { storedBool(forKey: searchScopeKey, defaultValue: true) }
+        set { UserDefaults.standard.set(newValue, forKey: searchScopeKey) }
     }
 
     static var language: AppLanguage {

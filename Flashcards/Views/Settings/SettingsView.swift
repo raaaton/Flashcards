@@ -15,6 +15,10 @@ struct SettingsView: View {
                     Toggle("settings.celebrations", isOn: $settings.celebrationsEnabled)
                 }
 
+                Section("settings.search.section") {
+                    Toggle("settings.search.scope", isOn: $settings.searchScopeEnabled)
+                }
+
                 Section("settings.language.section") {
                     Picker("settings.language.label", selection: $settings.language) {
                         ForEach(AppLanguage.allCases) { language in

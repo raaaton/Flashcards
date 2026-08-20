@@ -12,6 +12,8 @@
     "settings.backup" : { "localizations" : { "fr" : { "stringUnit" : { "state" : "translated", "value" : "Sauvegarde et restauration" } }, "en" : { "stringUnit" : { "state" : "translated", "value" : "Backup & Restore" } } } },
     "settings.haptics" : { "localizations" : { "fr" : { "stringUnit" : { "state" : "translated", "value" : "Retour haptique" } }, "en" : { "stringUnit" : { "state" : "translated", "value" : "Haptic feedback" } } } },
     "settings.celebrations" : { "localizations" : { "fr" : { "stringUnit" : { "state" : "translated", "value" : "Animations de célébration" } }, "en" : { "stringUnit" : { "state" : "translated", "value" : "Celebration animations" } } } },
+    "settings.search.section" : { "localizations" : { "fr" : { "stringUnit" : { "state" : "translated", "value" : "Recherche" } }, "en" : { "stringUnit" : { "state" : "translated", "value" : "Search" } } } },
+    "settings.search.scope" : { "localizations" : { "fr" : { "stringUnit" : { "state" : "translated", "value" : "Limiter au dossier actuel" } }, "en" : { "stringUnit" : { "state" : "translated", "value" : "Limit to current folder" } } } },
     "common.done" : { "localizations" : { "fr" : { "stringUnit" : { "state" : "translated", "value" : "Terminé" } }, "en" : { "stringUnit" : { "state" : "translated", "value" : "Done" } } } },
     "common.correct" : { "localizations" : { "fr" : { "stringUnit" : { "state" : "translated", "value" : "Correct" } }, "en" : { "stringUnit" : { "state" : "translated", "value" : "Correct" } } } },
     "common.start" : { "localizations" : { "fr" : { "stringUnit" : { "state" : "translated", "value" : "Commencer" } }, "en" : { "stringUnit" : { "state" : "translated", "value" : "Start" } } } },
