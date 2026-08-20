@@ -230,6 +230,8 @@
     "Sélectionner" : { "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "Select" } } } },
     "Désélectionner" : { "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "Deselect" } } } },
     "Ajoutez au moins une carte pour créer le deck." : { "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "Add at least one card to create the deck." } } } }
+    "Recherchez un dossier, un deck ou le contenu d’une carte." : { "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "Search for a folder, deck, or card content." } } } },
+    "Dossiers, decks et cartes" : { "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "Folders, decks and cards" } } } },
   },
   "version" : "1.0"
 }
