@@ -52,6 +52,11 @@ struct HomeView: View {
                       snapshot.state.currentIndex < snapshot.state.items.count else {
                     return nil
                 }
+                let deckCardIDs = Set(deck.cards.map(\.id))
+                let remainingCardIDs = snapshot.state.items
+                    .dropFirst(snapshot.state.currentIndex)
+                    .map(\.id)
+                guard remainingCardIDs.allSatisfy(deckCardIDs.contains) else { return nil }
                 return (deck, snapshot)
             }
             .max {

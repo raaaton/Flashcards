@@ -65,23 +65,50 @@ jobs:
           test "$(grep -R -l '\.searchable' Flashcards/Views | paste -sd ' ' -)" = \
             "Flashcards/Views/Library/DeckRow.swift"
           grep -q '\.prefix(2)' Flashcards/Views/HomeView.swift
+          RESUME_LINE="$(grep -n 'Text("Reprendre")' Flashcards/Views/HomeView.swift | cut -d: -f1)"
           RECENT_LINE="$(grep -n 'Text("Récents")' Flashcards/Views/HomeView.swift | cut -d: -f1)"
+          PINNED_LINE="$(grep -n 'Text("Épinglés")' Flashcards/Views/HomeView.swift | cut -d: -f1)"
           FOLDERS_LINE="$(grep -n 'Text("Dossiers")' Flashcards/Views/HomeView.swift | cut -d: -f1)"
-          test "$RECENT_LINE" -lt "$FOLDERS_LINE"
+          test "$RESUME_LINE" -lt "$RECENT_LINE"
+          test "$RECENT_LINE" -lt "$PINNED_LINE"
+          test "$PINNED_LINE" -lt "$FOLDERS_LINE"
           grep -q '@State private var termOption = TermDefinitionDelimiterOption.colon' \
             Flashcards/Views/Import/BulkImportView.swift
           grep -q 'var activeStudySessionData: Data?' Flashcards/Models/Deck.swift
           grep -q 'var lastOpenedAt: Date?' Flashcards/Models/Deck.swift
+          grep -q 'var studyHistoryData: Data?' Flashcards/Models/Deck.swift
+          grep -q 'var isPinned: Bool = false' Flashcards/Models/Deck.swift
+          grep -q 'var isStarred: Bool = false' Flashcards/Models/Card.swift
+          grep -q 'func undoLastAnswer()' Flashcards/Services/StudySessionState.swift
+          grep -q 'StudyCardProgressSnapshot' Flashcards/Services/StudySessionState.swift
+          grep -q 'Button("study.review_mistakes"' Flashcards/Views/Study/StudyView.swift
+          grep -q 'enum BulkDuplicateDetector' Flashcards/Services/BulkImportParser.swift
+          grep -q 'UIPasteboard.general.string' Flashcards/Views/Import/BulkImportView.swift
+          grep -q 'Button("Ignorer les doublons")' Flashcards/Views/Import/BulkImportView.swift
+          grep -q 'Button("Importer quand même")' Flashcards/Views/Import/BulkImportView.swift
+          grep -q 'private var pinnedDecks: \[Deck\]' Flashcards/Views/HomeView.swift
           grep -q 'allowsHitTesting(!isCommitting)' Flashcards/Views/Study/StudyView.swift
           grep -q 'onSubmit { submitWrittenAnswer() }' Flashcards/Views/Test/TestRunView.swift
           grep -q 'DeckTile(deck: deck)' Flashcards/Views/HomeView.swift
           grep -q 'GridItem(.adaptive' Flashcards/Views/Library/FolderDetailView.swift
           grep -q 'deck.folder?.iconName' Flashcards/Views/Library/DeckRow.swift
+          test -z "$(grep -n 'DeckRow(deck:' Flashcards/Views/Library/DeckRow.swift || true)"
+          grep -q 'private func cardPreview' Flashcards/Views/Library/DeckRow.swift
           grep -q 'static func deckAccent(for deck: Deck)' Flashcards/Theme.swift
           grep -q '\.tint(Theme.deckAccent(for: deck))' \
             Flashcards/Views/Library/DeckDetailView.swift
           test "$(grep -c 'Theme.deckAccent(for: deck)' \
             Flashcards/Views/Library/DeckDetailView.swift)" -ge 3
+          grep -q 'private var accent: Color { Theme.deckAccent(for: deck) }' \
+            Flashcards/Views/Study/StudySetupView.swift
+          grep -q 'private var accent: Color { Theme.deckAccent(for: deck) }' \
+            Flashcards/Views/Study/StudyView.swift
+          grep -q 'private var accent: Color { Theme.deckAccent(for: deck) }' \
+            Flashcards/Views/Test/TestSetupView.swift
+          grep -q 'private var accent: Color { Theme.deckAccent(for: deck) }' \
+            Flashcards/Views/Test/TestRunView.swift
+          test -z "$(grep -n 'FF3B30' Flashcards/FolderAppearance.swift || true)"
+          grep -q '"FF2D55"' Flashcards/FolderAppearance.swift
           grep -q 'Button("Continuer", role: .destructive)' \
             Flashcards/Views/Study/StudySetupView.swift
           for FORM_FILE in \
@@ -94,6 +121,8 @@ jobs:
             grep -q 'Button("Enregistrer")' "$FORM_FILE"
           done
           grep -q 'private struct CardTransferSheet' Flashcards/Views/Library/EditCardsView.swift
+          grep -q 'static func moveCards(' Flashcards/Services/LibraryActions.swift
+          grep -q 'static func copyCards(' Flashcards/Services/LibraryActions.swift
           grep -A60 'private struct CardTransferSheet' Flashcards/Views/Library/EditCardsView.swift | \
             grep -q 'Button("Annuler")'
           grep -A70 'private struct CardTransferSheet' Flashcards/Views/Library/EditCardsView.swift | \
