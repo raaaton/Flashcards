@@ -3,6 +3,7 @@ name: Build unsigned IPA
 on:
   push:
     branches: [main]
+    tags: ['v*']
   workflow_dispatch:
 
 permissions:
@@ -64,6 +65,14 @@ jobs:
           grep -q 'var lastOpenedAt: Date?' Flashcards/Models/Deck.swift
           grep -q 'allowsHitTesting(!isCommitting)' Flashcards/Views/Study/StudyView.swift
           grep -q 'onSubmit { submitWrittenAnswer() }' Flashcards/Views/Test/TestRunView.swift
+          grep -q '@FocusState private var searchIsFocused: Bool' Flashcards/Views/HomeView.swift
+          grep -q 'DeckTile(deck: deck)' Flashcards/Views/HomeView.swift
+          grep -q 'GridItem(.adaptive' Flashcards/Views/Library/FolderDetailView.swift
+          grep -q 'deck.folder?.iconName' Flashcards/Views/Library/DeckRow.swift
+          grep -q 'import CoreHaptics' Flashcards/Services/HapticService.swift
+          test -z "$(grep -R -l 'LabeledContent("Cartes restantes"' Flashcards || true)"
+          grep -q '\.tint(.red)' Flashcards/Views/HomeView.swift
+          grep -q '\.tint(.red)' Flashcards/Views/Library/EditCardsView.swift
           grep -q 'cloudKitDatabase: .none' Flashcards/FlashcardsApp.swift
           if grep -n -E 'XCRemoteSwiftPackageReference|packageProductDependencies|SystemCapabilities' \
             Flashcards.xcodeproj/project.pbxproj; then
@@ -71,8 +80,8 @@ jobs:
           fi
           test "$(grep -c 'isa = PBXNativeTarget;' Flashcards.xcodeproj/project.pbxproj)" -eq 1
           test "$(grep -c 'IPHONEOS_DEPLOYMENT_TARGET = 27.0;' Flashcards.xcodeproj/project.pbxproj)" -eq 2
-          test "$(grep -c 'CURRENT_PROJECT_VERSION = 2;' Flashcards.xcodeproj/project.pbxproj)" -eq 2
-          test "$(grep -c 'MARKETING_VERSION = 1.1.1;' Flashcards.xcodeproj/project.pbxproj)" -eq 2
+          test "$(grep -c 'CURRENT_PROJECT_VERSION = 4;' Flashcards.xcodeproj/project.pbxproj)" -eq 2
+          test "$(grep -c 'MARKETING_VERSION = 1.4;' Flashcards.xcodeproj/project.pbxproj)" -eq 2
           test "$(grep -c 'PRODUCT_BUNDLE_IDENTIFIER = com.raton.flashcards;' Flashcards.xcodeproj/project.pbxproj)" -eq 2
           test "$(grep -c 'SWIFT_VERSION = 6.0;' Flashcards.xcodeproj/project.pbxproj)" -eq 2
           test -z "$(find Flashcards -name '*.entitlements' -print -quit)"
@@ -163,6 +172,8 @@ jobs:
           test -d "$APP_PATH"
           test -s "$APP_PATH/Assets.car"
           plutil -p "$APP_PATH/Info.plist" | grep -q 'AppIcon'
+          test "$(plutil -extract CFBundleShortVersionString raw "$APP_PATH/Info.plist")" = "1.4"
+          test "$(plutil -extract CFBundleVersion raw "$APP_PATH/Info.plist")" = "4"
           rm -rf Payload Flashcards.ipa
           mkdir Payload
           cp -R "$APP_PATH" Payload/
@@ -174,12 +185,24 @@ jobs:
           GH_TOKEN: ${{ github.token }}
         run: |
           set -euxo pipefail
-          TAG="build-${{ github.run_number }}"
+          if test "$GITHUB_REF_TYPE" = "tag"; then
+            APP_PATH="$(find "$RUNNER_TEMP/DerivedData/Build/Products/Release-iphoneos" \
+              -maxdepth 1 -type d -name '*.app' -print -quit)"
+            APP_VERSION="$(plutil -extract CFBundleShortVersionString raw "$APP_PATH/Info.plist")"
+            test "$GITHUB_REF_NAME" = "v$APP_VERSION"
+            TAG="$GITHUB_REF_NAME"
+            TITLE="$TAG"
+            NOTES="Official unsigned IPA for Flashcards $APP_VERSION."
+          else
+            TAG="build-${{ github.run_number }}"
+            TITLE="Flashcards build ${{ github.run_number }}"
+            NOTES="Automated unsigned IPA build."
+          fi
           if gh release view "$TAG" >/dev/null 2>&1; then
             gh release upload "$TAG" Flashcards.ipa --clobber
           else
             gh release create "$TAG" Flashcards.ipa \
               --target "$GITHUB_SHA" \
-              --title "Flashcards build ${{ github.run_number }}" \
-              --notes "Automated unsigned IPA build."
+              --title "$TITLE" \
+              --notes "$NOTES"
           fi
