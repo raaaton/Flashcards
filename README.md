@@ -19,7 +19,6 @@ Built entirely with SwiftUI, SwiftData, Apple system APIs and ❤️.
 
 <p align="center">
   <img width="197" height="426" src="https://github.com/user-attachments/assets/cfd723bc-fba5-4365-be3d-7612562d3db7" />
-  <img width="197" height="426" src="https://github.com/user-attachments/assets/0bf94216-3188-4c75-8503-d2556de823a7" />
   <img width="197" height="426" src="https://github.com/user-attachments/assets/5f040034-350c-4cf0-84f7-7f4d2de66e02" />
   <img width="197" height="426" src="https://github.com/user-attachments/assets/284ad7da-6d84-4712-881a-7d12dfd04d99" />
 </p>
