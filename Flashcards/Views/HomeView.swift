@@ -12,6 +12,9 @@ struct HomeView: View {
     @State private var showingSettings = false
     @State private var folderToEdit: Folder?
     @State private var folderToDelete: Folder?
+    @State private var quickResumeDeck: Deck?
+    @State private var quickResumeSnapshot: ActiveStudySessionSnapshot?
+    @State private var showingQuickResume = false
 
     private let columns = [
         GridItem(.flexible(), spacing: 14),
@@ -33,10 +36,39 @@ struct HomeView: View {
         )
     }
 
+    private var pinnedDecks: [Deck] {
+        decks
+            .filter(\.isPinned)
+            .sorted {
+                ($0.lastOpenedAt ?? $0.updatedAt) > ($1.lastOpenedAt ?? $1.updatedAt)
+            }
+    }
+
+    private var resumableDeck: (deck: Deck, snapshot: ActiveStudySessionSnapshot)? {
+        decks
+            .compactMap { deck -> (Deck, ActiveStudySessionSnapshot)? in
+                guard let data = deck.activeStudySessionData,
+                      let snapshot = StudySessionPersistence.decode(data, deckID: deck.id),
+                      snapshot.state.currentIndex < snapshot.state.items.count else {
+                    return nil
+                }
+                return (deck, snapshot)
+            }
+            .max {
+                ($0.0.lastStudyActivityAt ?? .distantPast)
+                    < ($1.0.lastStudyActivityAt ?? .distantPast)
+            }
+    }
+
     var body: some View {
         NavigationStack {
             folderGrid
             .navigationTitle("Flashcards")
+            .navigationDestination(isPresented: $showingQuickResume) {
+                if let quickResumeDeck, let quickResumeSnapshot {
+                    StudyView(deck: quickResumeDeck, snapshot: quickResumeSnapshot)
+                }
+            }
             .toolbar {
                 ToolbarItem(placement: .topBarLeading) {
                     Button {
@@ -93,6 +125,54 @@ struct HomeView: View {
     private var folderGrid: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: 14) {
+                if let resumableDeck {
+                    Text("Reprendre")
+                        .font(.title2.bold())
+                        .padding(.horizontal)
+
+                    Button {
+                        resume(resumableDeck)
+                    } label: {
+                        HStack(spacing: 14) {
+                            Image(systemName: "play.fill")
+                                .font(.title3.weight(.bold))
+                                .foregroundStyle(.white)
+                                .frame(width: 48, height: 48)
+                                .background(
+                                    Theme.deckAccent(for: resumableDeck.deck).gradient,
+                                    in: .circle
+                                )
+
+                            VStack(alignment: .leading, spacing: 4) {
+                                Text(resumableDeck.deck.name)
+                                    .font(.headline)
+                                    .foregroundStyle(.primary)
+                                Text(
+                                    "\(resumableDeck.snapshot.state.currentIndex) / \(resumableDeck.snapshot.state.items.count)"
+                                )
+                                .font(.subheadline.monospacedDigit())
+                                .foregroundStyle(.secondary)
+                            }
+                            Spacer()
+                            Image(systemName: "chevron.right")
+                                .font(.caption.weight(.bold))
+                                .foregroundStyle(.tertiary)
+                        }
+                        .padding(16)
+                        .background(
+                            Theme.cardBackground,
+                            in: .rect(cornerRadius: 22, style: .continuous)
+                        )
+                        .contentShape(.rect(cornerRadius: 22, style: .continuous))
+                    }
+                    .buttonStyle(.plain)
+                    .padding(.horizontal)
+                    .accessibilityLabel("Reprendre \(resumableDeck.deck.name)")
+                    .accessibilityValue(
+                        "\(resumableDeck.snapshot.state.currentIndex) sur \(resumableDeck.snapshot.state.items.count)"
+                    )
+                }
+
                 if !recentDecks.isEmpty {
                     Text("Récents")
                         .font(.title2.bold())
@@ -106,16 +186,37 @@ struct HomeView: View {
                                 DeckTile(deck: deck)
                             }
                             .buttonStyle(.plain)
+                            .contextMenu { pinAction(for: deck) }
                         }
                     }
                     .padding(.horizontal)
                     .transition(.move(edge: .top).combined(with: .opacity))
                 }
 
+                if !pinnedDecks.isEmpty {
+                    Text("Épinglés")
+                        .font(.title2.bold())
+                        .padding(.horizontal)
+                        .padding(.top, 10)
+
+                    LazyVGrid(columns: columns, spacing: 14) {
+                        ForEach(pinnedDecks) { deck in
+                            NavigationLink {
+                                DeckDetailView(deck: deck)
+                            } label: {
+                                DeckTile(deck: deck)
+                            }
+                            .buttonStyle(.plain)
+                            .contextMenu { pinAction(for: deck) }
+                        }
+                    }
+                    .padding(.horizontal)
+                }
+
                 Text("Dossiers")
                     .font(.title2.bold())
                     .padding(.horizontal)
-                    .padding(.top, recentDecks.isEmpty ? 0 : 10)
+                    .padding(.top, recentDecks.isEmpty && pinnedDecks.isEmpty ? 0 : 10)
 
                 if folders.isEmpty {
                     folderEmptyState
@@ -172,6 +273,7 @@ struct HomeView: View {
         .animation(.spring(duration: 0.35), value: folders.map(\.id))
         .animation(.spring(duration: 0.35), value: orphanedDeckCount)
         .animation(.spring(duration: 0.35), value: recentDecks.map(\.id))
+        .animation(.spring(duration: 0.35), value: pinnedDecks.map(\.id))
     }
 
     private var folderEmptyState: some View {
@@ -229,6 +331,28 @@ struct HomeView: View {
         modelContext.delete(folder)
         try? modelContext.save()
         folderToDelete = nil
+    }
+
+    @ViewBuilder
+    private func pinAction(for deck: Deck) -> some View {
+        Button(
+            deck.isPinned ? "Désépingler" : "Épingler",
+            systemImage: deck.isPinned ? "pin.slash" : "pin"
+        ) {
+            deck.isPinned.toggle()
+            deck.updatedAt = .now
+            try? modelContext.save()
+            HapticService.play(.selection)
+        }
+        .normalActionColor()
+    }
+
+    private func resume(_ resumable: (deck: Deck, snapshot: ActiveStudySessionSnapshot)) {
+        resumable.deck.lastStudyActivityAt = .now
+        try? modelContext.save()
+        quickResumeDeck = resumable.deck
+        quickResumeSnapshot = resumable.snapshot
+        showingQuickResume = true
     }
 
 }

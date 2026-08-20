@@ -143,6 +143,16 @@ struct FolderDetailView: View {
         }
         .buttonStyle(.plain)
         .contextMenu {
+            Button(
+                deck.isPinned ? "Désépingler" : "Épingler",
+                systemImage: deck.isPinned ? "pin.slash" : "pin"
+            ) {
+                deck.isPinned.toggle()
+                deck.updatedAt = .now
+                try? modelContext.save()
+                HapticService.play(.selection)
+            }
+            .normalActionColor()
             Button("Modifier", systemImage: "pencil") { deckToEdit = deck }
                 .normalActionColor()
             Button("Dupliquer", systemImage: "plus.square.on.square") {
