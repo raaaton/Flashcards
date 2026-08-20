@@ -319,4 +319,3 @@ See [LICENSE](LICENSE) for details.
   <strong>Flashcards</strong><br>
   Native. Offline. Focused.
 </p>
-```
