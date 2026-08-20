@@ -1,3 +1,6 @@
+<img width="1500" height="440" alt="-iMMRBlo" src="https://github.com/user-attachments/assets/765b88df-43a6-46a2-b8c0-efcca870ef2c" />
+
+
 # Flashcards
 
 Native iOS flashcards application, fully local and offline. It lets you manage folders, decks, and cards, import hundreds of cards from text, study using rounds, generate tests, and back up the entire database as JSON.
