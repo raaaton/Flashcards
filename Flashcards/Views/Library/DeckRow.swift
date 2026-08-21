@@ -123,7 +123,6 @@ struct DeckSearchView: View {
         guard !cleanQuery.isEmpty else { return [] }
         return searchableDecks.filter { deck in
             deck.name.localizedCaseInsensitiveContains(cleanQuery)
-                || (deck.deckDescription?.localizedCaseInsensitiveContains(cleanQuery) ?? false)
         }
     }
 

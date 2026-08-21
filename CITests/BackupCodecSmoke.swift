@@ -42,7 +42,6 @@ enum BackupCodecSmoke {
                 BackupDeckDTO(
                     id: deckID,
                     name: "Deck",
-                    deckDescription: "Description",
                     createdAt: date,
                     updatedAt: date,
                     lastOpenedAt: date.addingTimeInterval(120),

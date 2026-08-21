@@ -90,7 +90,6 @@ struct BackupCardDTO: Codable, Equatable, Identifiable, Sendable {
 struct BackupDeckDTO: Codable, Equatable, Identifiable, Sendable {
     let id: UUID
     var name: String
-    var deckDescription: String?
     var createdAt: Date
     var updatedAt: Date
     var lastOpenedAt: Date?
@@ -105,7 +104,6 @@ struct BackupDeckDTO: Codable, Equatable, Identifiable, Sendable {
     init(
         id: UUID,
         name: String,
-        deckDescription: String?,
         createdAt: Date,
         updatedAt: Date,
         lastOpenedAt: Date? = nil,
@@ -119,7 +117,6 @@ struct BackupDeckDTO: Codable, Equatable, Identifiable, Sendable {
     ) {
         self.id = id
         self.name = name
-        self.deckDescription = deckDescription
         self.createdAt = createdAt
         self.updatedAt = updatedAt
         self.lastOpenedAt = lastOpenedAt
@@ -133,7 +130,7 @@ struct BackupDeckDTO: Codable, Equatable, Identifiable, Sendable {
     }
 
     private enum CodingKeys: String, CodingKey {
-        case id, name, deckDescription, createdAt, updatedAt, lastOpenedAt
+        case id, name, createdAt, updatedAt, lastOpenedAt
         case completedStudySessions, activeStudySessionData, studyHistoryData
         case lastStudyActivityAt, isPinned, folderID, cards
     }
@@ -142,7 +139,6 @@ struct BackupDeckDTO: Codable, Equatable, Identifiable, Sendable {
         let container = try decoder.container(keyedBy: CodingKeys.self)
         id = try container.decode(UUID.self, forKey: .id)
         name = try container.decode(String.self, forKey: .name)
-        deckDescription = try container.decodeIfPresent(String.self, forKey: .deckDescription)
         createdAt = try container.decode(Date.self, forKey: .createdAt)
         updatedAt = try container.decode(Date.self, forKey: .updatedAt)
         lastOpenedAt = try container.decodeIfPresent(Date.self, forKey: .lastOpenedAt)

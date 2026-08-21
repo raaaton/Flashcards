@@ -81,11 +81,6 @@ struct DeckDetailView: View {
 
     private var deckSummary: some View {
         VStack(alignment: .leading, spacing: 16) {
-            if let description = deck.deckDescription, !description.isEmpty {
-                Text(description)
-                    .foregroundStyle(.secondary)
-            }
-
             DeckProgressBar(
                 deckName: deck.name,
                 masteredCount: masteredCount,

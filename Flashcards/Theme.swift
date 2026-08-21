@@ -158,7 +158,7 @@ struct CardEditorSurface: View {
             )
 
             Divider()
-                .padding(.horizontal, 18)
+                .padding(.leading, 18)
 
             editorField(
                 title: "Définition",
@@ -169,8 +169,8 @@ struct CardEditorSurface: View {
             )
         }
         .background(
-            Color(uiColor: .tertiarySystemBackground),
-            in: .rect(cornerRadius: 24, style: .continuous)
+            Color(uiColor: .secondarySystemGroupedBackground),
+            in: .rect(cornerRadius: 12, style: .continuous)
         )
     }
 

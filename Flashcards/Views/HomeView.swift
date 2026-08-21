@@ -118,6 +118,11 @@ struct HomeView: View {
                 }
             }
         }
+        .overlay(alignment: .bottomTrailing) {
+            addMenu
+                .padding(.trailing, 24)
+                .padding(.bottom, 24)
+        }
         .sheet(isPresented: $showingNewFolder) {
             FolderFormView()
         }
@@ -305,11 +310,6 @@ struct HomeView: View {
         .animation(.spring(duration: 0.35), value: orphanedDeckCount)
         .animation(.spring(duration: 0.35), value: recentDecks.map(\.id))
         .animation(.spring(duration: 0.35), value: pinnedDecks.map(\.id))
-        .overlay(alignment: .bottomTrailing) {
-            addMenu
-                .padding(.trailing, 16)
-                .padding(.bottom, 16)
-        }
     }
 
     private var folderEmptyState: some View {

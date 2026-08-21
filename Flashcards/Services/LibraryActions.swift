@@ -5,7 +5,6 @@ enum LibraryActions {
     @discardableResult
     static func duplicateDeck(_ source: Deck, in modelContext: ModelContext) -> Deck {
         let copy = Deck(name: "\(source.name) — copie", folder: source.folder)
-        copy.deckDescription = source.deckDescription
         modelContext.insert(copy)
 
         for sourceCard in source.cards.sorted(by: { $0.position < $1.position }) {
@@ -34,7 +33,6 @@ enum LibraryActions {
 
         for sourceDeck in source.decks.sorted(by: { $0.createdAt < $1.createdAt }) {
             let deck = Deck(name: sourceDeck.name, folder: copy)
-            deck.deckDescription = sourceDeck.deckDescription
             modelContext.insert(deck)
 
             for sourceCard in sourceDeck.cards.sorted(by: { $0.position < $1.position }) {

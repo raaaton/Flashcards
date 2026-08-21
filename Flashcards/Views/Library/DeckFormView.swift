@@ -31,7 +31,6 @@ struct DeckFormView: View {
 
     let deck: Deck?
     @State private var name: String
-    @State private var deckDescription: String
     @State private var selectedFolderID: UUID?
     @State private var cardDrafts: [DeckCardDraft]
     @State private var showingBulkAdd = false
@@ -39,7 +38,6 @@ struct DeckFormView: View {
     init(deck: Deck? = nil, initialFolder: Folder? = nil) {
         self.deck = deck
         _name = State(initialValue: deck?.name ?? "")
-        _deckDescription = State(initialValue: deck?.deckDescription ?? "")
         _selectedFolderID = State(initialValue: deck?.folder?.id ?? initialFolder?.id)
         _cardDrafts = State(initialValue: deck == nil ? [DeckCardDraft()] : [])
     }
@@ -74,8 +72,6 @@ struct DeckFormView: View {
             Form {
                 Section("Deck") {
                     TextField("Nom", text: $name)
-                    TextField("Description (facultative)", text: $deckDescription, axis: .vertical)
-                        .lineLimit(2...5)
                 }
 
                 Section("Dossier") {
@@ -118,6 +114,7 @@ struct DeckFormView: View {
                                         systemImage: "trash"
                                     )
                                 }
+                                .tint(.red)
                             }
                             .contextMenu {
                                 Button(role: .destructive) {
@@ -204,17 +201,14 @@ struct DeckFormView: View {
 
     private func save() {
         let selectedFolder = folders.first { $0.id == selectedFolderID }
-        let cleanDescription = deckDescription.trimmingCharacters(in: .whitespacesAndNewlines)
 
         if let deck {
             deck.name = cleanName
-            deck.deckDescription = cleanDescription.isEmpty ? nil : cleanDescription
             deck.folder = selectedFolder
             deck.updatedAt = .now
         } else {
             guard canSave else { return }
             let newDeck = Deck(name: cleanName, folder: selectedFolder)
-            newDeck.deckDescription = cleanDescription.isEmpty ? nil : cleanDescription
             modelContext.insert(newDeck)
             for (position, draft) in validDrafts.enumerated() {
                 let card = Card(

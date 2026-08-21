@@ -103,7 +103,6 @@ enum BackupService {
                 }
 
                 deck.name = dto.name
-                deck.deckDescription = dto.deckDescription
                 deck.createdAt = dto.createdAt
                 deck.updatedAt = dto.updatedAt
                 deck.lastOpenedAt = dto.lastOpenedAt ?? deck.lastOpenedAt
@@ -164,7 +163,6 @@ enum BackupService {
         BackupDeckDTO(
             id: deck.id,
             name: deck.name,
-            deckDescription: deck.deckDescription,
             createdAt: deck.createdAt,
             updatedAt: deck.updatedAt,
             lastOpenedAt: deck.lastOpenedAt,
