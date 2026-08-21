@@ -41,7 +41,6 @@ enum FolderAppearance {
 
     static let presetColors = [
         "0A84FF",
-        "007AFF",
         "00A8A8",
         "34C759",
         "FF9500",

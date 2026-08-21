@@ -82,7 +82,7 @@ struct BulkImportView: View {
             return Color(folderHex: folder.colorHex)
         }
 
-        return Theme.accent
+        return .gray
     }
 
     private var termDelimiter: String {

@@ -20,7 +20,7 @@ struct FolderDetailView: View {
     ]
 
     private var accent: Color {
-        folder.map { Color(folderHex: $0.colorHex) } ?? Theme.accent
+        folder.map { Color(folderHex: $0.colorHex) } ?? .gray
     }
 
     private var decks: [Deck] {

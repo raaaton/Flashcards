@@ -65,7 +65,7 @@ struct DeckFormView: View {
         folders
             .first(where: { $0.id == selectedFolderID })
             .map { Color(folderHex: $0.colorHex) }
-            ?? Theme.accent
+            ?? .gray
     }
 
     var body: some View {

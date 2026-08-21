@@ -141,11 +141,10 @@ struct HomeView: View {
             DeckFormView()
         }
         .sheet(isPresented: $showingFirstDeckCreation) {
-            if let firstDeckFolder {
-                DeckFormView(initialFolder: firstDeckFolder)
-            } else {
-                DeckFormView()
-            }
+            DeckFormView()
+        }
+        .sheet(item: $firstDeckFolder) { folder in
+            DeckFormView(initialFolder: folder)
         }
         .sheet(isPresented: $showingFirstDeckImport) {
             BulkImportView()
@@ -485,16 +484,16 @@ struct HomeView: View {
         guard firstDeckWantsFolder else { return }
 
         Task { @MainActor in
-            // Laisse SwiftData/@Query recevoir le folder qui vient
-            // éventuellement d'être sauvegardé.
-            for _ in 0..<12 {
+            // Attend seulement que SwiftData/@Query voie
+            // le Folder qui vient d'être sauvegardé.
+            for _ in 0..<20 {
                 if let createdFolder = folders.first {
-                    firstDeckFolder = createdFolder
-
                     if firstDeckPendingImport {
                         showingFirstDeckImport = true
                     } else {
-                        showingFirstDeckCreation = true
+                        // Le Folder lui-même déclenche maintenant
+                        // la présentation du DeckForm.
+                        firstDeckFolder = createdFolder
                     }
 
                     return
@@ -505,9 +504,8 @@ struct HomeView: View {
                 )
             }
 
-            // Aucun folder apparu :
-            // FolderForm a été annulé.
-            // On reste simplement sur l'onboarding.
+            // Aucun Folder apparu :
+            // le formulaire a probablement été annulé.
         }
     }
 
