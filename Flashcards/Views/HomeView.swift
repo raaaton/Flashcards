@@ -28,6 +28,10 @@ struct HomeView: View {
     @State private var quickResumeDeck: Deck?
     @State private var quickResumeSnapshot: ActiveStudySessionSnapshot?
     @State private var showingQuickResume = false
+    @State private var folderOrderIDs: [UUID] = []
+    @State private var folderOrderRevision = 0
+    @State private var lastFolderReorderDestination:
+        ReorderDifference<UUID, ReorderableSingleCollectionIdentifier>.Destination?
 
     private let columns = [
         GridItem(.flexible(), spacing: 14),
@@ -48,6 +52,26 @@ struct HomeView: View {
             }
             return lhs.sortOrder < rhs.sortOrder
         }
+    }
+
+    private var persistedFolderOrderIDs: [UUID] {
+        orderedFolders.map(\.id)
+    }
+
+    private var displayedFolders: [Folder] {
+        let foldersByID = Dictionary(
+            uniqueKeysWithValues: folders.map { ($0.id, $0) }
+        )
+        let preferredIDs = folderOrderIDs.isEmpty
+            ? persistedFolderOrderIDs
+            : folderOrderIDs
+
+        var result = preferredIDs.compactMap { foldersByID[$0] }
+        let knownIDs = Set(result.map(\.id))
+        result.append(
+            contentsOf: orderedFolders.filter { !knownIDs.contains($0.id) }
+        )
+        return result
     }
 
     private var recentDecks: [Deck] {
@@ -395,7 +419,7 @@ struct HomeView: View {
                 }
 
                 LazyVGrid(columns: columns, spacing: 14) {
-                    ForEach(orderedFolders, id: \.id) { folder in
+                    ForEach(displayedFolders, id: \.id) { folder in
                         NavigationLink {
                             FolderDetailView(folder: folder)
                         } label: {
@@ -440,11 +464,17 @@ struct HomeView: View {
                 .reorderContainer(for: Folder.self, itemID: \.id) { difference in
                     applyFolderReorder(difference)
                 }
+                .onDropSessionUpdated { session in
+                    handleFolderDropSessionUpdate(session)
+                }
                 .padding(.horizontal)
 
             }
             .padding(.top, 8)
             .padding(.bottom, 108)
+        }
+        .onChange(of: folders.map(\.id), initial: true) { _, _ in
+            synchronizeFolderOrderFromPersistence()
         }
         .animation(.spring(duration: 0.35), value: orphanedDeckCount)
         .animation(.spring(duration: 0.35), value: recentDecks.map(\.id))
@@ -472,13 +502,51 @@ struct HomeView: View {
         .padding(.horizontal)
     }
 
+    private func synchronizeFolderOrderFromPersistence() {
+        let persistedIDs = persistedFolderOrderIDs
+        guard persistedIDs != folderOrderIDs else { return }
+        folderOrderIDs = persistedIDs
+    }
+
+    private func handleFolderDropSessionUpdate(_ session: DropSession) {
+        let destination = session.reorderDestination(
+            for: Folder.self,
+            itemID: \.id
+        )
+
+        if session.phase == .entering {
+            lastFolderReorderDestination = destination
+            return
+        }
+
+        if session.phase == .active {
+            guard destination != lastFolderReorderDestination else { return }
+            if destination != nil {
+                HapticService.play(.selection)
+            }
+            lastFolderReorderDestination = destination
+            return
+        }
+
+        lastFolderReorderDestination = nil
+    }
+
     private func applyFolderReorder<CollectionID: Hashable & Sendable>(
         _ difference: ReorderDifference<UUID, CollectionID>
     ) {
         let sourceIDs = difference.sources
         guard !sourceIDs.isEmpty else { return }
 
-        var reorderedIDs = orderedFolders.map(\.id)
+        var reorderedIDs = folderOrderIDs.isEmpty
+            ? persistedFolderOrderIDs
+            : folderOrderIDs
+        let liveFolderIDs = Set(folders.map(\.id))
+        reorderedIDs = reorderedIDs.filter { liveFolderIDs.contains($0) }
+
+        for id in persistedFolderOrderIDs where !reorderedIDs.contains(id) {
+            reorderedIDs.append(id)
+        }
+
         let sourceSet = Set(sourceIDs)
         reorderedIDs.removeAll { sourceSet.contains($0) }
 
@@ -495,8 +563,25 @@ struct HomeView: View {
 
         reorderedIDs.insert(contentsOf: sourceIDs, at: destinationIndex)
 
+        // Update the displayed collection synchronously so SwiftUI can finish
+        // the native drop animation immediately instead of waiting on @Query.
+        folderOrderIDs = reorderedIDs
+        folderOrderRevision += 1
+        let revision = folderOrderRevision
+        let finalOrder = reorderedIDs
+
+        Task { @MainActor in
+            // Give the native reorder transaction one run-loop turn to settle
+            // before touching SwiftData and saving the persistent order.
+            await Task.yield()
+            guard folderOrderRevision == revision else { return }
+            persistFolderOrder(finalOrder)
+        }
+    }
+
+    private func persistFolderOrder(_ orderedIDs: [UUID]) {
         let sortOrderByID = Dictionary(
-            uniqueKeysWithValues: reorderedIDs.enumerated().map {
+            uniqueKeysWithValues: orderedIDs.enumerated().map {
                 ($0.element, $0.offset)
             }
         )
