@@ -32,7 +32,7 @@ struct FlashcardsApp: App {
             HomeView()
                 .environment(settings)
                 .environment(\.locale, settings.locale ?? Locale.autoupdatingCurrent)
-                .tint(Theme.accent)
+                .tint(settings.accentColor.color)
                 .preferredColorScheme(.dark)
         }
         .modelContainer(modelContainer)

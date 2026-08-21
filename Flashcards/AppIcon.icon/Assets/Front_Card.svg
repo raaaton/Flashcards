@@ -1,15 +1,15 @@
 <svg width="512" height="512" viewBox="0 0 512 512" fill="none" xmlns="http://www.w3.org/2000/svg">
 <g transform="rotate(2 278 288)">
   <rect x="132" y="116" width="292" height="344" rx="52" fill="url(#frontBase)"/>
-  <rect x="132.75" y="116.75" width="290.5" height="342.5" rx="51.25" stroke="#F7FCFF" stroke-opacity="0.34" stroke-width="1.5"/>
-  <rect x="178" y="218" width="138" height="16" rx="8" fill="#F4FBFF" fill-opacity="0.86"/>
-  <rect x="178" y="254" width="184" height="16" rx="8" fill="#F4FBFF" fill-opacity="0.42"/>
+  <rect x="132.75" y="116.75" width="290.5" height="342.5" rx="51.25" stroke="#FFF8E7" stroke-opacity="0.30" stroke-width="1.5"/>
+  <rect x="178" y="218" width="138" height="16" rx="8" fill="#3A2C0D" fill-opacity="0.78"/>
+  <rect x="178" y="254" width="184" height="16" rx="8" fill="#3A2C0D" fill-opacity="0.34"/>
 </g>
 <defs>
   <linearGradient id="frontBase" x1="168" y1="132" x2="392" y2="446" gradientUnits="userSpaceOnUse">
-    <stop stop-color="#5BC0FF"/>
-    <stop offset="0.48" stop-color="#0A84FF"/>
-    <stop offset="1" stop-color="#075FC5"/>
+    <stop stop-color="#FFE29A"/>
+    <stop offset="0.48" stop-color="#F2C14E"/>
+    <stop offset="1" stop-color="#D89B2B"/>
   </linearGradient>
 </defs>
 </svg>

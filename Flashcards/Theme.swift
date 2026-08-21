@@ -1,12 +1,59 @@
 import SwiftUI
+import UIKit
+
+enum AppAccent: String, CaseIterable, Identifiable, Sendable {
+    case amber
+    case mint
+
+    var id: Self { self }
+
+    var hex: String {
+        switch self {
+        case .amber: "#F2C14E"
+        case .mint: "#46D7A7"
+        }
+    }
+
+    var color: Color {
+        switch self {
+        case .amber:
+            Color(
+                red: 242.0 / 255.0,
+                green: 193.0 / 255.0,
+                blue: 78.0 / 255.0
+            )
+        case .mint:
+            Color(
+                red: 70.0 / 255.0,
+                green: 215.0 / 255.0,
+                blue: 167.0 / 255.0
+            )
+        }
+    }
+}
 
 @MainActor
 enum Theme {
-    static let accent = Color.blue
+    static var accent: Color { AppPreferences.accentColor.color }
     static let cardBackground = Color(uiColor: .secondarySystemBackground)
 
     static func deckAccent(for deck: Deck) -> Color {
         deck.folder.map { Color(folderHex: $0.colorHex) } ?? .gray
+    }
+
+    static func foreground(on color: Color) -> Color {
+        let resolved = UIColor(color)
+        var red: CGFloat = 0
+        var green: CGFloat = 0
+        var blue: CGFloat = 0
+        var alpha: CGFloat = 0
+
+        guard resolved.getRed(&red, green: &green, blue: &blue, alpha: &alpha) else {
+            return .white
+        }
+
+        let luminance = (0.299 * red) + (0.587 * green) + (0.114 * blue)
+        return luminance > 0.60 ? Color.black.opacity(0.82) : .white
     }
 }
 
@@ -53,7 +100,7 @@ struct PrimaryStartButton: View {
         } label: {
             Text(title)
                 .font(.headline)
-                .foregroundStyle(.white)
+                .foregroundStyle(Theme.foreground(on: accent))
                 .frame(maxWidth: .infinity)
                 .padding(.vertical, 15)
                 .background(accent, in: .rect(cornerRadius: 16, style: .continuous))
@@ -76,7 +123,7 @@ struct CircularSaveButton: View {
         } label: {
             Image(systemName: "checkmark")
                 .font(.body.weight(.bold))
-                .foregroundStyle(.white)
+                .foregroundStyle(Theme.foreground(on: accent))
                 .frame(width: 38, height: 38)
                 .background(accent, in: .circle)
                 .contentShape(.circle)

@@ -8,6 +8,10 @@ final class AppSettings {
         didSet { AppPreferences.language = language }
     }
 
+    var accentColor: AppAccent {
+        didSet { AppPreferences.accentColor = accentColor }
+    }
+
     var hapticsEnabled: Bool {
         didSet { AppPreferences.hapticsEnabled = hapticsEnabled }
     }
@@ -38,6 +42,7 @@ final class AppSettings {
 
     init() {
         language = AppPreferences.language
+        accentColor = AppPreferences.accentColor
         hapticsEnabled = AppPreferences.hapticsEnabled
         celebrationsEnabled = AppPreferences.celebrationsEnabled
         searchScopeEnabled = AppPreferences.searchScopeEnabled

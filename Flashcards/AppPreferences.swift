@@ -44,6 +44,7 @@ enum AppPreferences {
     static let studyShuffleKey = "study.shuffle"
     static let studyStarredOnlyKey = "study.starredOnly"
     static let languageKey = "settings.language"
+    static let accentColorKey = "settings.accentColor"
 
     static var hapticsEnabled: Bool {
         get { storedBool(forKey: hapticsKey, defaultValue: true) }
@@ -112,6 +113,16 @@ enum AppPreferences {
             return AppLanguage(rawValue: value) ?? .automatic
         }
         set { UserDefaults.standard.set(newValue.rawValue, forKey: languageKey) }
+    }
+
+    static var accentColor: AppAccent {
+        get {
+            guard let value = UserDefaults.standard.string(forKey: accentColorKey) else {
+                return .amber
+            }
+            return AppAccent(rawValue: value) ?? .amber
+        }
+        set { UserDefaults.standard.set(newValue.rawValue, forKey: accentColorKey) }
     }
 
     private static func storedBool(forKey key: String, defaultValue: Bool) -> Bool {
