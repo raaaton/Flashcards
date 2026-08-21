@@ -4,6 +4,8 @@ enum AppLanguage: String, CaseIterable, Identifiable, Sendable {
     case automatic
     case french
     case english
+    case german
+    case spanish
 
     var id: Self { self }
 
@@ -12,6 +14,8 @@ enum AppLanguage: String, CaseIterable, Identifiable, Sendable {
         case .automatic: "settings.language.automatic"
         case .french: "settings.language.french"
         case .english: "settings.language.english"
+        case .german: "settings.language.german"
+        case .spanish: "settings.language.spanish"
         }
     }
 
@@ -20,6 +24,8 @@ enum AppLanguage: String, CaseIterable, Identifiable, Sendable {
         case .automatic: nil
         case .french: Locale(identifier: "fr")
         case .english: Locale(identifier: "en")
+        case .german: Locale(identifier: "de")
+        case .spanish: Locale(identifier: "es")
         }
     }
 }

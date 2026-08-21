@@ -208,7 +208,7 @@ When reproducing an Apple interaction, match the behavior as well as the appeara
 
 ## Localization
 
-The app currently supports French and English.
+The app currently supports French, English, German, and Spanish.
 
 User-facing strings should use the existing localization system where practical:
 
