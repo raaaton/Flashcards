@@ -1,22 +1,18 @@
 <svg width="397" height="485" viewBox="0 0 397 485" fill="none" xmlns="http://www.w3.org/2000/svg">
-<g filter="url(#filter0_d_5_4)">
-<rect x="2.1073" y="72.6838" width="300" height="420" rx="36" transform="rotate(-14 2.1073 72.6838)" fill="#282628"/>
-<rect x="2.1073" y="72.6838" width="300" height="420" rx="36" transform="rotate(-14 2.1073 72.6838)" fill="url(#paint0_linear_5_4)"/>
-<rect x="2.56188" y="72.957" width="299.25" height="419.25" rx="35.625" transform="rotate(-14 2.56188 72.957)" stroke="white" stroke-opacity="0.06" stroke-width="0.75"/>
-</g>
+<rect x="2.1073" y="72.6838" width="300" height="420" rx="36" transform="rotate(-14 2.1073 72.6838)" fill="url(#backBase)"/>
+<rect x="2.1073" y="72.6838" width="300" height="420" rx="36" transform="rotate(-14 2.1073 72.6838)" fill="url(#backSheen)"/>
+<rect x="2.71345" y="73.048" width="299" height="419" rx="35.5" transform="rotate(-14 2.71345 73.048)" stroke="#EAF4FF" stroke-opacity="0.18" stroke-width="1"/>
 <defs>
-<filter id="filter0_d_5_4" x="0" y="0" width="396.911" height="484.315" filterUnits="userSpaceOnUse" color-interpolation-filters="sRGB">
-<feFlood flood-opacity="0" result="BackgroundImageFix"/>
-<feColorMatrix in="SourceAlpha" type="matrix" values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 127 0" result="hardAlpha"/>
-<feOffset dy="2"/>
-<feGaussianBlur stdDeviation="5"/>
-<feColorMatrix type="matrix" values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0.28 0"/>
-<feBlend mode="normal" in2="BackgroundImageFix" result="effect1_dropShadow_5_4"/>
-<feBlend mode="normal" in="SourceGraphic" in2="effect1_dropShadow_5_4" result="shape"/>
-</filter>
-<linearGradient id="paint0_linear_5_4" x1="152.107" y1="72.6838" x2="152.107" y2="492.684" gradientUnits="userSpaceOnUse">
-<stop stop-color="white" stop-opacity="0.04"/>
-<stop offset="1" stop-opacity="0.02"/>
+<linearGradient id="backBase" x1="42" y1="88" x2="279" y2="474" gradientUnits="userSpaceOnUse">
+<stop stop-color="#314967"/>
+<stop offset="0.48" stop-color="#24364D"/>
+<stop offset="1" stop-color="#172232"/>
+</linearGradient>
+<linearGradient id="backSheen" x1="92" y1="68" x2="225" y2="472" gradientUnits="userSpaceOnUse">
+<stop stop-color="#C7E5FF" stop-opacity="0.14"/>
+<stop offset="0.32" stop-color="#7EBBFF" stop-opacity="0.06"/>
+<stop offset="0.72" stop-color="white" stop-opacity="0.015"/>
+<stop offset="1" stop-color="#00152E" stop-opacity="0.10"/>
 </linearGradient>
 </defs>
 </svg>
