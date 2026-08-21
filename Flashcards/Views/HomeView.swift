@@ -1,8 +1,16 @@
 import SwiftData
 import SwiftUI
 
+private struct ResumableDeck: Identifiable {
+    let deck: Deck
+    let snapshot: ActiveStudySessionSnapshot
+
+    var id: UUID { deck.id }
+}
+
 struct HomeView: View {
     @Environment(\.modelContext) private var modelContext
+    @Environment(AppSettings.self) private var settings
     @Query(sort: \Folder.createdAt) private var folders: [Folder]
     @Query(sort: \Deck.updatedAt, order: .reverse) private var decks: [Deck]
 
@@ -44,26 +52,37 @@ struct HomeView: View {
             }
     }
 
-    private var resumableDeck: (deck: Deck, snapshot: ActiveStudySessionSnapshot)? {
+    private var resumableDecks: [ResumableDeck] {
         decks
-            .compactMap { deck -> (Deck, ActiveStudySessionSnapshot)? in
+            .compactMap { deck -> ResumableDeck? in
                 guard let data = deck.activeStudySessionData,
-                        let snapshot = StudySessionPersistence.decode(data, deckID: deck.id),
-                        snapshot.state.currentIndex > 0,
-                        snapshot.state.currentIndex < snapshot.state.items.count else {
+                    let snapshot = StudySessionPersistence.decode(data, deckID: deck.id),
+                    snapshot.state.currentIndex > 0,
+                    snapshot.state.currentIndex < snapshot.state.items.count else {
                     return nil
                 }
+
                 let deckCardIDs = Set(deck.cards.map(\.id))
                 let remainingCardIDs = snapshot.state.items
                     .dropFirst(snapshot.state.currentIndex)
                     .map(\.id)
-                guard remainingCardIDs.allSatisfy(deckCardIDs.contains) else { return nil }
-                return (deck, snapshot)
+
+                guard remainingCardIDs.allSatisfy(deckCardIDs.contains) else {
+                    return nil
+                }
+
+                return ResumableDeck(deck: deck, snapshot: snapshot)
             }
-            .max {
-                ($0.0.lastStudyActivityAt ?? .distantPast)
-                    < ($1.0.lastStudyActivityAt ?? .distantPast)
+            .sorted {
+                ($0.deck.lastStudyActivityAt ?? .distantPast)
+                    > ($1.deck.lastStudyActivityAt ?? .distantPast)
             }
+    }
+
+    private var showsContentBeforeFolders: Bool {
+        (settings.homeResumeEnabled && !resumableDecks.isEmpty)
+            || (settings.homeRecentEnabled && !recentDecks.isEmpty)
+            || (settings.homePinnedEnabled && !pinnedDecks.isEmpty)
     }
 
     var body: some View {
@@ -131,55 +150,62 @@ struct HomeView: View {
     private var folderGrid: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: 14) {
-                if let resumableDeck {
+                if settings.homeResumeEnabled && !resumableDecks.isEmpty {
                     Text("Reprendre")
                         .font(.title2.bold())
                         .padding(.horizontal)
 
-                    Button {
-                        resume(resumableDeck)
-                    } label: {
-                        HStack(spacing: 14) {
-                            Image(systemName: "play.fill")
-                                .font(.title3.weight(.bold))
-                                .foregroundStyle(.white)
-                                .frame(width: 48, height: 48)
+                    LazyVStack(spacing: 10) {
+                        ForEach(resumableDecks) { resumableDeck in
+                            Button {
+                                resume(resumableDeck)
+                            } label: {
+                                HStack(spacing: 14) {
+                                    Image(systemName: "play.fill")
+                                        .font(.title3.weight(.bold))
+                                        .foregroundStyle(.white)
+                                        .frame(width: 48, height: 48)
+                                        .background(
+                                            Theme.deckAccent(for: resumableDeck.deck).gradient,
+                                            in: .circle
+                                        )
+
+                                    VStack(alignment: .leading, spacing: 4) {
+                                        Text(resumableDeck.deck.name)
+                                            .font(.headline)
+                                            .foregroundStyle(.primary)
+
+                                        Text(
+                                            "\(resumableDeck.snapshot.state.currentIndex) / \(resumableDeck.snapshot.state.items.count)"
+                                        )
+                                        .font(.subheadline.monospacedDigit())
+                                        .foregroundStyle(.secondary)
+                                    }
+
+                                    Spacer()
+
+                                    Image(systemName: "chevron.right")
+                                        .font(.caption.weight(.bold))
+                                        .foregroundStyle(.tertiary)
+                                }
+                                .padding(16)
                                 .background(
-                                    Theme.deckAccent(for: resumableDeck.deck).gradient,
-                                    in: .circle
+                                    Theme.cardBackground,
+                                    in: .rect(cornerRadius: 22, style: .continuous)
                                 )
-
-                            VStack(alignment: .leading, spacing: 4) {
-                                Text(resumableDeck.deck.name)
-                                    .font(.headline)
-                                    .foregroundStyle(.primary)
-                                Text(
-                                    "\(resumableDeck.snapshot.state.currentIndex) / \(resumableDeck.snapshot.state.items.count)"
-                                )
-                                .font(.subheadline.monospacedDigit())
-                                .foregroundStyle(.secondary)
+                                .contentShape(.rect(cornerRadius: 22, style: .continuous))
                             }
-                            Spacer()
-                            Image(systemName: "chevron.right")
-                                .font(.caption.weight(.bold))
-                                .foregroundStyle(.tertiary)
+                            .buttonStyle(.plain)
+                            .accessibilityLabel("Reprendre \(resumableDeck.deck.name)")
+                            .accessibilityValue(
+                                "\(resumableDeck.snapshot.state.currentIndex) sur \(resumableDeck.snapshot.state.items.count)"
+                            )
                         }
-                        .padding(16)
-                        .background(
-                            Theme.cardBackground,
-                            in: .rect(cornerRadius: 22, style: .continuous)
-                        )
-                        .contentShape(.rect(cornerRadius: 22, style: .continuous))
                     }
-                    .buttonStyle(.plain)
-                    .padding(.horizontal)
-                    .accessibilityLabel("Reprendre \(resumableDeck.deck.name)")
-                    .accessibilityValue(
-                        "\(resumableDeck.snapshot.state.currentIndex) sur \(resumableDeck.snapshot.state.items.count)"
-                    )
-                }
+    .padding(.horizontal)
+}
 
-                if !recentDecks.isEmpty {
+                if settings.homeRecentEnabled && !recentDecks.isEmpty {
                     Text("Récents")
                         .font(.title2.bold())
                         .padding(.horizontal)
@@ -199,7 +225,7 @@ struct HomeView: View {
                     .transition(.move(edge: .top).combined(with: .opacity))
                 }
 
-                if !pinnedDecks.isEmpty {
+                if settings.homePinnedEnabled && !pinnedDecks.isEmpty {
                     Text("Épinglés")
                         .font(.title2.bold())
                         .padding(.horizontal)
@@ -222,7 +248,7 @@ struct HomeView: View {
                 Text("Dossiers")
                     .font(.title2.bold())
                     .padding(.horizontal)
-                    .padding(.top, recentDecks.isEmpty && pinnedDecks.isEmpty ? 0 : 10)
+                    .padding(.top, showsContentBeforeFolders ? 10 : 0)
 
                 if folders.isEmpty {
                     folderEmptyState
@@ -353,7 +379,7 @@ struct HomeView: View {
         .normalActionColor()
     }
 
-    private func resume(_ resumable: (deck: Deck, snapshot: ActiveStudySessionSnapshot)) {
+    private func resume(_ resumable: ResumableDeck) {
         resumable.deck.lastStudyActivityAt = .now
         try? modelContext.save()
         quickResumeDeck = resumable.deck

@@ -4,6 +4,7 @@ import SwiftUI
 struct DeckDetailView: View {
     @Environment(\.dismiss) private var dismiss
     @Environment(\.modelContext) private var modelContext
+    @Environment(AppSettings.self) private var settings
     let deck: Deck
 
     @State private var showingEditDeck = false
@@ -25,7 +26,7 @@ struct DeckDetailView: View {
             LazyVStack(alignment: .leading, spacing: 24) {
                 deckSummary
                 studySection
-                if !deck.studyHistory.isEmpty {
+                if settings.studyHistoryEnabled && !deck.studyHistory.isEmpty {
                     studyHistorySection
                 }
                 cardsSection

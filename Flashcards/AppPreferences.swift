@@ -28,6 +28,12 @@ enum AppPreferences {
     static let hapticsKey = "settings.hapticsEnabled"
     static let celebrationsKey = "settings.celebrationsEnabled"
     static let searchScopeKey = "settings.searchScopeEnabled"
+
+    static let homeResumeKey = "settings.home.resumeEnabled"
+    static let homeRecentKey = "settings.home.recentEnabled"
+    static let homePinnedKey = "settings.home.pinnedEnabled"
+    static let studyHistoryKey = "settings.study.historyEnabled"
+
     static let studyDirectionKey = "study.direction"
     static let studyShuffleKey = "study.shuffle"
     static let studyStarredOnlyKey = "study.starredOnly"
@@ -46,6 +52,26 @@ enum AppPreferences {
     static var searchScopeEnabled: Bool {
         get { storedBool(forKey: searchScopeKey, defaultValue: true) }
         set { UserDefaults.standard.set(newValue, forKey: searchScopeKey) }
+    }
+
+    static var homeResumeEnabled: Bool {
+        get { storedBool(forKey: homeResumeKey, defaultValue: true) }
+        set { UserDefaults.standard.set(newValue, forKey: homeResumeKey) }
+    }
+
+    static var homeRecentEnabled: Bool {
+        get { storedBool(forKey: homeRecentKey, defaultValue: true) }
+        set { UserDefaults.standard.set(newValue, forKey: homeRecentKey) }
+    }
+
+    static var homePinnedEnabled: Bool {
+        get { storedBool(forKey: homePinnedKey, defaultValue: true) }
+        set { UserDefaults.standard.set(newValue, forKey: homePinnedKey) }
+    }
+
+    static var studyHistoryEnabled: Bool {
+        get { storedBool(forKey: studyHistoryKey, defaultValue: true) }
+        set { UserDefaults.standard.set(newValue, forKey: studyHistoryKey) }
     }
 
     static var studyDirection: StudyDirection {

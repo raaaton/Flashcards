@@ -7,8 +7,8 @@ private enum CardTransferMode: String {
 
     var title: String {
         switch self {
-        case .move: "Déplacer les cartes"
-        case .copy: "Copier les cartes"
+        case .move: L10n.text("edit_cards.transfer.move_title")
+        case .copy: L10n.text("edit_cards.transfer.copy_title")
         }
     }
 }
@@ -51,7 +51,9 @@ struct EditCardsView: View {
                     .contentShape(.rect)
                     .contextMenu {
                         Button(
-                            card.isStarred ? "Retirer des favoris" : "Ajouter aux favoris",
+                            L10n.text(
+                                card.isStarred ? "Retirer des favoris" : "Ajouter aux favoris"
+                            ),
                             systemImage: card.isStarred ? "star.slash" : "star"
                         ) {
                             setStarred(!card.isStarred, cards: [card])
@@ -63,10 +65,13 @@ struct EditCardsView: View {
                             beginTransfer(.copy, cardIDs: [card.id])
                         }
                         Divider()
-                        Button("Supprimer", systemImage: "trash", role: .destructive) {
+                        Button(role: .destructive) {
                             selectedCardIDs = [card.id]
                             showingDeleteConfirmation = true
+                        } label: {
+                            Label("Supprimer", systemImage: "trash")
                         }
+                        .tint(.red)
                     }
                     .swipeActions(edge: .trailing, allowsFullSwipe: !isSelecting) {
                         if !isSelecting {
@@ -90,7 +95,15 @@ struct EditCardsView: View {
                 )
             }
         }
-        .navigationTitle(isSelecting ? "\(selectedCardIDs.count) sélectionnée(s)" : "Modifier les cartes")
+        .navigationTitle(
+            isSelecting
+                ? L10n.format(
+                    "edit_cards.selection_count",
+                    Int64(selectedCardIDs.count)
+                )
+                : L10n.text("Modifier les cartes")
+        )
+        .navigationBarBackButtonHidden(isSelecting)
         .toolbar { toolbarContent }
         .sheet(isPresented: $showingNewCard) {
             CardFormView(deck: deck)
@@ -110,7 +123,10 @@ struct EditCardsView: View {
                 endSelection()
             }
         }
-        .alert("Supprimer les cartes ?", isPresented: $showingDeleteConfirmation) {
+        .alert(
+            L10n.text("edit_cards.delete.title"),
+            isPresented: $showingDeleteConfirmation
+        ) {
             Button("Annuler", role: .cancel) {
                 if !isSelecting { selectedCardIDs.removeAll() }
             }
@@ -118,8 +134,14 @@ struct EditCardsView: View {
                 LibraryActions.deleteCards(selectedCards, from: deck, in: modelContext)
                 endSelection()
             }
+            .tint(.red)
         } message: {
-            Text("Cette action supprimera définitivement \(L10n.cards(selectedCardIDs.count)).")
+            Text(
+                L10n.format(
+                    "edit_cards.delete.message",
+                    L10n.cards(selectedCardIDs.count)
+                )
+            )
         }
     }
 
@@ -144,7 +166,11 @@ struct EditCardsView: View {
                 }
                 .buttonStyle(.plain)
                 .accessibilityLabel(
-                    selectedCardIDs.contains(card.id) ? "Désélectionner" : "Sélectionner"
+                    L10n.text(
+                        selectedCardIDs.contains(card.id)
+                            ? "Désélectionner"
+                            : "Sélectionner"
+                    )
                 )
             }
 
@@ -167,7 +193,11 @@ struct EditCardsView: View {
                 .contentShape(.rect)
             }
             .buttonStyle(.plain)
-            .accessibilityHint(isSelecting ? "Basculer la sélection" : "Modifier cette carte")
+            .accessibilityHint(
+                isSelecting
+                    ? L10n.text("edit_cards.toggle_selection")
+                    : L10n.text("Modifier cette carte")
+            )
 
             Button {
                 setStarred(!card.isStarred, cards: [card])
@@ -191,7 +221,13 @@ struct EditCardsView: View {
                 Button("Annuler") { endSelection() }
             }
             ToolbarItem(placement: .topBarTrailing) {
-                Button(selectedCardIDs.count == orderedCards.count ? "Aucune" : "Toutes") {
+                Button(
+                    L10n.text(
+                        selectedCardIDs.count == orderedCards.count
+                            ? "edit_cards.select_none"
+                            : "edit_cards.select_all"
+                    )
+                ) {
                     if selectedCardIDs.count == orderedCards.count {
                         selectedCardIDs.removeAll()
                     } else {
@@ -206,6 +242,7 @@ struct EditCardsView: View {
                     Label("Supprimer", systemImage: "trash")
                         .foregroundStyle(.red)
                 }
+                .tint(.red)
                 .disabled(selectedCardIDs.isEmpty)
 
                 Spacer()
@@ -213,7 +250,10 @@ struct EditCardsView: View {
                 Button {
                     beginTransfer(.move, cardIDs: selectedCardIDs)
                 } label: {
-                    Label("Déplacer", systemImage: "folder")
+                    Label(
+                        L10n.text("edit_cards.move"),
+                        systemImage: "folder"
+                    )
                 }
                 .disabled(selectedCardIDs.isEmpty)
 
@@ -222,7 +262,10 @@ struct EditCardsView: View {
                 Button {
                     beginTransfer(.copy, cardIDs: selectedCardIDs)
                 } label: {
-                    Label("Copier", systemImage: "doc.on.doc")
+                    Label(
+                        L10n.text("edit_cards.copy"),
+                        systemImage: "doc.on.doc"
+                    )
                 }
                 .disabled(selectedCardIDs.isEmpty)
 
@@ -232,7 +275,11 @@ struct EditCardsView: View {
                     setStarred(shouldStarSelection, cards: selectedCards)
                 } label: {
                     Label(
-                        shouldStarSelection ? "Favoris" : "Retirer",
+                        L10n.text(
+                            shouldStarSelection
+                                ? "edit_cards.star"
+                                : "edit_cards.unstar"
+                        ),
                         systemImage: shouldStarSelection ? "star" : "star.slash"
                     )
                 }
@@ -243,23 +290,32 @@ struct EditCardsView: View {
                 EditButton()
                     .tint(.white)
             }
+
+            ToolbarItem(placement: .topBarTrailing) {
+                Button("Sélectionner") {
+                    beginSelection()
+                }
+                .disabled(orderedCards.isEmpty)
+                .tint(.white)
+            }
+
             ToolbarItem(placement: .topBarTrailing) {
                 Menu {
-                    Button("Ajouter une carte", systemImage: "plus") { showingNewCard = true }
-                        .normalActionColor()
-                    Button("Importer en masse", systemImage: "text.badge.plus") { showingBulkImport = true }
-                        .normalActionColor()
-                    Divider()
-                    Button("Sélectionner", systemImage: "checkmark.circle") {
-                        beginSelection()
+                    Button("Ajouter une carte", systemImage: "plus") {
+                        showingNewCard = true
                     }
-                    .disabled(orderedCards.isEmpty)
+                    .normalActionColor()
+
+                    Button("Importer en masse", systemImage: "text.badge.plus") {
+                        showingBulkImport = true
+                    }
+                    .normalActionColor()
                 } label: {
                     Image(systemName: "plus")
                         .neutralIconColor()
                 }
                 .tint(.white)
-                .accessibilityLabel("Ajouter ou sélectionner")
+                .accessibilityLabel("Ajouter")
             }
         }
     }
@@ -332,9 +388,13 @@ private struct CardTransferSheet: View {
                 Section("Destination") {
                     if destinationDecks.isEmpty {
                         ContentUnavailableView(
-                            "Aucun autre deck",
+                            L10n.text("edit_cards.transfer.no_other_deck"),
                             systemImage: "rectangle.stack",
-                            description: Text("Créez un autre deck avant de déplacer ou copier des cartes.")
+                            description: Text(
+                                L10n.text(
+                                    "edit_cards.transfer.no_other_deck_description"
+                                )
+                            )
                         )
                     } else {
                         Picker("Deck", selection: $destinationDeckID) {
@@ -348,11 +408,15 @@ private struct CardTransferSheet: View {
                 Section {
                     Label(L10n.cards(cards.count), systemImage: "rectangle.stack")
                     if mode == .copy {
-                        Text("Les favoris sont conservés. La progression des copies repart à zéro.")
+                        Text(
+                            L10n.text("edit_cards.transfer.copy_note")
+                        )
                             .font(.footnote)
                             .foregroundStyle(.secondary)
                     } else {
-                        Text("La progression, les statistiques et les favoris sont conservés.")
+                        Text(
+                            L10n.text("edit_cards.transfer.move_note")
+                        )
                             .font(.footnote)
                             .foregroundStyle(.secondary)
                     }

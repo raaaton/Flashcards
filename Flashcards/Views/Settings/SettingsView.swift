@@ -13,6 +13,13 @@ struct SettingsView: View {
                 Section("settings.study.section") {
                     Toggle("settings.haptics", isOn: $settings.hapticsEnabled)
                     Toggle("settings.celebrations", isOn: $settings.celebrationsEnabled)
+                    Toggle("settings.study.history", isOn: $settings.studyHistoryEnabled)
+                }
+
+                Section("settings.home.section") {
+                    Toggle("settings.home.resume", isOn: $settings.homeResumeEnabled)
+                    Toggle("settings.home.recent", isOn: $settings.homeRecentEnabled)
+                    Toggle("settings.home.pinned", isOn: $settings.homePinnedEnabled)
                 }
 
                 Section("settings.search.section") {
