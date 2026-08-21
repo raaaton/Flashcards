@@ -1,32 +1,25 @@
 <svg width="512" height="512" viewBox="0 0 512 512" fill="none" xmlns="http://www.w3.org/2000/svg">
-<g transform="rotate(2 256 256)">
-  <rect x="104" y="83" width="304" height="346" rx="54" fill="url(#cardBase)"/>
-  <rect x="104" y="83" width="304" height="346" rx="54" fill="url(#cardSheen)"/>
-  <rect x="104.75" y="83.75" width="302.5" height="344.5" rx="53.25" stroke="#F7FCFF" stroke-opacity="0.38" stroke-width="1.5"/>
-  <rect x="151" y="229" width="124" height="14" rx="7" fill="#F7FCFF" fill-opacity="0.88"/>
-  <rect x="151" y="263" width="174" height="14" rx="7" fill="#F7FCFF" fill-opacity="0.40"/>
-</g>
+  <rect x="98" y="92" width="316" height="332" rx="58" fill="url(#cardBase)"/>
+  <rect x="98" y="92" width="316" height="332" rx="58" fill="url(#cardSheen)"/>
+  <rect x="98.75" y="92.75" width="314.5" height="330.5" rx="57.25" stroke="#F7FCFF" stroke-opacity="0.40" stroke-width="1.5"/>
 
-<!-- Single abstract memory spark, hovering over the card edge. -->
-<path d="M386 96C390 115 399 124 418 128C399 132 390 141 386 160C382 141 373 132 354 128C373 124 382 115 386 96Z" fill="#9DDBFF" fill-opacity="0.18"/>
-<path d="M386 108C389 120 394 125 406 128C394 131 389 136 386 148C383 136 378 131 366 128C378 125 383 120 386 108Z" fill="url(#spark)"/>
+  <!-- Prompt / answer rhythm: keeps the object reading as a study card, not a generic tile. -->
+  <rect x="150" y="190" width="112" height="15" rx="7.5" fill="#F7FCFF" fill-opacity="0.90"/>
+  <rect x="150" y="246" width="212" height="3" rx="1.5" fill="#F7FCFF" fill-opacity="0.17"/>
+  <rect x="150" y="282" width="176" height="15" rx="7.5" fill="#F7FCFF" fill-opacity="0.48"/>
+  <rect x="150" y="314" width="118" height="15" rx="7.5" fill="#F7FCFF" fill-opacity="0.24"/>
 
-<defs>
-  <linearGradient id="cardBase" x1="144" y1="96" x2="382" y2="424" gradientUnits="userSpaceOnUse">
-    <stop stop-color="#69C9FF"/>
-    <stop offset="0.46" stop-color="#0A84FF"/>
-    <stop offset="1" stop-color="#075FC5"/>
-  </linearGradient>
-  <linearGradient id="cardSheen" x1="144" y1="84" x2="352" y2="408" gradientUnits="userSpaceOnUse">
-    <stop stop-color="white" stop-opacity="0.18"/>
-    <stop offset="0.28" stop-color="#D9EEFF" stop-opacity="0.08"/>
-    <stop offset="0.62" stop-color="white" stop-opacity="0.012"/>
-    <stop offset="1" stop-color="#004A9E" stop-opacity="0.06"/>
-  </linearGradient>
-  <linearGradient id="spark" x1="374" y1="114" x2="398" y2="142" gradientUnits="userSpaceOnUse">
-    <stop stop-color="white"/>
-    <stop offset="0.56" stop-color="#E8F7FF"/>
-    <stop offset="1" stop-color="#9AD8FF"/>
-  </linearGradient>
-</defs>
+  <defs>
+    <linearGradient id="cardBase" x1="132" y1="104" x2="392" y2="416" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#72CEFF"/>
+      <stop offset="0.44" stop-color="#0A84FF"/>
+      <stop offset="1" stop-color="#075FC5"/>
+    </linearGradient>
+    <linearGradient id="cardSheen" x1="132" y1="94" x2="368" y2="408" gradientUnits="userSpaceOnUse">
+      <stop stop-color="white" stop-opacity="0.20"/>
+      <stop offset="0.26" stop-color="#DDF1FF" stop-opacity="0.09"/>
+      <stop offset="0.62" stop-color="white" stop-opacity="0.012"/>
+      <stop offset="1" stop-color="#004A9E" stop-opacity="0.06"/>
+    </linearGradient>
+  </defs>
 </svg>

@@ -3,26 +3,55 @@
     {
       "layers": [
         {
-          "image-name": "Front_Card.svg",
-          "name": "Front_Card",
+          "image-name": "Spark.svg",
+          "name": "Memory_Spark",
           "opacity": 1,
           "blend-mode": "normal",
           "glass": true,
           "position": {
-            "scale": 1.3,
+            "scale": 1.18,
             "translation-in-points": [
               0,
-              1
+              -2
             ]
           }
         }
       ],
-      "name": "Front_Card",
+      "name": "Memory_Spark",
+      "specular": true,
+      "blur-material": 0.006,
+      "shadow": {
+        "kind": "layer-color",
+        "opacity": 0.08
+      },
+      "translucency": {
+        "enabled": true,
+        "value": 0.015
+      }
+    },
+    {
+      "layers": [
+        {
+          "image-name": "Front_Card.svg",
+          "name": "Flashcard",
+          "opacity": 1,
+          "blend-mode": "normal",
+          "glass": true,
+          "position": {
+            "scale": 1.22,
+            "translation-in-points": [
+              0,
+              4
+            ]
+          }
+        }
+      ],
+      "name": "Flashcard",
       "specular": true,
       "blur-material": 0.012,
       "shadow": {
         "kind": "layer-color",
-        "opacity": 0.23
+        "opacity": 0.24
       },
       "translucency": {
         "enabled": true,
