@@ -435,10 +435,17 @@ private struct CardTransferSheet: View {
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
                     Button("Annuler") { dismiss() }
+                        .tint(.white)
                 }
+
                 ToolbarItem(placement: .confirmationAction) {
-                    Button("Enregistrer") { save() }
-                        .disabled(destinationDeckID == nil || cards.isEmpty)
+                    CircularSaveButton(
+                        accent: Theme.deckAccent(for: sourceDeck),
+                        isEnabled: destinationDeckID != nil
+                            && !cards.isEmpty
+                    ) {
+                        save()
+                    }
                 }
             }
             .onAppear {

@@ -65,6 +65,147 @@ struct PrimaryStartButton: View {
     }
 }
 
+struct CircularSaveButton: View {
+    let accent: Color
+    let isEnabled: Bool
+    let action: () -> Void
+
+    var body: some View {
+        Button {
+            action()
+        } label: {
+            Image(systemName: "checkmark")
+                .font(.body.weight(.bold))
+                .foregroundStyle(.white)
+                .frame(width: 38, height: 38)
+                .background(accent, in: .circle)
+                .contentShape(.circle)
+        }
+        .buttonStyle(.plain)
+        .disabled(!isEnabled)
+        .opacity(isEnabled ? 1 : 0.35)
+        .accessibilityLabel("Enregistrer")
+    }
+}
+
+struct DeckProgressBar: View {
+    let deckName: String
+    let masteredCount: Int
+    let totalCount: Int
+    let accent: Color
+
+    private var progress: Double {
+        guard totalCount > 0 else { return 0 }
+
+        return min(
+            max(Double(masteredCount) / Double(totalCount), 0),
+            1
+        )
+    }
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 10) {
+            HStack {
+                Text("Progression")
+                    .font(.subheadline.weight(.semibold))
+
+                Spacer()
+
+                Text("\(masteredCount) / \(totalCount)")
+                    .font(.subheadline.monospacedDigit())
+                    .foregroundStyle(.secondary)
+            }
+
+            GeometryReader { proxy in
+                ZStack(alignment: .leading) {
+                    Capsule()
+                        .fill(Color.secondary.opacity(0.20))
+
+                    Capsule()
+                        .fill(accent.gradient)
+                        .frame(width: proxy.size.width * progress)
+                }
+            }
+            .frame(height: 10)
+            .animation(.snappy(duration: 0.35), value: progress)
+        }
+        .accessibilityElement(children: .ignore)
+        .accessibilityLabel(
+            L10n.format("deck.progress.label", deckName)
+        )
+        .accessibilityValue(
+            L10n.format(
+                "deck.progress.value",
+                Int64(masteredCount),
+                Int64(totalCount)
+            )
+        )
+    }
+}
+
+struct CardEditorSurface: View {
+    @Binding var term: String
+    @Binding var definition: String
+
+    let accent: Color
+
+    var body: some View {
+        VStack(spacing: 0) {
+            editorField(
+                title: "Terme",
+                placeholder: "Saisissez le terme",
+                text: $term,
+                minHeight: 92
+            )
+
+            Divider()
+                .padding(.horizontal, 18)
+
+            editorField(
+                title: "Définition",
+                placeholder: "Saisissez la définition",
+                text: $definition,
+                minHeight: 112
+            )
+        }
+        .background(
+            Color(uiColor: .tertiarySystemBackground),
+            in: .rect(cornerRadius: 24, style: .continuous)
+        )
+        .overlay {
+            RoundedRectangle(cornerRadius: 24, style: .continuous)
+                .strokeBorder(accent.opacity(0.20), lineWidth: 1)
+        }
+    }
+
+    private func editorField(
+        title: LocalizedStringKey,
+        placeholder: LocalizedStringKey,
+        text: Binding<String>,
+        minHeight: CGFloat
+    ) -> some View {
+        VStack(alignment: .leading, spacing: 10) {
+            Text(title)
+                .font(.subheadline.weight(.semibold))
+                .foregroundStyle(.secondary)
+
+            TextField(
+                placeholder,
+                text: text,
+                axis: .vertical
+            )
+            .font(.body)
+            .lineLimit(2...8)
+            .textInputAutocapitalization(.sentences)
+            .frame(
+                minHeight: minHeight,
+                alignment: .topLeading
+            )
+        }
+        .padding(18)
+    }
+}
+
 struct StudyDirectionMenu: View {
     @Binding var selection: StudyDirection
     let accent: Color

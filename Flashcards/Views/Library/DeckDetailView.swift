@@ -86,14 +86,12 @@ struct DeckDetailView: View {
                     .foregroundStyle(.secondary)
             }
 
-            ProgressView(
-                value: deck.cards.isEmpty ? 0 : Double(masteredCount) / Double(deck.cards.count)
-            ) {
-                Text("Progression")
-            } currentValueLabel: {
-                Text("\(masteredCount) / \(deck.cards.count)")
-            }
-            .tint(Theme.deckAccent(for: deck))
+            DeckProgressBar(
+                deckName: deck.name,
+                masteredCount: masteredCount,
+                totalCount: deck.cards.count,
+                accent: Theme.deckAccent(for: deck)
+            )
         }
         .frame(maxWidth: .infinity, alignment: .leading)
         .padding(18)

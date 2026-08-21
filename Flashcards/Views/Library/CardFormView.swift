@@ -25,16 +25,29 @@ struct CardFormView: View {
         definition.trimmingCharacters(in: .whitespacesAndNewlines)
     }
 
+    private var accent: Color {
+        Theme.deckAccent(for: deck)
+    }
+
     var body: some View {
         NavigationStack {
             Form {
-                Section("Terme") {
-                    TextField("Terme", text: $term, axis: .vertical)
-                        .lineLimit(2...8)
-                }
-                Section("Définition") {
-                    TextField("Définition", text: $definition, axis: .vertical)
-                        .lineLimit(3...12)
+                Section {
+                    CardEditorSurface(
+                        term: $term,
+                        definition: $definition,
+                        accent: accent
+                    )
+                    .listRowInsets(
+                        EdgeInsets(
+                            top: 12,
+                            leading: 0,
+                            bottom: 12,
+                            trailing: 0
+                        )
+                    )
+                    .listRowBackground(Color.clear)
+                    .listRowSeparator(.hidden)
                 }
             }
             .scrollDismissesKeyboard(.interactively)
@@ -47,10 +60,17 @@ struct CardFormView: View {
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
                     Button("Annuler") { dismiss() }
+                        .tint(.white)
                 }
+
                 ToolbarItem(placement: .confirmationAction) {
-                    Button("Enregistrer") { save() }
-                        .disabled(cleanTerm.isEmpty || cleanDefinition.isEmpty)
+                    CircularSaveButton(
+                        accent: accent,
+                        isEnabled: !cleanTerm.isEmpty
+                            && !cleanDefinition.isEmpty
+                    ) {
+                        save()
+                    }
                 }
             }
         }

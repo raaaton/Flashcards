@@ -266,6 +266,9 @@ jobs:
                   grep -q '"FF2D55"' Flashcards/FolderAppearance.swift
                   grep -q 'Button("Continuer", role: .destructive)' \
                     Flashcards/Views/Study/StudySetupView.swift
+                  grep -q 'struct CircularSaveButton: View' Flashcards/Theme.swift
+                  grep -q 'struct DeckProgressBar: View' Flashcards/Theme.swift
+                  grep -q 'struct CardEditorSurface: View' Flashcards/Theme.swift
                   for FORM_FILE in \
                     Flashcards/Views/Library/FolderFormView.swift \
                     Flashcards/Views/Library/DeckFormView.swift \
@@ -273,17 +276,21 @@ jobs:
                     grep -q 'ToolbarItem(placement: .cancellationAction)' "$FORM_FILE"
                     grep -q 'Button("Annuler")' "$FORM_FILE"
                     grep -q 'ToolbarItem(placement: .confirmationAction)' "$FORM_FILE"
-                    grep -q 'Button("Enregistrer")' "$FORM_FILE"
+                    grep -q 'CircularSaveButton(' "$FORM_FILE"
                   done
                   grep -q 'private struct CardTransferSheet' Flashcards/Views/Library/EditCardsView.swift
                   grep -q 'static func moveCards(' Flashcards/Services/LibraryActions.swift
                   grep -q 'static func copyCards(' Flashcards/Services/LibraryActions.swift
-                  grep -A60 'private struct CardTransferSheet' Flashcards/Views/Library/EditCardsView.swift | \
+                  grep -A120 'private struct CardTransferSheet' Flashcards/Views/Library/EditCardsView.swift | \
                     grep -q 'Button("Annuler")'
-                  grep -A70 'private struct CardTransferSheet' Flashcards/Views/Library/EditCardsView.swift | \
-                    grep -q 'Button("Enregistrer")'
-                  grep -q 'Button("Fermer")' Flashcards/Views/Import/BulkImportView.swift
-                  grep -q 'Image(systemName: "checkmark")' Flashcards/Views/Import/BulkImportView.swift
+                  grep -A120 'private struct CardTransferSheet' Flashcards/Views/Library/EditCardsView.swift | \
+                    grep -q 'CircularSaveButton('
+                  grep -q 'Button("Annuler")' Flashcards/Views/Import/BulkImportView.swift
+                  grep -q 'CircularSaveButton(' Flashcards/Views/Import/BulkImportView.swift
+                  grep -q 'CardEditorSurface(' Flashcards/Views/Library/DeckFormView.swift
+                  grep -q 'CardEditorSurface(' Flashcards/Views/Library/CardFormView.swift
+                  grep -q 'DeckProgressBar(' Flashcards/Views/Library/DeckDetailView.swift
+                  grep -q 'DeckProgressBar(' Flashcards/Views/Study/StudySetupView.swift
                   grep -q 'import CoreHaptics' Flashcards/Services/HapticService.swift
                   test -z "$(grep -R -l 'LabeledContent("Cartes restantes"' Flashcards || true)"
                   grep -q '\.tint(.red)' Flashcards/Views/Library/EditCardsView.swift

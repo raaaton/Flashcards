@@ -25,6 +25,10 @@ struct FolderFormView: View {
         name.trimmingCharacters(in: .whitespacesAndNewlines)
     }
 
+    private var accent: Color {
+        Color(folderHex: colorHex)
+    }
+
     var body: some View {
         NavigationStack {
             Form {
@@ -106,10 +110,16 @@ struct FolderFormView: View {
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
                     Button("Annuler") { dismiss() }
+                        .tint(.white)
                 }
+
                 ToolbarItem(placement: .confirmationAction) {
-                    Button("Enregistrer") { save() }
-                        .disabled(cleanName.isEmpty)
+                    CircularSaveButton(
+                        accent: accent,
+                        isEnabled: !cleanName.isEmpty
+                    ) {
+                        save()
+                    }
                 }
             }
         }

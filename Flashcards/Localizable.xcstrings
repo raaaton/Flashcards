@@ -263,7 +263,10 @@
     "edit_cards.transfer.no_other_deck" : {"localizations" : {"fr" : {"stringUnit" : {"state" : "translated", "value" : "Aucun autre deck"}}, "en" : {"stringUnit" : {"state" : "translated", "value" : "No Other Deck"}}}},
     "edit_cards.transfer.no_other_deck_description" : {"localizations" : {"fr" : {"stringUnit" : {"state" : "translated", "value" : "Créez un autre deck avant de déplacer ou copier des cartes."}}, "en" : {"stringUnit" : {"state" : "translated", "value" : "Create another deck before moving or copying cards."}}}},
     "edit_cards.transfer.copy_note" : {"localizations" : {"fr" : {"stringUnit" : {"state" : "translated", "value" : "Les favoris sont conservés. La progression des copies repart à zéro."}}, "en" : {"stringUnit" : {"state" : "translated", "value" : "Favorites are preserved. Copy progress resets to zero."}}}},
-    "edit_cards.transfer.move_note" : {"localizations" : {"fr" : {"stringUnit" : {"state" : "translated", "value" : "La progression, les statistiques et les favoris sont conservés."}}, "en" : {"stringUnit" : {"state" : "translated", "value" : "Progress, statistics, and favorites are preserved."}}}}
+    "edit_cards.transfer.move_note" : {"localizations" : {"fr" : {"stringUnit" : {"state" : "translated", "value" : "La progression, les statistiques et les favoris sont conservés."}}, "en" : {"stringUnit" : {"state" : "translated", "value" : "Progress, statistics, and favorites are preserved."}}}},
+    "Carte" : {"localizations" : {"en" : {"stringUnit" : {"state" : "translated", "value" : "Card"}}}},
+    "Saisissez le terme" : {"localizations" : {"en" : {"stringUnit" : {"state" : "translated", "value" : "Enter the term"}}}},
+    "Saisissez la définition" : {"localizations" : {"en" : {"stringUnit" : {"state" : "translated", "value" : "Enter the definition"}}}}
   },
   "version" : "1.0"
 }

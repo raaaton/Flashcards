@@ -62,6 +62,13 @@ struct DeckFormView: View {
         return !validDrafts.isEmpty && !hasIncompleteDraft
     }
 
+    private var accent: Color {
+        folders
+            .first(where: { $0.id == selectedFolderID })
+            .map { Color(folderHex: $0.colorHex) }
+            ?? Theme.accent
+    }
+
     var body: some View {
         NavigationStack {
             Form {
@@ -83,35 +90,56 @@ struct DeckFormView: View {
                 if deck == nil {
                     Section {
                         ForEach($cardDrafts) { $draft in
-                            HStack(alignment: .top, spacing: 12) {
-                                VStack(spacing: 10) {
-                                    TextField("Terme", text: $draft.term, axis: .vertical)
-                                        .lineLimit(1...5)
-                                    TextField("Définition", text: $draft.definition, axis: .vertical)
-                                        .lineLimit(1...7)
+                            VStack(alignment: .leading, spacing: 10) {
+                                HStack {
+                                    Label(
+                                        "Carte",
+                                        systemImage: "rectangle"
+                                    )
+                                    .font(.headline)
+                                    .foregroundStyle(.secondary)
+
+                                    Spacer()
+
+                                    Button(role: .destructive) {
+                                        removeDraft(draft.id)
+                                    } label: {
+                                        Image(systemName: "trash")
+                                            .frame(width: 32, height: 32)
+                                    }
+                                    .destructiveActionColor()
+                                    .buttonStyle(.plain)
+                                    .accessibilityLabel("Supprimer")
                                 }
 
-                                Button(role: .destructive) {
-                                    removeDraft(draft.id)
-                                } label: {
-                                    Image(systemName: "trash")
-                                }
-                                .destructiveActionColor()
-                                .buttonStyle(.plain)
-                                .accessibilityLabel("Supprimer")
+                                CardEditorSurface(
+                                    term: $draft.term,
+                                    definition: $draft.definition,
+                                    accent: accent
+                                )
                             }
-                            .padding(.vertical, 4)
+                            .padding(.vertical, 6)
+                            .listRowInsets(
+                                EdgeInsets(
+                                    top: 8,
+                                    leading: 0,
+                                    bottom: 8,
+                                    trailing: 0
+                                )
+                            )
+                            .listRowBackground(Color.clear)
+                            .listRowSeparator(.hidden)
                         }
 
                         Button("Ajouter une carte", systemImage: "plus") {
                             cardDrafts.append(DeckCardDraft())
                         }
-                        .normalActionColor()
+                        .normalActionColor(accent)
 
                         Button("Ajout en masse", systemImage: "text.badge.plus") {
                             showingBulkAdd = true
                         }
-                        .normalActionColor()
+                        .normalActionColor(accent)
                     } header: {
                         Text("Cartes initiales")
                     } footer: {
@@ -134,10 +162,16 @@ struct DeckFormView: View {
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
                     Button("Annuler") { dismiss() }
+                        .tint(.white)
                 }
+
                 ToolbarItem(placement: .confirmationAction) {
-                    Button("Enregistrer") { save() }
-                        .disabled(!canSave)
+                    CircularSaveButton(
+                        accent: accent,
+                        isEnabled: canSave
+                    ) {
+                        save()
+                    }
                 }
             }
         }
@@ -149,7 +183,8 @@ struct DeckFormView: View {
                         term: draft.cleanTerm,
                         definition: draft.cleanDefinition
                     )
-                }
+                },
+                saveAccent: accent
             ) { parsedCards in
                 cardDrafts.removeAll(where: \.isEmpty)
                 cardDrafts.append(contentsOf: parsedCards.map {

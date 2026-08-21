@@ -19,6 +19,10 @@ struct FolderDetailView: View {
         GridItem(.adaptive(minimum: 150, maximum: 220), spacing: 14)
     ]
 
+    private var accent: Color {
+        folder.map { Color(folderHex: $0.colorHex) } ?? Theme.accent
+    }
+
     private var decks: [Deck] {
         let scoped = allDecks.filter { deck in
             if let folder {
@@ -89,18 +93,27 @@ struct FolderDetailView: View {
                 }
             }
 
-            ToolbarItemGroup(placement: .bottomBar) {
-                Spacer()
-                Button {
-                    showingNewDeck = true
-                } label: {
-                    Image(systemName: "rectangle.stack.badge.plus")
-                        .neutralIconColor()
-                }
-                .tint(.white)
-                .accessibilityLabel("Nouveau deck")
-                .accessibilityHint("Créer un nouveau deck dans ce dossier")
+        }
+        .overlay(alignment: .bottomTrailing) {
+            Button {
+                showingNewDeck = true
+            } label: {
+                Image(systemName: "rectangle.stack.badge.plus")
+                    .font(.title2.weight(.semibold))
+                    .foregroundStyle(.white)
+                    .frame(width: 62, height: 62)
+                    .background(accent.gradient, in: .circle)
+                    .shadow(
+                        color: .black.opacity(0.28),
+                        radius: 12,
+                        y: 6
+                    )
             }
+            .buttonStyle(.plain)
+            .padding(.trailing, 20)
+            .padding(.bottom, 18)
+            .accessibilityLabel("Nouveau deck")
+            .accessibilityHint("Créer un nouveau deck dans ce dossier")
         }
         .sheet(isPresented: $showingNewDeck) {
             DeckFormView(initialFolder: folder)

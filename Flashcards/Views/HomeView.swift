@@ -115,7 +115,6 @@ struct HomeView: View {
                     .tint(.white)
                     .accessibilityLabel("Rechercher")
 
-                    addMenu
                 }
             }
         }
@@ -300,12 +299,17 @@ struct HomeView: View {
 
             }
             .padding(.top, 8)
-            .padding(.bottom, 28)
+            .padding(.bottom, 108)
         }
         .animation(.spring(duration: 0.35), value: folders.map(\.id))
         .animation(.spring(duration: 0.35), value: orphanedDeckCount)
         .animation(.spring(duration: 0.35), value: recentDecks.map(\.id))
         .animation(.spring(duration: 0.35), value: pinnedDecks.map(\.id))
+        .overlay(alignment: .bottomTrailing) {
+            addMenu
+                .padding(.trailing, 20)
+                .padding(.bottom, 18)
+        }
     }
 
     private var folderEmptyState: some View {
@@ -338,9 +342,17 @@ struct HomeView: View {
             .normalActionColor()
         } label: {
             Image(systemName: "plus")
-                .neutralIconColor()
+                .font(.title2.weight(.semibold))
+                .foregroundStyle(.white)
+                .frame(width: 62, height: 62)
+                .background(Theme.accent.gradient, in: .circle)
+                .shadow(
+                    color: .black.opacity(0.28),
+                    radius: 12,
+                    y: 6
+                )
         }
-        .tint(.white)
+        .buttonStyle(.plain)
         .accessibilityLabel("Ajouter")
         .accessibilityHint("Créer un deck ou un dossier")
     }

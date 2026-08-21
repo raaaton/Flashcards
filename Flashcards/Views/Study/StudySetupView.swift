@@ -116,26 +116,13 @@ struct StudySetupView: View {
                     }
                 }
 
-                Section("Progression") {
-                    ProgressView(
-                        value: deck.cards.isEmpty
-                            ? 0
-                            : Double(masteredCount) / Double(deck.cards.count)
-                    ) {
-                        Text("Progression")
-                    } currentValueLabel: {
-                        Text("\(masteredCount) / \(deck.cards.count)")
-                    }
-                    .accessibilityLabel(L10n.format("deck.progress.label", deck.name))
-                    .accessibilityValue(
-                        L10n.format(
-                            "deck.progress.value",
-                            Int64(masteredCount),
-                            Int64(deck.cards.count)
-                        )
+                Section {
+                    DeckProgressBar(
+                        deckName: deck.name,
+                        masteredCount: masteredCount,
+                        totalCount: deck.cards.count,
+                        accent: accent
                     )
-                    .tint(accent)
-
                 }
 
                 Section {

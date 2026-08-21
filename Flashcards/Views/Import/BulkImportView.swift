@@ -24,6 +24,7 @@ struct BulkImportView: View {
 
     private let draftImportHandler: (([ParsedCard]) -> Void)?
     private let draftComparisonCards: [(term: String, definition: String)]
+    private let inheritedAccent: Color?
 
     @State private var sourceText = ""
     @State private var termOption = TermDefinitionDelimiterOption.colon
@@ -43,23 +44,45 @@ struct BulkImportView: View {
     init(
         deck: Deck? = nil,
         comparisonCards: [ParsedCard] = [],
+        saveAccent: Color? = nil,
         onDraftImport: (([ParsedCard]) -> Void)? = nil
     ) {
         draftImportHandler = onDraftImport
         draftComparisonCards = comparisonCards.map { ($0.term, $0.definition) }
+        inheritedAccent = saveAccent
         _destination = State(initialValue: deck == nil ? .newDeck : .existingDeck)
         _selectedDeckID = State(initialValue: deck?.id)
     }
 
     init(
         comparisonCards: [ParsedCard] = [],
+        saveAccent: Color? = nil,
         onDraftImport: @escaping ([ParsedCard]) -> Void
     ) {
         self.init(
             deck: nil,
             comparisonCards: comparisonCards,
+            saveAccent: saveAccent,
             onDraftImport: onDraftImport
         )
+    }
+
+    private var accent: Color {
+        if let inheritedAccent {
+            return inheritedAccent
+        }
+
+        if destination == .existingDeck,
+           let deck = decks.first(where: { $0.id == selectedDeckID }) {
+            return Theme.deckAccent(for: deck)
+        }
+
+        if destination == .newDeck,
+           let folder = folders.first(where: { $0.id == selectedFolderID }) {
+            return Color(folderHex: folder.colorHex)
+        }
+
+        return Theme.accent
     }
 
     private var termDelimiter: String {
@@ -172,21 +195,22 @@ struct BulkImportView: View {
             .scrollDismissesKeyboard(.interactively)
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
-                    Button("Fermer") { dismiss() }
+                    Button("Annuler") { dismiss() }
+                        .tint(.white)
                 }
+
                 ToolbarItem(placement: .confirmationAction) {
-                    Button {
+                    CircularSaveButton(
+                        accent: accent,
+                        isEnabled: canImport
+                    ) {
                         prepareImport()
-                    } label: {
-                        Image(systemName: "checkmark")
-                            .neutralIconColor()
-                            .frame(minWidth: 44, minHeight: 44)
-                            .contentShape(.rect)
                     }
-                    .tint(.white)
-                    .disabled(!canImport)
                     .accessibilityLabel(
-                        L10n.format("import.action.cards", Int64(preview.cards.count))
+                        L10n.format(
+                            "import.action.cards",
+                            Int64(preview.cards.count)
+                        )
                     )
                 }
             }
