@@ -1,7 +1,7 @@
 <svg width="397" height="497" viewBox="0 0 397 497" fill="none" xmlns="http://www.w3.org/2000/svg">
-<rect x="83.11" y="11.4075" width="300" height="420" rx="36" transform="rotate(8 83.11 11.4075)" fill="url(#frontBase)"/>
-<rect x="83.11" y="11.4075" width="300" height="420" rx="36" transform="rotate(8 83.11 11.4075)" fill="url(#frontSheen)"/>
-<rect x="83.5257" y="11.9797" width="299" height="419" rx="35.5" transform="rotate(8 83.5257 11.9797)" stroke="#F7FCFF" stroke-opacity="0.42" stroke-width="1"/>
+<rect x="83.11" y="11.4075" width="300" height="420" rx="36" transform="rotate(5 83.11 11.4075)" fill="url(#frontBase)"/>
+<rect x="83.11" y="11.4075" width="300" height="420" rx="36" transform="rotate(5 83.11 11.4075)" fill="url(#frontSheen)"/>
+<rect x="83.5257" y="11.9797" width="299" height="419" rx="35.5" transform="rotate(5 83.5257 11.9797)" stroke="#F7FCFF" stroke-opacity="0.42" stroke-width="1"/>
 <defs>
 <linearGradient id="frontBase" x1="132" y1="18" x2="343" y2="430" gradientUnits="userSpaceOnUse">
 <stop stop-color="#73CCFF"/>
