@@ -3,8 +3,8 @@
     {
       "layers": [
         {
-          "image-name": "Front_Card.svg",
-          "name": "Front_Card",
+          "image-name": "Back_Card.svg",
+          "name": "Back_Card",
           "opacity": 1,
           "blend-mode": "normal",
           "glass": true,
@@ -17,16 +17,16 @@
           }
         }
       ],
-      "name": "Front_Card",
+      "name": "Back_Card",
       "specular": true,
-      "blur-material": 0.04,
+      "blur-material": 0.26,
       "shadow": {
         "kind": "layer-color",
-        "opacity": 0.22
+        "opacity": 0.14
       },
       "translucency": {
         "enabled": true,
-        "value": 0.08
+        "value": 0.44
       }
     },
     {
@@ -61,8 +61,8 @@
     {
       "layers": [
         {
-          "image-name": "Back_Card.svg",
-          "name": "Back_Card",
+          "image-name": "Front_Card.svg",
+          "name": "Front_Card",
           "opacity": 1,
           "blend-mode": "normal",
           "glass": true,
@@ -75,16 +75,16 @@
           }
         }
       ],
-      "name": "Back_Card",
+      "name": "Front_Card",
       "specular": true,
-      "blur-material": 0.26,
+      "blur-material": 0.04,
       "shadow": {
         "kind": "layer-color",
-        "opacity": 0.14
+        "opacity": 0.22
       },
       "translucency": {
         "enabled": true,
-        "value": 0.44
+        "value": 0.08
       }
     }
   ],
