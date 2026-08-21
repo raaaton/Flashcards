@@ -1,0 +1,89 @@
+{
+  "groups": [
+    {
+      "layers": [
+        {
+          "image-name": "Back_Card.svg",
+          "name": "Back_Card",
+          "opacity": 1,
+          "blend-mode": "normal",
+          "glass": true,
+          "position": {
+            "scale": 1,
+            "translation-in-points": [0, 0]
+          }
+        }
+      ],
+      "name": "Back_Card",
+      "specular": true,
+      "blur-material": 0.22,
+      "shadow": {
+        "kind": "layer-color",
+        "opacity": 0.3
+      },
+      "translucency": {
+        "enabled": true,
+        "value": 0.32
+      }
+    },
+    {
+      "layers": [
+        {
+          "image-name": "Middle_Card.svg",
+          "name": "Middle_Card",
+          "opacity": 1,
+          "blend-mode": "normal",
+          "glass": true,
+          "position": {
+            "scale": 1,
+            "translation-in-points": [0, 0]
+          }
+        }
+      ],
+      "name": "Middle_Card",
+      "specular": true,
+      "blur-material": 0.16,
+      "shadow": {
+        "kind": "layer-color",
+        "opacity": 0.42
+      },
+      "translucency": {
+        "enabled": true,
+        "value": 0.24
+      }
+    },
+    {
+      "layers": [
+        {
+          "image-name": "Front_Card.svg",
+          "name": "Front_Card",
+          "opacity": 1,
+          "blend-mode": "normal",
+          "glass": true,
+          "position": {
+            "scale": 1,
+            "translation-in-points": [0, 0]
+          }
+        }
+      ],
+      "name": "Front_Card",
+      "specular": true,
+      "blur-material": 0.1,
+      "shadow": {
+        "kind": "layer-color",
+        "opacity": 0.56
+      },
+      "translucency": {
+        "enabled": true,
+        "value": 0.16
+      }
+    }
+  ],
+  "supported-platforms": {
+    "squares": "shared",
+    "circles": ["watchOS"]
+  },
+  "fill": {
+    "solid": "srgb:0.07059,0.07059,0.07059,1.00000"
+  }
+}
