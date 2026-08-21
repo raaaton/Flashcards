@@ -239,6 +239,10 @@ private struct ConcentricFloatingActionModifier<FloatingContent: View>: ViewModi
     private let diameter: CGFloat = 62
     private let fallbackEdgeMargin: CGFloat = 16
 
+    // Correction optique : un cercle paraît mieux légèrement
+    // plus à l'intérieur que le centre géométrique du coin.
+    private let inwardOffset: CGFloat = 8
+
     func body(content: Content) -> some View {
         content
             .overlay {
@@ -247,16 +251,18 @@ private struct ConcentricFloatingActionModifier<FloatingContent: View>: ViewModi
                     let minimumCenterInset =
                         (diameter / 2) + fallbackEdgeMargin
 
+                    let horizontalInset =
+                        max(corner.width, minimumCenterInset)
+                        + inwardOffset
+
+                    let verticalInset =
+                        max(corner.height, minimumCenterInset)
+                        + inwardOffset
+
                     floatingContent
                         .position(
-                            x: geometry.size.width - max(
-                                corner.width,
-                                minimumCenterInset
-                            ),
-                            y: geometry.size.height - max(
-                                corner.height,
-                                minimumCenterInset
-                            )
+                            x: geometry.size.width - horizontalInset,
+                            y: geometry.size.height - verticalInset
                         )
                 }
                 .ignoresSafeArea(

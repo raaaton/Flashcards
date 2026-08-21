@@ -345,9 +345,7 @@ struct HomeView: View {
                 .foregroundStyle(.white)
                 .frame(width: 62, height: 62)
                 .glassEffect(
-                    .regular
-                        .tint(Theme.accent)
-                        .interactive(),
+                    .regular.interactive(),
                     in: .circle
                 )
         }

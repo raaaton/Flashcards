@@ -92,11 +92,12 @@ struct DeckFormView: View {
                                 term: $draft.term,
                                 definition: $draft.definition
                             )
+                            .padding(.vertical, 3)
                             .listRowInsets(
                                 EdgeInsets(
-                                    top: 5,
+                                    top: 0,
                                     leading: 0,
-                                    bottom: 5,
+                                    bottom: 0,
                                     trailing: 0
                                 )
                             )
