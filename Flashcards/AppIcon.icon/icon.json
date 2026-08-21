@@ -9,7 +9,7 @@
           "blend-mode": "normal",
           "glass": true,
           "position": {
-            "scale": 1.38,
+            "scale": 1.34,
             "translation-in-points": [
               0,
               0
@@ -19,14 +19,14 @@
       ],
       "name": "Back_Card",
       "specular": true,
-      "blur-material": 0.32,
+      "blur-material": 0.26,
       "shadow": {
         "kind": "layer-color",
-        "opacity": 0.16
+        "opacity": 0.14
       },
       "translucency": {
         "enabled": true,
-        "value": 0.52
+        "value": 0.44
       }
     },
     {
@@ -38,7 +38,7 @@
           "blend-mode": "normal",
           "glass": true,
           "position": {
-            "scale": 1.38,
+            "scale": 1.34,
             "translation-in-points": [
               0,
               0
@@ -48,14 +48,14 @@
       ],
       "name": "Middle_Card",
       "specular": true,
-      "blur-material": 0.22,
+      "blur-material": 0.15,
       "shadow": {
         "kind": "layer-color",
-        "opacity": 0.23
+        "opacity": 0.18
       },
       "translucency": {
         "enabled": true,
-        "value": 0.4
+        "value": 0.28
       }
     },
     {
@@ -67,7 +67,7 @@
           "blend-mode": "normal",
           "glass": true,
           "position": {
-            "scale": 1.38,
+            "scale": 1.34,
             "translation-in-points": [
               0,
               0
@@ -77,14 +77,14 @@
       ],
       "name": "Front_Card",
       "specular": true,
-      "blur-material": 0.12,
+      "blur-material": 0.04,
       "shadow": {
         "kind": "layer-color",
-        "opacity": 0.3
+        "opacity": 0.22
       },
       "translucency": {
         "enabled": true,
-        "value": 0.28
+        "value": 0.08
       }
     }
   ],
