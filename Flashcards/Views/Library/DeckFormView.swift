@@ -81,20 +81,22 @@ struct DeckFormView: View {
                 Section("Dossier") {
                     Picker("Emplacement", selection: $selectedFolderID) {
                         Text("Sans dossier").tag(nil as UUID?)
+
                         ForEach(folders) { folder in
                             Text(folder.name).tag(folder.id as UUID?)
                         }
                     }
+                    .tint(accent)
                 }
 
                 if deck == nil {
-                    Section {
+                    Section("Cartes initiales") {
                         ForEach($cardDrafts) { $draft in
                             VStack(alignment: .leading, spacing: 10) {
                                 HStack {
                                     Label(
                                         "Carte",
-                                        systemImage: "rectangle"
+                                        systemImage: "rectangle.on.rectangle.angled"
                                     )
                                     .font(.headline)
                                     .foregroundStyle(.secondary)
@@ -114,8 +116,7 @@ struct DeckFormView: View {
 
                                 CardEditorSurface(
                                     term: $draft.term,
-                                    definition: $draft.definition,
-                                    accent: accent
+                                    definition: $draft.definition
                                 )
                             }
                             .padding(.vertical, 6)
@@ -129,10 +130,18 @@ struct DeckFormView: View {
                             )
                             .listRowBackground(Color.clear)
                             .listRowSeparator(.hidden)
+                            .transition(
+                                .move(edge: .bottom)
+                                    .combined(with: .opacity)
+                            )
                         }
+                    }
 
+                    Section {
                         Button("Ajouter une carte", systemImage: "plus") {
-                            cardDrafts.append(DeckCardDraft())
+                            withAnimation(.snappy(duration: 0.28)) {
+                                cardDrafts.append(DeckCardDraft())
+                            }
                         }
                         .normalActionColor(accent)
 
@@ -140,8 +149,6 @@ struct DeckFormView: View {
                             showingBulkAdd = true
                         }
                         .normalActionColor(accent)
-                    } header: {
-                        Text("Cartes initiales")
                     } footer: {
                         if hasIncompleteDraft {
                             Text("Chaque carte commencée doit avoir un terme et une définition.")
@@ -223,6 +230,8 @@ struct DeckFormView: View {
     }
 
     private func removeDraft(_ id: UUID) {
-        cardDrafts.removeAll { $0.id == id }
+        withAnimation(.snappy(duration: 0.28)) {
+            cardDrafts.removeAll { $0.id == id }
+        }
     }
 }

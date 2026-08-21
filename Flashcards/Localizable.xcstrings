@@ -266,7 +266,9 @@
     "edit_cards.transfer.move_note" : {"localizations" : {"fr" : {"stringUnit" : {"state" : "translated", "value" : "La progression, les statistiques et les favoris sont conservés."}}, "en" : {"stringUnit" : {"state" : "translated", "value" : "Progress, statistics, and favorites are preserved."}}}},
     "Carte" : {"localizations" : {"en" : {"stringUnit" : {"state" : "translated", "value" : "Card"}}}},
     "Saisissez le terme" : {"localizations" : {"en" : {"stringUnit" : {"state" : "translated", "value" : "Enter the term"}}}},
-    "Saisissez la définition" : {"localizations" : {"en" : {"stringUnit" : {"state" : "translated", "value" : "Enter the definition"}}}}
+    "Saisissez la définition" : {"localizations" : {"en" : {"stringUnit" : {"state" : "translated", "value" : "Enter the definition"}}}},
+    "import.duplicate.exact" : {"localizations": {"fr": {"stringUnit": {"state": "translated", "value": "Doublon exact"}}, "en": {"stringUnit": {"state": "translated", "value": "Exact duplicate"}}}},
+    "import.duplicate.possible" : {"localizations": {"fr": {"stringUnit": {"state": "translated", "value": "Doublon possible"}}, "en": {"stringUnit": {"state": "translated", "value": "Possible duplicate"}}}}
   },
   "version" : "1.0"
 }

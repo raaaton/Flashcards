@@ -332,7 +332,9 @@ struct BulkImportView: View {
                         Spacer()
                         if let kind = duplicateAnalysis.kind(for: card.recordIndex) {
                             Label(
-                                kind == .exact ? "Doublon exact" : "Doublon possible",
+                                kind == .exact
+                                    ? L10n.text("import.duplicate.exact")
+                                    : L10n.text("import.duplicate.possible"),
                                 systemImage: kind == .exact
                                     ? "exclamationmark.octagon.fill"
                                     : "exclamationmark.triangle.fill"

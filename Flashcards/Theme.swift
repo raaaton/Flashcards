@@ -147,15 +147,14 @@ struct CardEditorSurface: View {
     @Binding var term: String
     @Binding var definition: String
 
-    let accent: Color
-
     var body: some View {
         VStack(spacing: 0) {
             editorField(
                 title: "Terme",
                 placeholder: "Saisissez le terme",
                 text: $term,
-                minHeight: 92
+                minHeight: 42,
+                lineLimits: 1...2
             )
 
             Divider()
@@ -165,26 +164,24 @@ struct CardEditorSurface: View {
                 title: "Définition",
                 placeholder: "Saisissez la définition",
                 text: $definition,
-                minHeight: 112
+                minHeight: 88,
+                lineLimits: 2...8
             )
         }
         .background(
             Color(uiColor: .tertiarySystemBackground),
             in: .rect(cornerRadius: 24, style: .continuous)
         )
-        .overlay {
-            RoundedRectangle(cornerRadius: 24, style: .continuous)
-                .strokeBorder(accent.opacity(0.20), lineWidth: 1)
-        }
     }
 
     private func editorField(
         title: LocalizedStringKey,
         placeholder: LocalizedStringKey,
         text: Binding<String>,
-        minHeight: CGFloat
+        minHeight: CGFloat,
+        lineLimits: ClosedRange<Int>
     ) -> some View {
-        VStack(alignment: .leading, spacing: 10) {
+        VStack(alignment: .leading, spacing: 8) {
             Text(title)
                 .font(.subheadline.weight(.semibold))
                 .foregroundStyle(.secondary)
@@ -195,7 +192,7 @@ struct CardEditorSurface: View {
                 axis: .vertical
             )
             .font(.body)
-            .lineLimit(2...8)
+            .lineLimit(lineLimits)
             .textInputAutocapitalization(.sentences)
             .frame(
                 minHeight: minHeight,

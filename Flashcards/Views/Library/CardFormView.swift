@@ -35,8 +35,7 @@ struct CardFormView: View {
                 Section {
                     CardEditorSurface(
                         term: $term,
-                        definition: $definition,
-                        accent: accent
+                        definition: $definition
                     )
                     .listRowInsets(
                         EdgeInsets(

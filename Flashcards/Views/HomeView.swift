@@ -308,7 +308,7 @@ struct HomeView: View {
         .overlay(alignment: .bottomTrailing) {
             addMenu
                 .padding(.trailing, 20)
-                .padding(.bottom, 18)
+                .padding(.bottom, 20)
         }
     }
 
@@ -336,6 +336,7 @@ struct HomeView: View {
                 showingNewDeck = true
             }
             .normalActionColor()
+
             Button("Nouveau dossier", systemImage: "folder.badge.plus") {
                 showingNewFolder = true
             }
@@ -343,13 +344,20 @@ struct HomeView: View {
         } label: {
             Image(systemName: "plus")
                 .font(.title2.weight(.semibold))
-                .foregroundStyle(.white)
+                .foregroundStyle(Theme.accent)
                 .frame(width: 62, height: 62)
-                .background(Theme.accent.gradient, in: .circle)
+                .background(.ultraThinMaterial, in: .circle)
+                .overlay {
+                    Circle()
+                        .strokeBorder(
+                            Color.white.opacity(0.12),
+                            lineWidth: 1
+                        )
+                }
                 .shadow(
-                    color: .black.opacity(0.28),
-                    radius: 12,
-                    y: 6
+                    color: .black.opacity(0.22),
+                    radius: 10,
+                    y: 5
                 )
         }
         .buttonStyle(.plain)

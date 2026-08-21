@@ -111,7 +111,7 @@ struct FolderDetailView: View {
             }
             .buttonStyle(.plain)
             .padding(.trailing, 20)
-            .padding(.bottom, 18)
+            .padding(.bottom, 20)
             .accessibilityLabel("Nouveau deck")
             .accessibilityHint("Créer un nouveau deck dans ce dossier")
         }
