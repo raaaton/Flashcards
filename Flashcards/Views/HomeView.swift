@@ -20,7 +20,6 @@ struct HomeView: View {
     @State private var showingFirstDeckImport = false
     @State private var showingFirstDeckFolder = false
     @State private var firstDeckWantsFolder = false
-    @State private var firstDeckPendingImport = false
     @State private var firstDeckFolder: Folder?
     @State private var showingSearch = false
     @State private var showingSettings = false
@@ -134,7 +133,7 @@ struct HomeView: View {
                 }
             }
         }
-         .sheet(isPresented: $showingNewFolder) {
+        .sheet(isPresented: $showingNewFolder) {
             FolderFormView()
         }
         .sheet(isPresented: $showingNewDeck) {
@@ -147,7 +146,7 @@ struct HomeView: View {
             DeckFormView(initialFolder: folder)
         }
         .sheet(isPresented: $showingFirstDeckImport) {
-            BulkImportView()
+            BackupView(autoOpenImporter: true)
         }
         .sheet(
             isPresented: $showingFirstDeckFolder,
@@ -331,8 +330,8 @@ struct HomeView: View {
                             )
                         }
                     }
-    .padding(.horizontal)
-}
+                    .padding(.horizontal)
+                }
 
                 if settings.homeRecentEnabled && !recentDecks.isEmpty {
                     Text("Récents")
@@ -459,7 +458,6 @@ struct HomeView: View {
     }
 
     private func startFirstDeckCreation() {
-        firstDeckPendingImport = false
         firstDeckFolder = nil
 
         if firstDeckWantsFolder {
@@ -470,14 +468,8 @@ struct HomeView: View {
     }
 
     private func startFirstDeckImport() {
-        firstDeckPendingImport = true
         firstDeckFolder = nil
-
-        if firstDeckWantsFolder {
-            showingFirstDeckFolder = true
-        } else {
-            showingFirstDeckImport = true
-        }
+        showingFirstDeckImport = true
     }
 
     private func continueFirstDeckFlowAfterFolder() {
@@ -488,14 +480,9 @@ struct HomeView: View {
             // le Folder qui vient d'être sauvegardé.
             for _ in 0..<20 {
                 if let createdFolder = folders.first {
-                    if firstDeckPendingImport {
-                        showingFirstDeckImport = true
-                    } else {
-                        // Le Folder lui-même déclenche maintenant
-                        // la présentation du DeckForm.
-                        firstDeckFolder = createdFolder
-                    }
-
+                    // Le Folder lui-même déclenche maintenant
+                    // la présentation du DeckForm.
+                    firstDeckFolder = createdFolder
                     return
                 }
 

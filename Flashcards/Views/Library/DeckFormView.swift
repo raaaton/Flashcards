@@ -68,6 +68,10 @@ struct DeckFormView: View {
             ?? .gray
     }
 
+    private var controlAccent: Color {
+        selectedFolderID == nil ? Theme.accent : accent
+    }
+
     var body: some View {
         NavigationStack {
             Form {
@@ -89,7 +93,7 @@ struct DeckFormView: View {
                             Text(folder.name).tag(folder.id as UUID?)
                         }
                     }
-                    .tint(accent)
+                    .tint(controlAccent)
                 }
 
                 if deck == nil {
@@ -97,8 +101,7 @@ struct DeckFormView: View {
                         Section {
                             CardEditorSurface(
                                 term: $draft.term,
-                                definition: $draft.definition,
-                                usesOwnBackground: false
+                                definition: $draft.definition
                             )
                             .listRowInsets(
                                 EdgeInsets(
@@ -108,9 +111,7 @@ struct DeckFormView: View {
                                     trailing: 0
                                 )
                             )
-                            .listRowBackground(
-                                Color(uiColor: .secondarySystemGroupedBackground)
-                            )
+                            .listRowBackground(Color.clear)
                             .listRowSeparator(.hidden)
                             .swipeActions(
                                 edge: .trailing,
@@ -155,12 +156,12 @@ struct DeckFormView: View {
                                 cardDrafts.append(DeckCardDraft())
                             }
                         }
-                        .normalActionColor(accent)
+                        .normalActionColor(controlAccent)
 
                         Button("Ajout en masse", systemImage: "text.badge.plus") {
                             showingBulkAdd = true
                         }
-                        .normalActionColor(accent)
+                        .normalActionColor(controlAccent)
                     } footer: {
                         if hasIncompleteDraft {
                             Text("Chaque carte commencée doit avoir un terme et une définition.")
@@ -187,7 +188,7 @@ struct DeckFormView: View {
 
                 ToolbarItem(placement: .confirmationAction) {
                     CircularSaveButton(
-                        accent: accent,
+                        accent: controlAccent,
                         isEnabled: canSave
                     ) {
                         save()
@@ -204,7 +205,7 @@ struct DeckFormView: View {
                         definition: draft.cleanDefinition
                     )
                 },
-                saveAccent: accent
+                saveAccent: controlAccent
             ) { parsedCards in
                 cardDrafts.removeAll(where: \.isEmpty)
                 cardDrafts.append(contentsOf: parsedCards.map {

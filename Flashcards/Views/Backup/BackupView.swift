@@ -9,16 +9,19 @@ struct BackupView: View {
     @Query(sort: \Deck.createdAt) private var decks: [Deck]
 
     let deck: Deck?
+    let autoOpenImporter: Bool
 
     @State private var exportURL: URL?
     @State private var showingFileImporter = false
+    @State private var didAutoOpenImporter = false
     @State private var pendingEnvelope: BackupEnvelopeV1?
     @State private var statusTitle = ""
     @State private var statusMessage = ""
     @State private var showingStatus = false
 
-    init(deck: Deck? = nil) {
+    init(deck: Deck? = nil, autoOpenImporter: Bool = false) {
         self.deck = deck
+        self.autoOpenImporter = autoOpenImporter
     }
 
     var body: some View {
@@ -81,6 +84,12 @@ struct BackupView: View {
             }
             .task {
                 prepareExport()
+
+                if autoOpenImporter && deck == nil && !didAutoOpenImporter {
+                    didAutoOpenImporter = true
+                    await Task.yield()
+                    showingFileImporter = true
+                }
             }
             .fileImporter(
                 isPresented: $showingFileImporter,

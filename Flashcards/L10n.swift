@@ -21,7 +21,7 @@ enum L10n {
     }
 
     static func decks(_ count: Int) -> String {
-        format("format.decks", Int64(count))
+        count > 1 ? format("format.decks", Int64(count)) : "\(count) deck"
     }
 
     static func questions(_ count: Int) -> String {
