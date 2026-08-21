@@ -231,7 +231,18 @@
     "Désélectionner" : { "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "Deselect" } } } },
     "Ajoutez au moins une carte pour créer le deck." : { "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "Add at least one card to create the deck." } } } },
     "Recherchez un dossier, un deck ou le contenu d’une carte." : { "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "Search for a folder, deck, or card content." } } } },
-    "Dossiers, decks et cartes" : { "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "Folders, decks and cards" } } } }
+    "Dossiers, decks et cartes" : { "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "Folders, decks and cards" } } } },
+    "Doublons détectés" : { "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "Duplicates Detected" } } } },
+    "Ignorer les doublons exacts" : { "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "Skip Exact Duplicates" } } } },
+    "Importer quand même" : { "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "Import Anyway" } } } },
+    "import.duplicates.both" : { "localizations" : {"fr" : { "stringUnit" : { "state" : "translated", "value" : "%lld doublon(s) exact(s) et %lld doublon(s) possible(s) ont été détectés. Les doublons possibles ont le même terme mais une définition différente." } }, "en" : { "stringUnit" : { "state" : "translated", "value" : "%lld exact duplicate(s) and %lld possible duplicate(s) were found. Possible duplicates share the same term but have a different definition." } }} },
+    "import.duplicates.possible" : { "localizations" : {"fr" : { "stringUnit" : { "state" : "translated", "value" : "%lld doublon(s) possible(s) ont été détectés. Ils ont le même terme qu’une autre carte mais une définition différente." } }, "en" : { "stringUnit" : { "state" : "translated", "value" : "%lld possible duplicate(s) were found. They share the same term but have a different definition." } }} },
+    "import.duplicates.exact" : { "localizations" : {"fr" : { "stringUnit" : { "state" : "translated", "value" : "%lld doublon(s) exact(s) ont été détectés." } }, "en" : { "stringUnit" : { "state" : "translated", "value" : "%lld exact duplicate(s) were found." } }} },
+    "Effacer l’historique" : { "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "Clear History" } } } },
+    "Actions de l’historique" : { "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "History Actions" } } } },
+    "Effacer l’historique ?" : { "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "Clear History?" } } } },
+    "Toutes les sessions d’étude enregistrées pour ce deck seront supprimées." : { "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "All study sessions saved for this deck will be removed." } } } },
+    "Il y a <1 min" : { "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "<1 min ago" } } } }
   },
   "version" : "1.0"
 }

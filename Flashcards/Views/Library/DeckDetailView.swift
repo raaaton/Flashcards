@@ -9,7 +9,6 @@ struct DeckDetailView: View {
     @State private var showingEditDeck = false
     @State private var showingExport = false
     @State private var confirmingDeletion = false
-    @State private var historyEntryPendingDeletion: UUID?
     @State private var confirmingHistoryReset = false
     @State private var didRecordOpening = false
 
@@ -183,14 +182,18 @@ struct DeckDetailView: View {
 
                 Spacer()
 
-                Button(role: .destructive) {
-                    confirmingHistoryReset = true
+                Menu {
+                    Button("Effacer l’historique", systemImage: "trash", role: .destructive) {
+                        confirmingHistoryReset = true
+                    }
                 } label: {
-                    Image(systemName: "trash")
-                        .foregroundStyle(.red)
+                    Image(systemName: "ellipsis")
+                        .neutralIconColor()
+                        .frame(minWidth: 36, minHeight: 36)
+                        .contentShape(.rect)
                 }
-                .buttonStyle(.plain)
-                .accessibilityLabel("Effacer l’historique")
+                .tint(.white)
+                .accessibilityLabel("Actions de l’historique")
             }
 
             VStack(spacing: 0) {
@@ -211,23 +214,9 @@ struct DeckDetailView: View {
 
                                 Spacer()
 
-                                Text(
-                                    entry.completedAt.formatted(
-                                        date: .abbreviated,
-                                        time: .shortened
-                                    )
-                                )
-                                .font(.caption)
-                                .foregroundStyle(.secondary)
-
-                                Button(role: .destructive) {
-                                    historyEntryPendingDeletion = entry.id
-                                } label: {
-                                    Image(systemName: "trash")
-                                        .foregroundStyle(.red)
-                                }
-                                .buttonStyle(.plain)
-                                .accessibilityLabel("Supprimer cette entrée")
+                                historyDate(entry.completedAt)
+                                    .font(.caption)
+                                    .foregroundStyle(.secondary)
                             }
 
                             Text(historySummary(entry))
@@ -236,23 +225,11 @@ struct DeckDetailView: View {
                         }
                     }
                     .padding(.vertical, 12)
-                    .alert(
-                        "Supprimer cette entrée ?",
-                        isPresented: Binding(
-                            get: { historyEntryPendingDeletion == entry.id },
-                            set: { isPresented in
-                                if !isPresented {
-                                    historyEntryPendingDeletion = nil
-                                }
-                            }
-                        )
-                    ) {
-                        Button("Supprimer", role: .destructive) {
+                    .contentShape(.rect)
+                    .contextMenu {
+                        Button("Supprimer", systemImage: "trash", role: .destructive) {
                             deleteHistoryEntry(entry.id)
                         }
-                        Button("Annuler", role: .cancel) {}
-                    } message: {
-                        Text("Cette session sera supprimée de l’historique.")
                     }
 
                     if entry.id != deck.studyHistory.prefix(5).last?.id {
@@ -266,17 +243,26 @@ struct DeckDetailView: View {
                 in: .rect(cornerRadius: 20, style: .continuous)
             )
         }
-        .confirmationDialog(
-            "Effacer tout l’historique ?",
-            isPresented: $confirmingHistoryReset,
-            titleVisibility: .visible
+        .alert(
+            "Effacer l’historique ?",
+            isPresented: $confirmingHistoryReset
         ) {
             Button("Effacer l’historique", role: .destructive) {
                 clearStudyHistory()
             }
+
             Button("Annuler", role: .cancel) {}
         } message: {
-            Text("Toutes les sessions enregistrées pour ce deck seront supprimées.")
+            Text("Toutes les sessions d’étude enregistrées pour ce deck seront supprimées.")
+        }
+    }
+
+    @ViewBuilder
+    private func historyDate(_ date: Date) -> some View {
+        if Date.now.timeIntervalSince(date) < 60 {
+            Text("Il y a <1 min")
+        } else {
+            Text(date, style: .relative)
         }
     }
 
@@ -297,7 +283,6 @@ struct DeckDetailView: View {
     private func deleteHistoryEntry(_ id: UUID) {
         deck.removeStudyHistoryEntry(id: id)
         deck.updatedAt = .now
-        historyEntryPendingDeletion = nil
         try? modelContext.save()
         HapticService.play(.selection)
     }
@@ -305,7 +290,6 @@ struct DeckDetailView: View {
     private func clearStudyHistory() {
         deck.clearStudyHistory()
         deck.updatedAt = .now
-        historyEntryPendingDeletion = nil
         try? modelContext.save()
         HapticService.play(.selection)
     }
