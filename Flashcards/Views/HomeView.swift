@@ -307,8 +307,8 @@ struct HomeView: View {
         .animation(.spring(duration: 0.35), value: pinnedDecks.map(\.id))
         .overlay(alignment: .bottomTrailing) {
             addMenu
-                .padding(.trailing, 20)
-                .padding(.bottom, 20)
+                .padding(.trailing, 16)
+                .padding(.bottom, 16)
         }
     }
 
@@ -346,18 +346,9 @@ struct HomeView: View {
                 .font(.title2.weight(.semibold))
                 .foregroundStyle(Theme.accent)
                 .frame(width: 62, height: 62)
-                .background(.ultraThinMaterial, in: .circle)
-                .overlay {
-                    Circle()
-                        .strokeBorder(
-                            Color.white.opacity(0.12),
-                            lineWidth: 1
-                        )
-                }
-                .shadow(
-                    color: .black.opacity(0.22),
-                    radius: 10,
-                    y: 5
+                .glassEffect(
+                    .regular.interactive(),
+                    in: .circle
                 )
         }
         .buttonStyle(.plain)

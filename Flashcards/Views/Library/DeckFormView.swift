@@ -92,44 +92,44 @@ struct DeckFormView: View {
                 if deck == nil {
                     Section("Cartes initiales") {
                         ForEach($cardDrafts) { $draft in
-                            VStack(alignment: .leading, spacing: 10) {
-                                HStack {
-                                    Label(
-                                        "Carte",
-                                        systemImage: "rectangle.on.rectangle.angled"
-                                    )
-                                    .font(.headline)
-                                    .foregroundStyle(.secondary)
-
-                                    Spacer()
-
-                                    Button(role: .destructive) {
-                                        removeDraft(draft.id)
-                                    } label: {
-                                        Image(systemName: "trash")
-                                            .frame(width: 32, height: 32)
-                                    }
-                                    .destructiveActionColor()
-                                    .buttonStyle(.plain)
-                                    .accessibilityLabel("Supprimer")
-                                }
-
-                                CardEditorSurface(
-                                    term: $draft.term,
-                                    definition: $draft.definition
-                                )
-                            }
-                            .padding(.vertical, 6)
+                            CardEditorSurface(
+                                term: $draft.term,
+                                definition: $draft.definition
+                            )
                             .listRowInsets(
                                 EdgeInsets(
-                                    top: 8,
+                                    top: 3,
                                     leading: 0,
-                                    bottom: 8,
+                                    bottom: 3,
                                     trailing: 0
                                 )
                             )
                             .listRowBackground(Color.clear)
                             .listRowSeparator(.hidden)
+                            .swipeActions(
+                                edge: .trailing,
+                                allowsFullSwipe: true
+                            ) {
+                                Button(role: .destructive) {
+                                    removeDraft(draft.id)
+                                } label: {
+                                    Label(
+                                        "Supprimer",
+                                        systemImage: "trash"
+                                    )
+                                }
+                            }
+                            .contextMenu {
+                                Button(role: .destructive) {
+                                    removeDraft(draft.id)
+                                } label: {
+                                    Label(
+                                        "Supprimer",
+                                        systemImage: "trash"
+                                    )
+                                }
+                                .destructiveActionColor()
+                            }
                             .transition(
                                 .move(edge: .bottom)
                                     .combined(with: .opacity)
@@ -157,6 +157,7 @@ struct DeckFormView: View {
                             Text("Ajoutez au moins une carte pour créer le deck.")
                         }
                     }
+                    .listSectionSpacing(12)
                 }
             }
             .scrollDismissesKeyboard(.interactively)
