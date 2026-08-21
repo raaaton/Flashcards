@@ -9,7 +9,7 @@
 
 # Flashcards
 
-Native iOS flashcards app focused on fast creation, distraction-free studying, and complete offline ownership of your data.
+Native iOS flashcards app focused on fast creation, distraction-free studying, and complete offline ownership of your data.<br />
 Built entirely with SwiftUI, SwiftData, Apple system APIs and ❤️.
 
 ---
