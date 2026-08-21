@@ -287,17 +287,19 @@ struct EditCardsView: View {
             }
         } else {
             ToolbarItem(placement: .topBarTrailing) {
-                EditButton()
-                    .tint(.white)
-            }
-
-            ToolbarItem(placement: .topBarTrailing) {
-                Button("Sélectionner") {
+                Button {
                     beginSelection()
+                } label: {
+                    Label(
+                        L10n.text("Modifier"),
+                        systemImage: "line.3.horizontal"
+                    )
                 }
                 .disabled(orderedCards.isEmpty)
                 .tint(.white)
             }
+
+            ToolbarSpacer(.fixed, placement: .topBarTrailing)
 
             ToolbarItem(placement: .topBarTrailing) {
                 Menu {
@@ -321,14 +323,20 @@ struct EditCardsView: View {
     }
 
     private func beginSelection() {
-        editMode?.wrappedValue = .inactive
         selectedCardIDs.removeAll()
-        isSelecting = true
+
+        withAnimation(.snappy(duration: 0.25)) {
+            isSelecting = true
+            editMode?.wrappedValue = .active
+        }
     }
 
     private func endSelection() {
-        selectedCardIDs.removeAll()
-        isSelecting = false
+        withAnimation(.snappy(duration: 0.25)) {
+            selectedCardIDs.removeAll()
+            isSelecting = false
+            editMode?.wrappedValue = .inactive
+        }
     }
 
     private func toggleSelection(_ id: UUID) {
