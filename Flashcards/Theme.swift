@@ -147,6 +147,8 @@ struct CardEditorSurface: View {
     @Binding var term: String
     @Binding var definition: String
 
+    var usesOwnBackground = true
+
     var body: some View {
         VStack(spacing: 0) {
             editorField(
@@ -168,8 +170,10 @@ struct CardEditorSurface: View {
                 lineLimits: 2...8
             )
         }
-        .background(
-            Color(uiColor: .secondarySystemGroupedBackground),
+                .background(
+            usesOwnBackground
+                ? Color(uiColor: .secondarySystemGroupedBackground)
+                : Color.clear,
             in: .rect(cornerRadius: 12, style: .continuous)
         )
     }

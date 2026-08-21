@@ -341,9 +341,9 @@ struct HomeView: View {
             .normalActionColor()
         } label: {
             Image(systemName: "plus")
-                .font(.title2.weight(.semibold))
+                .font(.title.weight(.semibold))
                 .foregroundStyle(.white)
-                .frame(width: 62, height: 62)
+                .frame(width: 78, height: 78)
                 .glassEffect(
                     .regular.interactive(),
                     in: .circle

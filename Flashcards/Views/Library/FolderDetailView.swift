@@ -99,9 +99,9 @@ struct FolderDetailView: View {
                 showingNewDeck = true
             } label: {
                 Image(systemName: "rectangle.stack.badge.plus")
-                    .font(.title2.weight(.semibold))
+                    .font(.title.weight(.semibold))
                     .foregroundStyle(.white)
-                    .frame(width: 62, height: 62)
+                    .frame(width: 78, height: 78)
                     .background(accent.gradient, in: .circle)
                     .shadow(
                         color: .black.opacity(0.28),

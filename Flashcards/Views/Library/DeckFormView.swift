@@ -86,13 +86,13 @@ struct DeckFormView: View {
                 }
 
                 if deck == nil {
-                    Section("Cartes initiales") {
-                        ForEach($cardDrafts) { $draft in
+                    ForEach($cardDrafts) { $draft in
+                        Section {
                             CardEditorSurface(
                                 term: $draft.term,
-                                definition: $draft.definition
+                                definition: $draft.definition,
+                                usesOwnBackground: false
                             )
-                            .padding(.vertical, 3)
                             .listRowInsets(
                                 EdgeInsets(
                                     top: 0,
@@ -101,7 +101,9 @@ struct DeckFormView: View {
                                     trailing: 0
                                 )
                             )
-                            .listRowBackground(Color.clear)
+                            .listRowBackground(
+                                Color(uiColor: .secondarySystemGroupedBackground)
+                            )
                             .listRowSeparator(.hidden)
                             .swipeActions(
                                 edge: .trailing,
@@ -132,7 +134,12 @@ struct DeckFormView: View {
                                 .move(edge: .bottom)
                                     .combined(with: .opacity)
                             )
+                        } header: {
+                            if draft.id == cardDrafts.first?.id {
+                                Text("Cartes initiales")
+                            }
                         }
+                        .listSectionSpacing(6)
                     }
 
                     Section {
