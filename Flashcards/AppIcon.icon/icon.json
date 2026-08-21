@@ -9,20 +9,20 @@
           "blend-mode": "normal",
           "glass": true,
           "position": {
-            "scale": 1.16,
+            "scale": 1.18,
             "translation-in-points": [
-              8,
-              10
+              7,
+              8
             ]
           }
         }
       ],
       "name": "Front_Card",
       "specular": true,
-      "blur-material": 0.012,
+      "blur-material": 0.01,
       "shadow": {
         "kind": "layer-color",
-        "opacity": 0.24
+        "opacity": 0.22
       },
       "translucency": {
         "enabled": true,
@@ -38,9 +38,9 @@
           "blend-mode": "normal",
           "glass": true,
           "position": {
-            "scale": 1.2,
+            "scale": 1.22,
             "translation-in-points": [
-              -8,
+              -7,
               -8
             ]
           }
@@ -48,14 +48,14 @@
       ],
       "name": "Rear_Card",
       "specular": true,
-      "blur-material": 0.035,
+      "blur-material": 0.025,
       "shadow": {
         "kind": "layer-color",
-        "opacity": 0.18
+        "opacity": 0.16
       },
       "translucency": {
         "enabled": true,
-        "value": 0.08
+        "value": 0.07
       }
     }
   ],
