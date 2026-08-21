@@ -9,21 +9,24 @@
           "blend-mode": "normal",
           "glass": true,
           "position": {
-            "scale": 1,
-            "translation-in-points": [0, 0]
+            "scale": 1.75,
+            "translation-in-points": [
+              0,
+              0
+            ]
           }
         }
       ],
       "name": "Back_Card",
       "specular": true,
-      "blur-material": 0.22,
+      "blur-material": 0.3,
       "shadow": {
         "kind": "layer-color",
-        "opacity": 0.3
+        "opacity": 0.22
       },
       "translucency": {
         "enabled": true,
-        "value": 0.32
+        "value": 0.46
       }
     },
     {
@@ -35,21 +38,24 @@
           "blend-mode": "normal",
           "glass": true,
           "position": {
-            "scale": 1,
-            "translation-in-points": [0, 0]
+            "scale": 1.75,
+            "translation-in-points": [
+              0,
+              0
+            ]
           }
         }
       ],
       "name": "Middle_Card",
       "specular": true,
-      "blur-material": 0.16,
+      "blur-material": 0.22,
       "shadow": {
         "kind": "layer-color",
-        "opacity": 0.42
+        "opacity": 0.34
       },
       "translucency": {
         "enabled": true,
-        "value": 0.24
+        "value": 0.34
       }
     },
     {
@@ -61,27 +67,32 @@
           "blend-mode": "normal",
           "glass": true,
           "position": {
-            "scale": 1,
-            "translation-in-points": [0, 0]
+            "scale": 1.75,
+            "translation-in-points": [
+              0,
+              0
+            ]
           }
         }
       ],
       "name": "Front_Card",
       "specular": true,
-      "blur-material": 0.1,
+      "blur-material": 0.14,
       "shadow": {
         "kind": "layer-color",
-        "opacity": 0.56
+        "opacity": 0.48
       },
       "translucency": {
         "enabled": true,
-        "value": 0.16
+        "value": 0.24
       }
     }
   ],
   "supported-platforms": {
     "squares": "shared",
-    "circles": ["watchOS"]
+    "circles": [
+      "watchOS"
+    ]
   },
   "fill": {
     "solid": "srgb:0.07059,0.07059,0.07059,1.00000"
