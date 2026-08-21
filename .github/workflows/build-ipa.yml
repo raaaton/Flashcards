@@ -203,7 +203,7 @@ jobs:
                   if grep -R -n -E 'cloudKitDatabase:[[:space:]]+\.(automatic|private)' Flashcards; then
                     exit 1
                   fi
-                  grep -q 'static let accent = Color.blue' Flashcards/Theme.swift
+                  grep -q 'static var accent: Color { AppPreferences.accentColor.color }' Flashcards/Theme.swift
                   test -z "$(find Flashcards/Assets.xcassets -name 'AccentColor.colorset' -print -quit)"
                   if grep -R -n -E 'StudyRound|currentRound|nextRound|roundNumber|feedbackMilliseconds|card\(s\)|carte\(s\)|Tabulation|accentHex' \
                     Flashcards CITests; then
@@ -318,7 +318,6 @@ jobs:
                   set -euxo pipefail
                   xcrun swiftc \
                     -swift-version 6 \
-                    Flashcards/AppPreferences.swift \
                     Flashcards/L10n.swift \
                     Flashcards/Services/StudySessionState.swift \
                     Flashcards/Services/BulkImportParser.swift \
@@ -327,7 +326,6 @@ jobs:
                   "$RUNNER_TEMP/bulk-import-smoke"
                   xcrun swiftc \
                     -swift-version 6 \
-                    Flashcards/AppPreferences.swift \
                     Flashcards/L10n.swift \
                     Flashcards/Services/StudySessionState.swift \
                     CITests/StudySessionSmoke.swift \
@@ -335,7 +333,6 @@ jobs:
                   "$RUNNER_TEMP/study-session-smoke"
                   xcrun swiftc \
                     -swift-version 6 \
-                    Flashcards/AppPreferences.swift \
                     Flashcards/L10n.swift \
                     Flashcards/Services/StudySessionState.swift \
                     Flashcards/Services/TestSessionState.swift \
@@ -344,7 +341,6 @@ jobs:
                   "$RUNNER_TEMP/test-session-smoke"
                   xcrun swiftc \
                     -swift-version 6 \
-                    Flashcards/AppPreferences.swift \
                     Flashcards/L10n.swift \
                     Flashcards/Services/StudySessionState.swift \
                     Flashcards/Services/BackupModels.swift \
