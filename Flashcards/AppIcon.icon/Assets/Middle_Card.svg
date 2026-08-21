@@ -1,14 +1,14 @@
-<svg width="348" height="461" viewBox="0 0 348 461" fill="none" xmlns="http://www.w3.org/2000/svg">
-<rect x="12.7754" y="24.4762" width="300" height="420" rx="36" transform="rotate(-10 12.7754 24.4762)" fill="url(#middleBase)"/>
-<rect x="12.7754" y="24.4762" width="300" height="420" rx="36" transform="rotate(-10 12.7754 24.4762)" fill="url(#middleSheen)"/>
-<rect x="13.3009" y="24.9493" width="299" height="419" rx="35.5" transform="rotate(-10 13.3009 24.9493)" stroke="#F3FAFF" stroke-opacity="0.34" stroke-width="1.15"/>
+<svg width="512" height="512" viewBox="0 0 512 512" fill="none" xmlns="http://www.w3.org/2000/svg">
+<rect x="106" y="46" width="300" height="420" rx="36" transform="rotate(-10 256 256)" fill="url(#middleBase)"/>
+<rect x="106" y="46" width="300" height="420" rx="36" transform="rotate(-10 256 256)" fill="url(#middleSheen)"/>
+<rect x="106.5" y="46.5" width="299" height="419" rx="35.5" transform="rotate(-10 256 256)" stroke="#F3FAFF" stroke-opacity="0.34" stroke-width="1.15"/>
 <defs>
-<linearGradient id="middleBase" x1="55" y1="31" x2="286" y2="431" gradientUnits="userSpaceOnUse">
+<linearGradient id="middleBase" x1="148.2246" y1="52.5238" x2="379.2246" y2="452.5238" gradientUnits="userSpaceOnUse">
 <stop stop-color="#7B9ABC"/>
 <stop offset="0.5" stop-color="#5F7F9F"/>
 <stop offset="1" stop-color="#405F7D"/>
 </linearGradient>
-<linearGradient id="middleSheen" x1="86" y1="18" x2="242" y2="442" gradientUnits="userSpaceOnUse">
+<linearGradient id="middleSheen" x1="179.2246" y1="39.5238" x2="335.2246" y2="463.5238" gradientUnits="userSpaceOnUse">
 <stop stop-color="#E3F2FF" stop-opacity="0.25"/>
 <stop offset="0.28" stop-color="#9FD2FF" stop-opacity="0.11"/>
 <stop offset="0.68" stop-color="white" stop-opacity="0.025"/>
