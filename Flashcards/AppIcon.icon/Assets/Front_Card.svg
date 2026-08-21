@@ -1,18 +1,18 @@
 <svg width="512" height="512" viewBox="0 0 512 512" fill="none" xmlns="http://www.w3.org/2000/svg">
-<rect x="106" y="46" width="300" height="420" rx="36" transform="rotate(3 256 256)" fill="url(#frontBase)"/>
-<rect x="106" y="46" width="300" height="420" rx="36" transform="rotate(3 256 256)" fill="url(#frontSheen)"/>
-<rect x="106.5" y="46.5" width="299" height="419" rx="35.5" transform="rotate(3 256 256)" stroke="#F7FCFF" stroke-opacity="0.44" stroke-width="1"/>
+<rect x="96" y="168" width="332" height="232" rx="42" transform="rotate(4 262 284)" fill="url(#frontBase)"/>
+<rect x="96" y="168" width="332" height="232" rx="42" transform="rotate(4 262 284)" fill="url(#frontSheen)"/>
+<rect x="96.5" y="168.5" width="331" height="231" rx="41.5" transform="rotate(4 262 284)" stroke="#F7FCFF" stroke-opacity="0.46" stroke-width="1"/>
 <defs>
-<linearGradient id="frontBase" x1="154.89" y1="52.5925" x2="365.89" y2="464.5925" gradientUnits="userSpaceOnUse">
-<stop stop-color="#7BD1FF"/>
+<linearGradient id="frontBase" x1="132" y1="176" x2="394" y2="394" gradientUnits="userSpaceOnUse">
+<stop stop-color="#82D5FF"/>
 <stop offset="0.42" stop-color="#168DFF"/>
 <stop offset="1" stop-color="#0769D5"/>
 </linearGradient>
-<linearGradient id="frontSheen" x1="164.89" y1="34.5925" x2="339.89" y2="476.5925" gradientUnits="userSpaceOnUse">
-<stop stop-color="white" stop-opacity="0.36"/>
-<stop offset="0.20" stop-color="#DCEFFF" stop-opacity="0.21"/>
-<stop offset="0.48" stop-color="#92D2FF" stop-opacity="0.06"/>
-<stop offset="0.78" stop-color="white" stop-opacity="0.018"/>
+<linearGradient id="frontSheen" x1="148" y1="156" x2="368" y2="410" gradientUnits="userSpaceOnUse">
+<stop stop-color="white" stop-opacity="0.38"/>
+<stop offset="0.22" stop-color="#DCEFFF" stop-opacity="0.22"/>
+<stop offset="0.54" stop-color="#8FD0FF" stop-opacity="0.055"/>
+<stop offset="0.80" stop-color="white" stop-opacity="0.018"/>
 <stop offset="1" stop-color="#004A9E" stop-opacity="0.08"/>
 </linearGradient>
 </defs>
