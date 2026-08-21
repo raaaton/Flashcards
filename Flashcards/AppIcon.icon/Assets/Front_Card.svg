@@ -1,25 +1,15 @@
 <svg width="512" height="512" viewBox="0 0 512 512" fill="none" xmlns="http://www.w3.org/2000/svg">
-  <rect x="98" y="92" width="316" height="332" rx="58" fill="url(#cardBase)"/>
-  <rect x="98" y="92" width="316" height="332" rx="58" fill="url(#cardSheen)"/>
-  <rect x="98.75" y="92.75" width="314.5" height="330.5" rx="57.25" stroke="#F7FCFF" stroke-opacity="0.40" stroke-width="1.5"/>
-
-  <!-- Prompt / answer rhythm: keeps the object reading as a study card, not a generic tile. -->
-  <rect x="150" y="190" width="112" height="15" rx="7.5" fill="#F7FCFF" fill-opacity="0.90"/>
-  <rect x="150" y="246" width="212" height="3" rx="1.5" fill="#F7FCFF" fill-opacity="0.17"/>
-  <rect x="150" y="282" width="176" height="15" rx="7.5" fill="#F7FCFF" fill-opacity="0.48"/>
-  <rect x="150" y="314" width="118" height="15" rx="7.5" fill="#F7FCFF" fill-opacity="0.24"/>
-
-  <defs>
-    <linearGradient id="cardBase" x1="132" y1="104" x2="392" y2="416" gradientUnits="userSpaceOnUse">
-      <stop stop-color="#72CEFF"/>
-      <stop offset="0.44" stop-color="#0A84FF"/>
-      <stop offset="1" stop-color="#075FC5"/>
-    </linearGradient>
-    <linearGradient id="cardSheen" x1="132" y1="94" x2="368" y2="408" gradientUnits="userSpaceOnUse">
-      <stop stop-color="white" stop-opacity="0.20"/>
-      <stop offset="0.26" stop-color="#DDF1FF" stop-opacity="0.09"/>
-      <stop offset="0.62" stop-color="white" stop-opacity="0.012"/>
-      <stop offset="1" stop-color="#004A9E" stop-opacity="0.06"/>
-    </linearGradient>
-  </defs>
+<g transform="rotate(2 278 288)">
+  <rect x="132" y="116" width="292" height="344" rx="52" fill="url(#frontBase)"/>
+  <rect x="132.75" y="116.75" width="290.5" height="342.5" rx="51.25" stroke="#F7FCFF" stroke-opacity="0.34" stroke-width="1.5"/>
+  <rect x="178" y="218" width="138" height="16" rx="8" fill="#F4FBFF" fill-opacity="0.86"/>
+  <rect x="178" y="254" width="184" height="16" rx="8" fill="#F4FBFF" fill-opacity="0.42"/>
+</g>
+<defs>
+  <linearGradient id="frontBase" x1="168" y1="132" x2="392" y2="446" gradientUnits="userSpaceOnUse">
+    <stop stop-color="#5BC0FF"/>
+    <stop offset="0.48" stop-color="#0A84FF"/>
+    <stop offset="1" stop-color="#075FC5"/>
+  </linearGradient>
+</defs>
 </svg>

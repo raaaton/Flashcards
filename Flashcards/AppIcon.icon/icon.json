@@ -3,59 +3,59 @@
     {
       "layers": [
         {
-          "image-name": "Spark.svg",
-          "name": "Memory_Spark",
+          "image-name": "Front_Card.svg",
+          "name": "Front_Card",
           "opacity": 1,
           "blend-mode": "normal",
           "glass": true,
           "position": {
             "scale": 1.18,
             "translation-in-points": [
-              0,
-              -2
+              7,
+              8
             ]
           }
         }
       ],
-      "name": "Memory_Spark",
+      "name": "Front_Card",
       "specular": true,
-      "blur-material": 0.006,
+      "blur-material": 0.01,
       "shadow": {
         "kind": "layer-color",
-        "opacity": 0.08
+        "opacity": 0.22
       },
       "translucency": {
         "enabled": true,
-        "value": 0.015
+        "value": 0.025
       }
     },
     {
       "layers": [
         {
-          "image-name": "Front_Card.svg",
-          "name": "Flashcard",
+          "image-name": "Middle_Card.svg",
+          "name": "Rear_Card",
           "opacity": 1,
           "blend-mode": "normal",
           "glass": true,
           "position": {
             "scale": 1.22,
             "translation-in-points": [
-              0,
-              4
+              -7,
+              -8
             ]
           }
         }
       ],
-      "name": "Flashcard",
+      "name": "Rear_Card",
       "specular": true,
-      "blur-material": 0.012,
+      "blur-material": 0.025,
       "shadow": {
         "kind": "layer-color",
-        "opacity": 0.24
+        "opacity": 0.16
       },
       "translucency": {
         "enabled": true,
-        "value": 0.03
+        "value": 0.07
       }
     }
   ],
