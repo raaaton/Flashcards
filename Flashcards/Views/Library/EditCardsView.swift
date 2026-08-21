@@ -292,7 +292,7 @@ struct EditCardsView: View {
                 } label: {
                     Label(
                         L10n.text("Modifier"),
-                        systemImage: "line.3.horizontal"
+                        systemImage: "checkmark.circle"
                     )
                 }
                 .disabled(orderedCards.isEmpty)
