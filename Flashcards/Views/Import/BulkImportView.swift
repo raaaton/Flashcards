@@ -226,6 +226,11 @@ struct BulkImportView: View {
                 if decks.isEmpty {
                     destination = .newDeck
                 }
+
+                if selectedFolderID == nil,
+                   folders.count == 1 {
+                    selectedFolderID = folders.first?.id
+                }
             }
             .alert(
                 "Doublons détectés",

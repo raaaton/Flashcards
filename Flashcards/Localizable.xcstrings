@@ -269,6 +269,47 @@
     "Saisissez la définition" : {"localizations" : {"en" : {"stringUnit" : {"state" : "translated", "value" : "Enter the definition"}}}},
     "import.duplicate.exact" : {"localizations": {"fr": {"stringUnit": {"state": "translated", "value": "Doublon exact"}}, "en": {"stringUnit": {"state": "translated", "value": "Exact duplicate"}}}},
     "import.duplicate.possible" : {"localizations": {"fr": {"stringUnit": {"state": "translated", "value": "Doublon possible"}}, "en": {"stringUnit": {"state": "translated", "value": "Possible duplicate"}}}}
+  ,
+    "Crée ton premier deck" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Create your first deck"
+          }
+        }
+      }
+    },
+    "Commence par créer un deck ou importer directement tes cartes." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Start by creating a deck or importing your cards directly."
+          }
+        }
+      }
+    },
+    "Créer mon premier deck" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Create my first deck"
+          }
+        }
+      }
+    },
+    "Importer des cartes" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Import cards"
+          }
+        }
+      }
+    }
   },
   "version" : "1.0"
 }

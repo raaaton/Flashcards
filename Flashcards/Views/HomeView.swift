@@ -16,6 +16,12 @@ struct HomeView: View {
 
     @State private var showingNewFolder = false
     @State private var showingNewDeck = false
+    @State private var showingFirstDeckCreation = false
+    @State private var showingFirstDeckImport = false
+    @State private var showingFirstDeckFolder = false
+    @State private var firstDeckWantsFolder = false
+    @State private var firstDeckPendingImport = false
+    @State private var firstDeckFolder: Folder?
     @State private var showingSearch = false
     @State private var showingSettings = false
     @State private var folderToEdit: Folder?
@@ -85,9 +91,19 @@ struct HomeView: View {
             || (settings.homePinnedEnabled && !pinnedDecks.isEmpty)
     }
 
+    private var showsFirstDeckOnboarding: Bool {
+        folders.isEmpty && decks.isEmpty
+    }
+
     var body: some View {
         NavigationStack {
-            folderGrid
+            Group {
+                if showsFirstDeckOnboarding {
+                    firstDeckOnboarding
+                } else {
+                    folderGrid
+                }
+            }
             .navigationTitle("Flashcards")
             .navigationDestination(isPresented: $showingQuickResume) {
                 if let quickResumeDeck, let quickResumeSnapshot {
@@ -124,6 +140,22 @@ struct HomeView: View {
         .sheet(isPresented: $showingNewDeck) {
             DeckFormView()
         }
+        .sheet(isPresented: $showingFirstDeckCreation) {
+            if let firstDeckFolder {
+                DeckFormView(initialFolder: firstDeckFolder)
+            } else {
+                DeckFormView()
+            }
+        }
+        .sheet(isPresented: $showingFirstDeckImport) {
+            BulkImportView()
+        }
+        .sheet(
+            isPresented: $showingFirstDeckFolder,
+            onDismiss: continueFirstDeckFlowAfterFolder
+        ) {
+            FolderFormView()
+        }
         .sheet(isPresented: $showingSettings) {
             SettingsView()
         }
@@ -143,6 +175,105 @@ struct HomeView: View {
             Button("Annuler", role: .cancel) { folderToDelete = nil }
         } message: {
             Text("Vous pouvez déplacer les decks vers « Sans dossier » ou supprimer définitivement tout le contenu.")
+        }
+    }
+
+    private var firstDeckOnboarding: some View {
+        ScrollView {
+            VStack(spacing: 26) {
+                Spacer(minLength: 56)
+
+                Image(systemName: "rectangle.stack.fill")
+                    .font(
+                        .system(
+                            size: 54,
+                            weight: .semibold
+                        )
+                    )
+                    .foregroundStyle(Theme.accent)
+                    .accessibilityHidden(true)
+
+                VStack(spacing: 8) {
+                    Text("Crée ton premier deck")
+                        .font(.largeTitle.bold())
+                        .multilineTextAlignment(.center)
+
+                    Text(
+                        "Commence par créer un deck ou importer directement tes cartes."
+                    )
+                    .font(.body)
+                    .foregroundStyle(.secondary)
+                    .multilineTextAlignment(.center)
+                }
+
+                VStack(
+                    alignment: .leading,
+                    spacing: 12
+                ) {
+                    Text("Emplacement")
+                        .font(.headline)
+
+                    Picker(
+                        "Emplacement",
+                        selection: $firstDeckWantsFolder
+                    ) {
+                        Text("Sans dossier")
+                            .tag(false)
+
+                        Text("Créer un dossier")
+                            .tag(true)
+                    }
+                    .pickerStyle(.segmented)
+                }
+                .padding(16)
+                .background(
+                    Theme.cardBackground,
+                    in: .rect(
+                        cornerRadius: 20,
+                        style: .continuous
+                    )
+                )
+
+                VStack(spacing: 12) {
+                    Button {
+                        startFirstDeckCreation()
+                    } label: {
+                        Label(
+                            "Créer mon premier deck",
+                            systemImage: "plus"
+                        )
+                        .font(.headline)
+                        .frame(
+                            maxWidth: .infinity,
+                            minHeight: 54
+                        )
+                    }
+                    .buttonStyle(.borderedProminent)
+                    .tint(Theme.accent)
+
+                    Button {
+                        startFirstDeckImport()
+                    } label: {
+                        Label(
+                            "Importer des cartes",
+                            systemImage:
+                                "square.and.arrow.down"
+                        )
+                        .font(.headline)
+                        .frame(
+                            maxWidth: .infinity,
+                            minHeight: 54
+                        )
+                    }
+                    .buttonStyle(.bordered)
+                }
+
+                Spacer(minLength: 24)
+            }
+            .frame(maxWidth: 560)
+            .padding(.horizontal, 24)
+            .padding(.bottom, 32)
+            .frame(maxWidth: .infinity)
         }
     }
 
@@ -326,6 +457,58 @@ struct HomeView: View {
         .padding(18)
         .background(Theme.cardBackground, in: .rect(cornerRadius: 18, style: .continuous))
         .padding(.horizontal)
+    }
+
+    private func startFirstDeckCreation() {
+        firstDeckPendingImport = false
+        firstDeckFolder = nil
+
+        if firstDeckWantsFolder {
+            showingFirstDeckFolder = true
+        } else {
+            showingFirstDeckCreation = true
+        }
+    }
+
+    private func startFirstDeckImport() {
+        firstDeckPendingImport = true
+        firstDeckFolder = nil
+
+        if firstDeckWantsFolder {
+            showingFirstDeckFolder = true
+        } else {
+            showingFirstDeckImport = true
+        }
+    }
+
+    private func continueFirstDeckFlowAfterFolder() {
+        guard firstDeckWantsFolder else { return }
+
+        Task { @MainActor in
+            // Laisse SwiftData/@Query recevoir le folder qui vient
+            // éventuellement d'être sauvegardé.
+            for _ in 0..<12 {
+                if let createdFolder = folders.first {
+                    firstDeckFolder = createdFolder
+
+                    if firstDeckPendingImport {
+                        showingFirstDeckImport = true
+                    } else {
+                        showingFirstDeckCreation = true
+                    }
+
+                    return
+                }
+
+                try? await Task.sleep(
+                    for: .milliseconds(50)
+                )
+            }
+
+            // Aucun folder apparu :
+            // FolderForm a été annulé.
+            // On reste simplement sur l'onboarding.
+        }
     }
 
     private var addMenu: some View {
