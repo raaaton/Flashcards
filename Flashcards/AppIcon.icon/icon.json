@@ -9,82 +9,53 @@
           "blend-mode": "normal",
           "glass": true,
           "position": {
-            "scale": 1.24,
+            "scale": 1.26,
             "translation-in-points": [
-              7,
-              8
+              6,
+              6
             ]
           }
         }
       ],
       "name": "Front_Card",
       "specular": true,
-      "blur-material": 0.02,
+      "blur-material": 0.015,
       "shadow": {
         "kind": "layer-color",
         "opacity": 0.24
       },
       "translucency": {
         "enabled": true,
-        "value": 0.04
+        "value": 0.03
       }
     },
     {
       "layers": [
         {
           "image-name": "Middle_Card.svg",
-          "name": "Middle_Card",
+          "name": "Rear_Card",
           "opacity": 1,
           "blend-mode": "normal",
           "glass": true,
           "position": {
-            "scale": 1.34,
+            "scale": 1.36,
             "translation-in-points": [
-              -5,
-              -4
+              -7,
+              -5
             ]
           }
         }
       ],
-      "name": "Middle_Card",
+      "name": "Rear_Card",
       "specular": true,
-      "blur-material": 0.06,
+      "blur-material": 0.045,
       "shadow": {
         "kind": "layer-color",
-        "opacity": 0.2
+        "opacity": 0.18
       },
       "translucency": {
         "enabled": true,
-        "value": 0.12
-      }
-    },
-    {
-      "layers": [
-        {
-          "image-name": "Back_Card.svg",
-          "name": "Back_Card",
-          "opacity": 1,
-          "blend-mode": "normal",
-          "glass": true,
-          "position": {
-            "scale": 1.4,
-            "translation-in-points": [
-              -10,
-              -8
-            ]
-          }
-        }
-      ],
-      "name": "Back_Card",
-      "specular": true,
-      "blur-material": 0.09,
-      "shadow": {
-        "kind": "layer-color",
-        "opacity": 0.16
-      },
-      "translucency": {
-        "enabled": true,
-        "value": 0.18
+        "value": 0.1
       }
     }
   ],
