@@ -102,12 +102,12 @@ struct FolderDetailView: View {
                     .font(.title.weight(.semibold))
                     .foregroundStyle(.white)
                     .frame(width: 78, height: 78)
-                    .background(accent.gradient, in: .circle)
-                    .shadow(
-                        color: .black.opacity(0.28),
-                        radius: 12,
-                        y: 6
+                    .glassEffect(
+                        .regular.tint(accent).interactive(),
+                        in: .circle
                     )
+
+
             }
             .buttonStyle(.plain)
              .accessibilityLabel("Nouveau deck")

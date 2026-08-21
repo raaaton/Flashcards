@@ -348,6 +348,7 @@ struct HomeView: View {
                     .regular.interactive(),
                     in: .circle
                 )
+
         }
         .buttonStyle(.plain)
         .accessibilityLabel("Ajouter")

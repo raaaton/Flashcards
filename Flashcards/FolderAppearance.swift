@@ -4,7 +4,7 @@ import UIKit
 
 enum FolderAppearance {
     static let defaultIcon = "folder.fill"
-    static let defaultColorHex = "5856D6"
+    static let defaultColorHex = "0A84FF"
 
     static let icons: [String] = [
         "folder.fill",
@@ -40,12 +40,13 @@ enum FolderAppearance {
     ].filter { UIImage(systemName: $0) != nil }
 
     static let presetColors = [
-        "5856D6",
+        "0A84FF",
         "007AFF",
         "00A8A8",
         "34C759",
         "FF9500",
         "AF52DE",
+        "5856D6",
         "FF2D55"
     ]
 }

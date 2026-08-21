@@ -34,6 +34,7 @@ struct DeckFormView: View {
     @State private var selectedFolderID: UUID?
     @State private var cardDrafts: [DeckCardDraft]
     @State private var showingBulkAdd = false
+    @FocusState private var nameFieldFocused: Bool
 
     init(deck: Deck? = nil, initialFolder: Folder? = nil) {
         self.deck = deck
@@ -72,6 +73,12 @@ struct DeckFormView: View {
             Form {
                 Section("Deck") {
                     TextField("Nom", text: $name)
+                        .focused($nameFieldFocused)
+                        .task {
+                            guard deck == nil else { return }
+                            try? await Task.sleep(nanoseconds: 120_000_000)
+                            nameFieldFocused = true
+                        }
                 }
 
                 Section("Dossier") {

@@ -10,6 +10,7 @@ struct FolderFormView: View {
     @State private var iconName: String
     @State private var colorHex: String
     @State private var customColor: Color
+    @FocusState private var nameFieldFocused: Bool
 
     init(folder: Folder? = nil) {
         self.folder = folder
@@ -41,6 +42,18 @@ struct FolderFormView: View {
                             .background(Color(folderHex: colorHex).gradient, in: .circle)
 
                         TextField("Nom du dossier", text: $name)
+
+                            .focused($nameFieldFocused)
+
+                            .task {
+
+                                guard folder == nil else { return }
+
+                                try? await Task.sleep(nanoseconds: 120_000_000)
+
+                                nameFieldFocused = true
+
+                            }
                             .textInputAutocapitalization(.sentences)
                     }
                 }
@@ -92,12 +105,21 @@ struct FolderFormView: View {
                                 colorHex.caseInsensitiveCompare(preset) == .orderedSame ? .isSelected : []
                             )
                         }
-                    }
-
-                    ColorPicker("Couleur personnalisée", selection: $customColor, supportsOpacity: false)
+                    
+                        ColorPicker(
+                            "",
+                            selection: $customColor,
+                            supportsOpacity: false
+                        )
+                        .labelsHidden()
+                        .frame(width: 28, height: 28)
+                        .accessibilityLabel("Couleur personnalisée")
                         .onChange(of: customColor) { _, newColor in
                             colorHex = newColor.folderHexString
                         }
+}
+
+                    
                 }
             }
             .scrollDismissesKeyboard(.interactively)
