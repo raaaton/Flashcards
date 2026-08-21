@@ -9,6 +9,8 @@ struct DeckDetailView: View {
     @State private var showingEditDeck = false
     @State private var showingExport = false
     @State private var confirmingDeletion = false
+    @State private var historyEntryPendingDeletion: UUID?
+    @State private var confirmingHistoryReset = false
     @State private var didRecordOpening = false
 
     private var orderedCards: [Card] {
@@ -175,31 +177,83 @@ struct DeckDetailView: View {
 
     private var studyHistorySection: some View {
         VStack(alignment: .leading, spacing: 12) {
-            Text("study.history.title")
-                .font(.title2.bold())
+            HStack {
+                Text("study.history.title")
+                    .font(.title2.bold())
+
+                Spacer()
+
+                Button(role: .destructive) {
+                    confirmingHistoryReset = true
+                } label: {
+                    Image(systemName: "trash")
+                        .foregroundStyle(.red)
+                }
+                .buttonStyle(.plain)
+                .accessibilityLabel("Effacer l’historique")
+            }
 
             VStack(spacing: 0) {
                 ForEach(Array(deck.studyHistory.prefix(5))) { entry in
                     HStack(alignment: .top, spacing: 12) {
-                        Image(systemName: entry.mode == .flashcards ? "rectangle.stack" : "checklist")
-                            .foregroundStyle(Theme.deckAccent(for: deck))
-                            .frame(width: 28)
+                        Image(
+                            systemName: entry.mode == .flashcards
+                                ? "rectangle.stack"
+                                : "checklist"
+                        )
+                        .foregroundStyle(Theme.deckAccent(for: deck))
+                        .frame(width: 28)
 
                         VStack(alignment: .leading, spacing: 4) {
                             HStack {
                                 Text(entry.mode.title)
                                     .font(.headline)
+
                                 Spacer()
-                                Text(entry.completedAt, style: .relative)
-                                    .font(.caption)
-                                    .foregroundStyle(.secondary)
+
+                                Text(
+                                    entry.completedAt.formatted(
+                                        date: .abbreviated,
+                                        time: .shortened
+                                    )
+                                )
+                                .font(.caption)
+                                .foregroundStyle(.secondary)
+
+                                Button(role: .destructive) {
+                                    historyEntryPendingDeletion = entry.id
+                                } label: {
+                                    Image(systemName: "trash")
+                                        .foregroundStyle(.red)
+                                }
+                                .buttonStyle(.plain)
+                                .accessibilityLabel("Supprimer cette entrée")
                             }
+
                             Text(historySummary(entry))
                                 .font(.subheadline)
                                 .foregroundStyle(.secondary)
                         }
                     }
                     .padding(.vertical, 12)
+                    .alert(
+                        "Supprimer cette entrée ?",
+                        isPresented: Binding(
+                            get: { historyEntryPendingDeletion == entry.id },
+                            set: { isPresented in
+                                if !isPresented {
+                                    historyEntryPendingDeletion = nil
+                                }
+                            }
+                        )
+                    ) {
+                        Button("Supprimer", role: .destructive) {
+                            deleteHistoryEntry(entry.id)
+                        }
+                        Button("Annuler", role: .cancel) {}
+                    } message: {
+                        Text("Cette session sera supprimée de l’historique.")
+                    }
 
                     if entry.id != deck.studyHistory.prefix(5).last?.id {
                         Divider()
@@ -207,7 +261,22 @@ struct DeckDetailView: View {
                 }
             }
             .padding(.horizontal, 16)
-            .background(Theme.cardBackground, in: .rect(cornerRadius: 20, style: .continuous))
+            .background(
+                Theme.cardBackground,
+                in: .rect(cornerRadius: 20, style: .continuous)
+            )
+        }
+        .confirmationDialog(
+            "Effacer tout l’historique ?",
+            isPresented: $confirmingHistoryReset,
+            titleVisibility: .visible
+        ) {
+            Button("Effacer l’historique", role: .destructive) {
+                clearStudyHistory()
+            }
+            Button("Annuler", role: .cancel) {}
+        } message: {
+            Text("Toutes les sessions enregistrées pour ce deck seront supprimées.")
         }
     }
 
@@ -215,6 +284,7 @@ struct DeckDetailView: View {
         let itemLabel = entry.mode == .flashcards
             ? L10n.cards(entry.itemCount)
             : L10n.questions(entry.itemCount)
+
         return L10n.format(
             "study.history.summary",
             itemLabel,
@@ -222,6 +292,22 @@ struct DeckDetailView: View {
             Int64(entry.incorrectCount),
             Int64(entry.successRate)
         )
+    }
+
+    private func deleteHistoryEntry(_ id: UUID) {
+        deck.removeStudyHistoryEntry(id: id)
+        deck.updatedAt = .now
+        historyEntryPendingDeletion = nil
+        try? modelContext.save()
+        HapticService.play(.selection)
+    }
+
+    private func clearStudyHistory() {
+        deck.clearStudyHistory()
+        deck.updatedAt = .now
+        historyEntryPendingDeletion = nil
+        try? modelContext.save()
+        HapticService.play(.selection)
     }
 
     private func studyTile<Destination: View>(

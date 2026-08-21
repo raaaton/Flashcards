@@ -204,21 +204,35 @@ struct BulkImportView: View {
                 }
             }
             .confirmationDialog(
-                "Doublons exacts détectés",
+                "Doublons détectés",
                 isPresented: $showingDuplicateChoice,
                 titleVisibility: .visible
             ) {
-                Button("Ignorer les doublons") {
-                    importCards(skipExactDuplicates: true)
+                if duplicateAnalysis.exactCount > 0 {
+                    Button("Ignorer les doublons exacts") {
+                        importCards(skipExactDuplicates: true)
+                    }
                 }
+
                 Button("Importer quand même") {
                     importCards(skipExactDuplicates: false)
                 }
+
                 Button("Annuler", role: .cancel) {}
             } message: {
-                Text(
-                    "\(L10n.cards(duplicateAnalysis.exactCount)) correspondent exactement à une carte déjà présente ou à une ligne précédente."
-                )
+                if duplicateAnalysis.possibleCount > 0 && duplicateAnalysis.exactCount > 0 {
+                    Text(
+                        "\(duplicateAnalysis.exactCount) doublon(s) exact(s) et \(duplicateAnalysis.possibleCount) doublon(s) possible(s) ont été détectés. Les doublons possibles ont le même terme mais une définition différente."
+                    )
+                } else if duplicateAnalysis.possibleCount > 0 {
+                    Text(
+                        "\(duplicateAnalysis.possibleCount) doublon(s) possible(s) ont été détectés. Ils ont le même terme qu’une autre carte mais une définition différente. Vérifiez-les avant d’importer."
+                    )
+                } else {
+                    Text(
+                        "\(L10n.cards(duplicateAnalysis.exactCount)) correspondent exactement à une carte déjà présente ou à une ligne précédente."
+                    )
+                }
             }
             .alert(alertTitle, isPresented: $showingAlert) {
                 Button("OK", role: .cancel) {}
@@ -357,7 +371,8 @@ struct BulkImportView: View {
 
     private func prepareImport() {
         guard canImport else { return }
-        if duplicateAnalysis.exactCount > 0 {
+
+        if duplicateAnalysis.exactCount > 0 || duplicateAnalysis.possibleCount > 0 {
             showingDuplicateChoice = true
         } else {
             importCards(skipExactDuplicates: false)

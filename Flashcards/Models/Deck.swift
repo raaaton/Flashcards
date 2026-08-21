@@ -75,6 +75,7 @@ extension Deck {
         incorrectCount: Int
     ) {
         guard itemCount > 0 else { return }
+
         let entry = StudyHistoryEntry(
             id: UUID(),
             completedAt: .now,
@@ -83,6 +84,26 @@ extension Deck {
             correctCount: correctCount,
             incorrectCount: incorrectCount
         )
-        studyHistoryData = try? JSONEncoder().encode(Array(([entry] + studyHistory).prefix(5)))
+
+        setStudyHistory(Array(([entry] + studyHistory).prefix(5)))
+    }
+
+    func removeStudyHistoryEntry(id: UUID) {
+        setStudyHistory(
+            studyHistory.filter { $0.id != id }
+        )
+    }
+
+    func clearStudyHistory() {
+        studyHistoryData = nil
+    }
+
+    private func setStudyHistory(_ entries: [StudyHistoryEntry]) {
+        guard !entries.isEmpty else {
+            studyHistoryData = nil
+            return
+        }
+
+        studyHistoryData = try? JSONEncoder().encode(entries)
     }
 }
