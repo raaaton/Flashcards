@@ -231,3 +231,50 @@ struct StudyDirectionMenu: View {
         .accessibilityValue(selection.title)
     }
 }
+
+
+private struct ConcentricFloatingActionModifier<FloatingContent: View>: ViewModifier {
+    let floatingContent: FloatingContent
+
+    private let diameter: CGFloat = 62
+    private let fallbackEdgeMargin: CGFloat = 16
+
+    func body(content: Content) -> some View {
+        content
+            .overlay {
+                GeometryReader { geometry in
+                    let corner = geometry.containerCornerInsets.bottomTrailing
+                    let minimumCenterInset =
+                        (diameter / 2) + fallbackEdgeMargin
+
+                    floatingContent
+                        .position(
+                            x: geometry.size.width - max(
+                                corner.width,
+                                minimumCenterInset
+                            ),
+                            y: geometry.size.height - max(
+                                corner.height,
+                                minimumCenterInset
+                            )
+                        )
+                }
+                .ignoresSafeArea(
+                    .container,
+                    edges: [.bottom, .trailing]
+                )
+            }
+    }
+}
+
+extension View {
+    func concentricFloatingAction<FloatingContent: View>(
+        @ViewBuilder content: () -> FloatingContent
+    ) -> some View {
+        modifier(
+            ConcentricFloatingActionModifier(
+                floatingContent: content()
+            )
+        )
+    }
+}

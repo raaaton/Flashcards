@@ -94,7 +94,7 @@ struct FolderDetailView: View {
             }
 
         }
-        .overlay(alignment: .bottomTrailing) {
+        .concentricFloatingAction {
             Button {
                 showingNewDeck = true
             } label: {
@@ -110,9 +110,7 @@ struct FolderDetailView: View {
                     )
             }
             .buttonStyle(.plain)
-            .padding(.trailing, 24)
-            .padding(.bottom, 24)
-            .accessibilityLabel("Nouveau deck")
+             .accessibilityLabel("Nouveau deck")
             .accessibilityHint("Créer un nouveau deck dans ce dossier")
         }
         .sheet(isPresented: $showingNewDeck) {

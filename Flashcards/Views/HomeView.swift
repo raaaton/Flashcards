@@ -118,12 +118,7 @@ struct HomeView: View {
                 }
             }
         }
-        .overlay(alignment: .bottomTrailing) {
-            addMenu
-                .padding(.trailing, 24)
-                .padding(.bottom, 24)
-        }
-        .sheet(isPresented: $showingNewFolder) {
+         .sheet(isPresented: $showingNewFolder) {
             FolderFormView()
         }
         .sheet(isPresented: $showingNewDeck) {
@@ -310,6 +305,9 @@ struct HomeView: View {
         .animation(.spring(duration: 0.35), value: orphanedDeckCount)
         .animation(.spring(duration: 0.35), value: recentDecks.map(\.id))
         .animation(.spring(duration: 0.35), value: pinnedDecks.map(\.id))
+        .concentricFloatingAction {
+            addMenu
+        }
     }
 
     private var folderEmptyState: some View {
@@ -344,10 +342,12 @@ struct HomeView: View {
         } label: {
             Image(systemName: "plus")
                 .font(.title2.weight(.semibold))
-                .foregroundStyle(Theme.accent)
+                .foregroundStyle(.white)
                 .frame(width: 62, height: 62)
                 .glassEffect(
-                    .regular.interactive(),
+                    .regular
+                        .tint(Theme.accent)
+                        .interactive(),
                     in: .circle
                 )
         }

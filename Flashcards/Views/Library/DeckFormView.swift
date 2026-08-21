@@ -94,9 +94,9 @@ struct DeckFormView: View {
                             )
                             .listRowInsets(
                                 EdgeInsets(
-                                    top: 3,
+                                    top: 5,
                                     leading: 0,
-                                    bottom: 3,
+                                    bottom: 5,
                                     trailing: 0
                                 )
                             )
