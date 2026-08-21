@@ -165,7 +165,6 @@ struct HomeView: View {
                     }
                     .tint(.white)
                     .accessibilityLabel("Rechercher")
-
                 }
             }
         }
@@ -290,8 +289,7 @@ struct HomeView: View {
                     } label: {
                         Label(
                             "Importer des cartes",
-                            systemImage:
-                                "square.and.arrow.down"
+                            systemImage: "square.and.arrow.down"
                         )
                         .font(.headline)
                         .frame(
@@ -464,11 +462,10 @@ struct HomeView: View {
                 .reorderContainer(for: Folder.self, itemID: \.id) { difference in
                     applyFolderReorder(difference)
                 }
-                .onDropSessionUpdated { session in
-                    handleFolderDropSessionUpdate(session)
+                .dropConfiguration { session in
+                    folderDropConfiguration(session)
                 }
                 .padding(.horizontal)
-
             }
             .padding(.top, 8)
             .padding(.bottom, 108)
@@ -508,27 +505,25 @@ struct HomeView: View {
         folderOrderIDs = persistedIDs
     }
 
-    private func handleFolderDropSessionUpdate(_ session: DropSession) {
+    private func folderDropConfiguration(_ session: DropSession) -> DropConfiguration {
         let destination = session.reorderDestination(
             for: Folder.self,
             itemID: \.id
         )
 
-        if session.phase == .entering {
-            lastFolderReorderDestination = destination
-            return
-        }
-
-        if session.phase == .active {
+        Task { @MainActor in
             guard destination != lastFolderReorderDestination else { return }
             if destination != nil {
                 HapticService.play(.selection)
             }
             lastFolderReorderDestination = destination
-            return
         }
 
-        lastFolderReorderDestination = nil
+        if let destination {
+            return DropConfiguration(operation: .move, destination: destination)
+        }
+
+        return DropConfiguration(operation: .move)
     }
 
     private func applyFolderReorder<CollectionID: Hashable & Sendable>(
@@ -536,6 +531,8 @@ struct HomeView: View {
     ) {
         let sourceIDs = difference.sources
         guard !sourceIDs.isEmpty else { return }
+
+        lastFolderReorderDestination = nil
 
         var reorderedIDs = folderOrderIDs.isEmpty
             ? persistedFolderOrderIDs
@@ -653,7 +650,6 @@ struct HomeView: View {
                     .regular.interactive(),
                     in: .circle
                 )
-
         }
         .buttonStyle(.plain)
         .accessibilityLabel("Ajouter")
