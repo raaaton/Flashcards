@@ -13,6 +13,7 @@ private struct FolderReorderDropDelegate: DropDelegate {
     let destinationID: UUID
     @Binding var draggedFolderID: UUID?
     let moveFolder: (UUID, UUID) -> Void
+    let finishDragging: () -> Void
 
     func dropEntered(info: DropInfo) {
         guard let sourceID = draggedFolderID,
@@ -28,7 +29,7 @@ private struct FolderReorderDropDelegate: DropDelegate {
     }
 
     func performDrop(info: DropInfo) -> Bool {
-        draggedFolderID = nil
+        finishDragging()
         return true
     }
 }
@@ -433,6 +434,7 @@ struct HomeView: View {
                             )
                         }
                         .buttonStyle(.plain)
+                        .opacity(draggedFolderID == folder.id ? 0 : 1)
                         .onDrag {
                             draggedFolderID = folder.id
                             HapticService.play(.selection)
@@ -453,7 +455,8 @@ struct HomeView: View {
                             delegate: FolderReorderDropDelegate(
                                 destinationID: folder.id,
                                 draggedFolderID: $draggedFolderID,
-                                moveFolder: moveFolder
+                                moveFolder: moveFolder,
+                                finishDragging: finishFolderDrag
                             )
                         )
                         .contextMenu {
@@ -542,6 +545,19 @@ struct HomeView: View {
 
         try? modelContext.save()
         HapticService.play(.selection)
+    }
+
+    private func finishFolderDrag() {
+        guard let finishingID = draggedFolderID else { return }
+
+        Task { @MainActor in
+            try? await Task.sleep(for: .milliseconds(80))
+            guard draggedFolderID == finishingID else { return }
+
+            withAnimation(.easeOut(duration: 0.18)) {
+                draggedFolderID = nil
+            }
+        }
     }
 
     private func startFirstDeckCreation() {
