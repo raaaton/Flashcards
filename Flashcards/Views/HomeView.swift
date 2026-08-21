@@ -1,37 +1,11 @@
 import SwiftData
 import SwiftUI
-import UniformTypeIdentifiers
 
 private struct ResumableDeck: Identifiable {
     let deck: Deck
     let snapshot: ActiveStudySessionSnapshot
 
     var id: UUID { deck.id }
-}
-
-private struct FolderReorderDropDelegate: DropDelegate {
-    let destinationID: UUID
-    @Binding var draggedFolderID: UUID?
-    let moveFolder: (UUID, UUID) -> Void
-    let finishDragging: () -> Void
-
-    func dropEntered(info: DropInfo) {
-        guard let sourceID = draggedFolderID,
-              sourceID != destinationID else {
-            return
-        }
-
-        moveFolder(sourceID, destinationID)
-    }
-
-    func dropUpdated(info: DropInfo) -> DropProposal? {
-        DropProposal(operation: .move)
-    }
-
-    func performDrop(info: DropInfo) -> Bool {
-        finishDragging()
-        return true
-    }
 }
 
 struct HomeView: View {
@@ -54,7 +28,6 @@ struct HomeView: View {
     @State private var quickResumeDeck: Deck?
     @State private var quickResumeSnapshot: ActiveStudySessionSnapshot?
     @State private var showingQuickResume = false
-    @State private var draggedFolderID: UUID?
 
     private let columns = [
         GridItem(.flexible(), spacing: 14),
@@ -422,7 +395,7 @@ struct HomeView: View {
                 }
 
                 LazyVGrid(columns: columns, spacing: 14) {
-                    ForEach(orderedFolders) { folder in
+                    ForEach(orderedFolders, id: \.id) { folder in
                         NavigationLink {
                             FolderDetailView(folder: folder)
                         } label: {
@@ -434,31 +407,6 @@ struct HomeView: View {
                             )
                         }
                         .buttonStyle(.plain)
-                        .opacity(draggedFolderID == folder.id ? 0 : 1)
-                        .onDrag {
-                            draggedFolderID = folder.id
-                            HapticService.play(.selection)
-                            return NSItemProvider(
-                                object: folder.id.uuidString as NSString
-                            )
-                        } preview: {
-                            FolderTile(
-                                name: folder.name,
-                                systemImage: folder.iconName,
-                                color: Color(folderHex: folder.colorHex),
-                                deckCount: folder.decks.count
-                            )
-                            .frame(width: 170)
-                        }
-                        .onDrop(
-                            of: [UTType.text],
-                            delegate: FolderReorderDropDelegate(
-                                destinationID: folder.id,
-                                draggedFolderID: $draggedFolderID,
-                                moveFolder: moveFolder,
-                                finishDragging: finishFolderDrag
-                            )
-                        )
                         .contextMenu {
                             Button("Modifier", systemImage: "pencil") { folderToEdit = folder }
                                 .normalActionColor()
@@ -472,6 +420,7 @@ struct HomeView: View {
                             .destructiveActionColor()
                         }
                     }
+                    .reorderable()
 
                     if orphanedDeckCount > 0 {
                         NavigationLink {
@@ -488,13 +437,15 @@ struct HomeView: View {
                         .transition(.scale(scale: 0.92).combined(with: .opacity))
                     }
                 }
+                .reorderContainer(for: Folder.self, itemID: \.id) { difference in
+                    applyFolderReorder(difference)
+                }
                 .padding(.horizontal)
 
             }
             .padding(.top, 8)
             .padding(.bottom, 108)
         }
-        .animation(.spring(duration: 0.35), value: orderedFolders.map(\.id))
         .animation(.spring(duration: 0.35), value: orphanedDeckCount)
         .animation(.spring(duration: 0.35), value: recentDecks.map(\.id))
         .animation(.spring(duration: 0.35), value: pinnedDecks.map(\.id))
@@ -521,43 +472,41 @@ struct HomeView: View {
         .padding(.horizontal)
     }
 
-    private func moveFolder(_ sourceID: UUID, _ destinationID: UUID) {
-        var reordered = orderedFolders
+    private func applyFolderReorder<CollectionID: Hashable & Sendable>(
+        _ difference: ReorderDifference<UUID, CollectionID>
+    ) {
+        let sourceIDs = difference.sources
+        guard !sourceIDs.isEmpty else { return }
 
-        guard let sourceIndex = reordered.firstIndex(where: { $0.id == sourceID }),
-              let destinationIndex = reordered.firstIndex(where: { $0.id == destinationID }),
-              sourceIndex != destinationIndex else {
-            return
+        var reorderedIDs = orderedFolders.map(\.id)
+        let sourceSet = Set(sourceIDs)
+        reorderedIDs.removeAll { sourceSet.contains($0) }
+
+        let destinationIndex: Int
+        switch difference.destination.position {
+        case let .before(destinationID):
+            guard let index = reorderedIDs.firstIndex(of: destinationID) else {
+                return
+            }
+            destinationIndex = index
+        case .end:
+            destinationIndex = reorderedIDs.endIndex
         }
 
-        withAnimation(.snappy(duration: 0.24)) {
-            reordered.move(
-                fromOffsets: IndexSet(integer: sourceIndex),
-                toOffset: destinationIndex > sourceIndex
-                    ? destinationIndex + 1
-                    : destinationIndex
-            )
+        reorderedIDs.insert(contentsOf: sourceIDs, at: destinationIndex)
 
-            for (index, folder) in reordered.enumerated() {
-                folder.sortOrder = index
+        let sortOrderByID = Dictionary(
+            uniqueKeysWithValues: reorderedIDs.enumerated().map {
+                ($0.element, $0.offset)
             }
+        )
+
+        for folder in folders {
+            guard let sortOrder = sortOrderByID[folder.id] else { continue }
+            folder.sortOrder = sortOrder
         }
 
         try? modelContext.save()
-        HapticService.play(.selection)
-    }
-
-    private func finishFolderDrag() {
-        guard let finishingID = draggedFolderID else { return }
-
-        Task { @MainActor in
-            try? await Task.sleep(for: .milliseconds(80))
-            guard draggedFolderID == finishingID else { return }
-
-            withAnimation(.easeOut(duration: 0.18)) {
-                draggedFolderID = nil
-            }
-        }
     }
 
     private func startFirstDeckCreation() {
