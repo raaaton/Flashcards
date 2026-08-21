@@ -183,16 +183,18 @@ struct DeckDetailView: View {
                 Spacer()
 
                 Menu {
-                    Button("Effacer l’historique", systemImage: "trash", role: .destructive) {
+                    Button(role: .destructive) {
                         confirmingHistoryReset = true
+                    } label: {
+                        Label("Effacer l’historique", systemImage: "trash")
                     }
+                    .tint(.red)
                 } label: {
                     Image(systemName: "ellipsis")
                         .neutralIconColor()
                         .frame(minWidth: 36, minHeight: 36)
                         .contentShape(.rect)
                 }
-                .tint(.white)
                 .accessibilityLabel("Actions de l’historique")
             }
 
@@ -227,9 +229,12 @@ struct DeckDetailView: View {
                     .padding(.vertical, 12)
                     .contentShape(.rect)
                     .contextMenu {
-                        Button("Supprimer", systemImage: "trash", role: .destructive) {
+                        Button(role: .destructive) {
                             deleteHistoryEntry(entry.id)
+                        } label: {
+                            Label("Supprimer", systemImage: "trash")
                         }
+                        .tint(.red)
                     }
 
                     if entry.id != deck.studyHistory.prefix(5).last?.id {
