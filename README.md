@@ -17,7 +17,7 @@ Built entirely with SwiftUI, SwiftData, Apple system APIs and ❤️.
 ## Development Build
 
 <!-- DEV_IPA_START -->
-[⬇️ **Download latest development IPA**](https://github.com/raaaton/Flashcards/releases/download/dev/Flashcards-v1.10.3.ipa)
+[⬇️ **Download latest development IPA**](https://github.com/raaaton/Flashcards/releases/download/dev/Flashcards-v1.10.4.ipa)
 <!-- DEV_IPA_END -->
 
 > Built automatically from the latest commit on `main`. Development builds may be unstable.
