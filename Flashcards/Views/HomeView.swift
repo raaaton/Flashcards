@@ -343,7 +343,7 @@ struct HomeView: View {
             Image(systemName: "plus")
                 .font(.title.weight(.semibold))
                 .foregroundStyle(.white)
-                .frame(width: 78, height: 78)
+                .frame(width: 72, height: 72)
                 .glassEffect(
                     .regular.interactive(),
                     in: .circle

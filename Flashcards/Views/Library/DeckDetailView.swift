@@ -261,7 +261,14 @@ struct DeckDetailView: View {
         if Date.now.timeIntervalSince(date) < 60 {
             Text("Il y a <1 min")
         } else {
-            Text(date, style: .relative)
+            Text(
+                date.formatted(
+                    .relative(
+                        presentation: .numeric,
+                        unitsStyle: .narrow
+                    )
+                )
+            )
         }
     }
 

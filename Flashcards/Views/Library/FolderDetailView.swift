@@ -101,7 +101,7 @@ struct FolderDetailView: View {
                 Image(systemName: "rectangle.stack.badge.plus")
                     .font(.title.weight(.semibold))
                     .foregroundStyle(.white)
-                    .frame(width: 78, height: 78)
+                    .frame(width: 72, height: 72)
                     .glassEffect(
                         .regular.tint(accent).interactive(),
                         in: .circle
