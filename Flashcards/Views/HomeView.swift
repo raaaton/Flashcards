@@ -1,11 +1,36 @@
 import SwiftData
 import SwiftUI
+import UniformTypeIdentifiers
 
 private struct ResumableDeck: Identifiable {
     let deck: Deck
     let snapshot: ActiveStudySessionSnapshot
 
     var id: UUID { deck.id }
+}
+
+private struct FolderReorderDropDelegate: DropDelegate {
+    let destinationID: UUID
+    @Binding var draggedFolderID: UUID?
+    let moveFolder: (UUID, UUID) -> Void
+
+    func dropEntered(info: DropInfo) {
+        guard let sourceID = draggedFolderID,
+              sourceID != destinationID else {
+            return
+        }
+
+        moveFolder(sourceID, destinationID)
+    }
+
+    func dropUpdated(info: DropInfo) -> DropProposal? {
+        DropProposal(operation: .move)
+    }
+
+    func performDrop(info: DropInfo) -> Bool {
+        draggedFolderID = nil
+        return true
+    }
 }
 
 struct HomeView: View {
@@ -28,6 +53,7 @@ struct HomeView: View {
     @State private var quickResumeDeck: Deck?
     @State private var quickResumeSnapshot: ActiveStudySessionSnapshot?
     @State private var showingQuickResume = false
+    @State private var draggedFolderID: UUID?
 
     private let columns = [
         GridItem(.flexible(), spacing: 14),
@@ -36,6 +62,18 @@ struct HomeView: View {
 
     private var orphanedDeckCount: Int {
         decks.count { $0.folder == nil }
+    }
+
+    private var orderedFolders: [Folder] {
+        folders.sorted { lhs, rhs in
+            if lhs.sortOrder == rhs.sortOrder {
+                if lhs.createdAt == rhs.createdAt {
+                    return lhs.id.uuidString < rhs.id.uuidString
+                }
+                return lhs.createdAt < rhs.createdAt
+            }
+            return lhs.sortOrder < rhs.sortOrder
+        }
     }
 
     private var recentDecks: [Deck] {
@@ -383,7 +421,7 @@ struct HomeView: View {
                 }
 
                 LazyVGrid(columns: columns, spacing: 14) {
-                    ForEach(folders) { folder in
+                    ForEach(orderedFolders) { folder in
                         NavigationLink {
                             FolderDetailView(folder: folder)
                         } label: {
@@ -395,6 +433,29 @@ struct HomeView: View {
                             )
                         }
                         .buttonStyle(.plain)
+                        .onDrag {
+                            draggedFolderID = folder.id
+                            HapticService.play(.selection)
+                            return NSItemProvider(
+                                object: folder.id.uuidString as NSString
+                            )
+                        } preview: {
+                            FolderTile(
+                                name: folder.name,
+                                systemImage: folder.iconName,
+                                color: Color(folderHex: folder.colorHex),
+                                deckCount: folder.decks.count
+                            )
+                            .frame(width: 170)
+                        }
+                        .onDrop(
+                            of: [UTType.text],
+                            delegate: FolderReorderDropDelegate(
+                                destinationID: folder.id,
+                                draggedFolderID: $draggedFolderID,
+                                moveFolder: moveFolder
+                            )
+                        )
                         .contextMenu {
                             Button("Modifier", systemImage: "pencil") { folderToEdit = folder }
                                 .normalActionColor()
@@ -430,7 +491,7 @@ struct HomeView: View {
             .padding(.top, 8)
             .padding(.bottom, 108)
         }
-        .animation(.spring(duration: 0.35), value: folders.map(\.id))
+        .animation(.spring(duration: 0.35), value: orderedFolders.map(\.id))
         .animation(.spring(duration: 0.35), value: orphanedDeckCount)
         .animation(.spring(duration: 0.35), value: recentDecks.map(\.id))
         .animation(.spring(duration: 0.35), value: pinnedDecks.map(\.id))
@@ -455,6 +516,32 @@ struct HomeView: View {
         .padding(18)
         .background(Theme.cardBackground, in: .rect(cornerRadius: 18, style: .continuous))
         .padding(.horizontal)
+    }
+
+    private func moveFolder(_ sourceID: UUID, _ destinationID: UUID) {
+        var reordered = orderedFolders
+
+        guard let sourceIndex = reordered.firstIndex(where: { $0.id == sourceID }),
+              let destinationIndex = reordered.firstIndex(where: { $0.id == destinationID }),
+              sourceIndex != destinationIndex else {
+            return
+        }
+
+        withAnimation(.snappy(duration: 0.24)) {
+            reordered.move(
+                fromOffsets: IndexSet(integer: sourceIndex),
+                toOffset: destinationIndex > sourceIndex
+                    ? destinationIndex + 1
+                    : destinationIndex
+            )
+
+            for (index, folder) in reordered.enumerated() {
+                folder.sortOrder = index
+            }
+        }
+
+        try? modelContext.save()
+        HapticService.play(.selection)
     }
 
     private func startFirstDeckCreation() {
@@ -564,5 +651,4 @@ struct HomeView: View {
         quickResumeSnapshot = resumable.snapshot
         showingQuickResume = true
     }
-
 }

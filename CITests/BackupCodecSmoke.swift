@@ -35,7 +35,8 @@ enum BackupCodecSmoke {
                     name: "Dossier",
                     createdAt: date,
                     iconName: "graduationcap.fill",
-                    colorHex: "FF9500"
+                    colorHex: "FF9500",
+                    sortOrder: 3
                 )
             ],
             decks: [
@@ -60,6 +61,7 @@ enum BackupCodecSmoke {
         precondition(decoded == envelope)
         precondition(decoded.folders[0].iconName == "graduationcap.fill")
         precondition(decoded.folders[0].colorHex == "FF9500")
+        precondition(decoded.folders[0].sortOrder == 3)
         precondition(decoded.decks[0].completedStudySessions == 7)
         precondition(decoded.decks[0].activeStudySessionData == Data("resume".utf8))
         precondition(decoded.decks[0].lastOpenedAt == date.addingTimeInterval(120))
@@ -73,6 +75,7 @@ enum BackupCodecSmoke {
         var legacyFolders = legacyJSON["folders"] as! [[String: Any]]
         legacyFolders[0].removeValue(forKey: "iconName")
         legacyFolders[0].removeValue(forKey: "colorHex")
+        legacyFolders[0].removeValue(forKey: "sortOrder")
         legacyJSON["folders"] = legacyFolders
         var legacyDecks = legacyJSON["decks"] as! [[String: Any]]
         legacyDecks[0].removeValue(forKey: "completedStudySessions")
@@ -89,6 +92,7 @@ enum BackupCodecSmoke {
         let decodedLegacy = try BackupCodec.decode(legacyData)
         precondition(decodedLegacy.folders[0].iconName == "folder.fill")
         precondition(decodedLegacy.folders[0].colorHex == "5856D6")
+        precondition(decodedLegacy.folders[0].sortOrder == Int.max)
         precondition(decodedLegacy.decks[0].completedStudySessions == 0)
         precondition(decodedLegacy.decks[0].activeStudySessionData == nil)
         precondition(decodedLegacy.decks[0].lastOpenedAt == nil)

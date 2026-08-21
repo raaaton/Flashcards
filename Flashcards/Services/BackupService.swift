@@ -27,7 +27,14 @@ enum BackupService {
     static func databaseEnvelope(folders: [Folder], decks: [Deck]) -> BackupEnvelopeV1 {
         BackupEnvelopeV1(
             scope: .database,
-            folders: folders.map(folderDTO),
+            folders: folders
+                .sorted {
+                    if $0.sortOrder == $1.sortOrder {
+                        return $0.createdAt < $1.createdAt
+                    }
+                    return $0.sortOrder < $1.sortOrder
+                }
+                .map(folderDTO),
             decks: decks.map(deckDTO)
         )
     }
@@ -74,12 +81,14 @@ enum BackupService {
                     folder.createdAt = dto.createdAt
                     folder.iconName = dto.iconName
                     folder.colorHex = dto.colorHex
+                    folder.sortOrder = dto.sortOrder
                     report.updatedFolders += 1
                 } else {
                     let folder = Folder(
                         name: dto.name,
                         iconName: dto.iconName,
-                        colorHex: dto.colorHex
+                        colorHex: dto.colorHex,
+                        sortOrder: dto.sortOrder
                     )
                     folder.id = dto.id
                     folder.createdAt = dto.createdAt
@@ -155,7 +164,8 @@ enum BackupService {
             name: folder.name,
             createdAt: folder.createdAt,
             iconName: folder.iconName,
-            colorHex: folder.colorHex
+            colorHex: folder.colorHex,
+            sortOrder: folder.sortOrder
         )
     }
 

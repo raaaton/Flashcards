@@ -11,23 +11,26 @@ struct BackupFolderDTO: Codable, Equatable, Identifiable, Sendable {
     var createdAt: Date
     var iconName: String
     var colorHex: String
+    var sortOrder: Int
 
     init(
         id: UUID,
         name: String,
         createdAt: Date,
         iconName: String = "folder.fill",
-        colorHex: String = "5856D6"
+        colorHex: String = "5856D6",
+        sortOrder: Int = Int.max
     ) {
         self.id = id
         self.name = name
         self.createdAt = createdAt
         self.iconName = iconName
         self.colorHex = colorHex
+        self.sortOrder = sortOrder
     }
 
     private enum CodingKeys: String, CodingKey {
-        case id, name, createdAt, iconName, colorHex
+        case id, name, createdAt, iconName, colorHex, sortOrder
     }
 
     init(from decoder: Decoder) throws {
@@ -37,6 +40,7 @@ struct BackupFolderDTO: Codable, Equatable, Identifiable, Sendable {
         createdAt = try container.decode(Date.self, forKey: .createdAt)
         iconName = try container.decodeIfPresent(String.self, forKey: .iconName) ?? "folder.fill"
         colorHex = try container.decodeIfPresent(String.self, forKey: .colorHex) ?? "5856D6"
+        sortOrder = try container.decodeIfPresent(Int.self, forKey: .sortOrder) ?? Int.max
     }
 }
 
@@ -247,7 +251,12 @@ enum BackupMerger {
         return BackupEnvelopeV1(
             exportedAt: incoming.exportedAt,
             scope: .database,
-            folders: folders.values.sorted { $0.createdAt < $1.createdAt },
+            folders: folders.values.sorted {
+                if $0.sortOrder == $1.sortOrder {
+                    return $0.createdAt < $1.createdAt
+                }
+                return $0.sortOrder < $1.sortOrder
+            },
             decks: decks.values.sorted { $0.createdAt < $1.createdAt }
         )
     }
