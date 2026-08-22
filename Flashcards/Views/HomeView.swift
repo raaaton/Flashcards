@@ -480,7 +480,7 @@ struct HomeView: View {
         }
         .onChange(of: folders.map(\.id), initial: true) { _, _ in
             synchronizeFolderOrderFromPersistence()
-            resetFolderReorderHapticTracking()
+            resetFolderReorderHapticState()
         }
         .animation(.spring(duration: 0.35), value: orphanedDeckCount)
         .animation(.spring(duration: 0.35), value: recentDecks.map(\.id))
@@ -514,7 +514,7 @@ struct HomeView: View {
         folderOrderIDs = persistedIDs
     }
 
-    private func resetFolderReorderHapticTracking() {
+    private func resetFolderReorderHapticState() {
         folderReorderHapticRevision += 1
         let revision = folderReorderHapticRevision
 
