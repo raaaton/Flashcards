@@ -13,7 +13,7 @@ The product intentionally avoids infrastructure that is unnecessary for a person
 - no account system
 - no backend
 - no cloud database
-- no runtime network requests
+- no in-app runtime network requests
 - no analytics or telemetry
 - no advertising
 - no third-party SDKs
@@ -21,6 +21,8 @@ The product intentionally avoids infrastructure that is unnecessary for a person
 - no app entitlements
 - no CloudKit synchronization
 - JSON export/restore for user-owned data
+
+The optional Create with AI flow is a user-initiated handoff to ChatGPT, Claude, or Gemini: Flashcards creates and copies a prompt, opens the provider through the system URL handler, and later parses JSON that the user explicitly pastes back. The provider's app/site owns its own network access, document upload, account state, and AI processing. Flashcards does not embed an AI model, call an AI API, proxy requests, or upload the user's study documents itself.
 
 The app should feel like an Apple-native utility rather than a cross-platform product ported to iOS.
 
@@ -37,7 +39,8 @@ The app should feel like an Apple-native utility rather than a cross-platform pr
 | Localization | String Catalog + `L10n` helpers |
 | Dependencies | None |
 | Backend | None |
-| Runtime network | None |
+| In-app runtime network | None |
+| AI integration | External user-controlled handoff only |
 | CloudKit | Explicitly disabled |
 | App target count | 1 |
 | Bundle identifier | `com.raton.flashcards` |
@@ -60,6 +63,8 @@ When reproducing an Apple interaction, behavior matters as much as appearance. D
 
 All core workflows must work without a network connection. A feature must not silently introduce a server, API request, remote database, telemetry endpoint, or remote configuration dependency.
 
+Optional external handoffs may open another app/site only after an explicit user action. They must remain nonessential to manual creation, import, study, backup, restore, and all other core local workflows.
+
 ### User-owned data
 
 Folders, decks, cards, card order, folder order, study progress, starred state, resumable sessions, pin state, and study history belong to the user. Persistent state should be exportable when it is part of the user's library experience.
@@ -78,18 +83,21 @@ The current v2 visual system is intentionally fixed rather than theme-selectable
 
 - brand accent: mint `#46D7A7`
 - `AppAccent` currently has exactly one case: `.mint`
-- black / white / system gray provide structure
+- roughly 90–95% of the interface should read as black / white / system gray / material
+- mint is a selective signature rather than the default color of every action or surface
+- primary CTAs, progress, selected states, success, and small brand details are appropriate mint uses
+- repeated library icon surfaces are neutral with white symbols
+- large study-mode tiles are neutral rather than solid mint
 - red is reserved for destructive actions and exact-duplicate warnings
 - orange is used for possible-duplicate warnings
 - folder cards are neutral system-gray surfaces
-- folder icon surfaces use mint
-- deck accents resolve to the global mint accent
+- deck accents still resolve to the global mint accent when a semantic accent is requested
 - system typography and SF Symbols are preferred
 - continuous rounded shapes are used throughout
 - Liquid Glass is used selectively for native floating controls
 - the app itself currently renders dark-only even though the app icon has appearance-specific variants
 
-`Theme.deckAccent(for:)` currently returns the global accent and does not derive a visible color from a folder.
+`Theme.deckAccent(for:)` currently returns the global accent and does not derive a visible color from a folder. `Theme.iconSurface` and `NeutralIconBadge` provide the shared neutral treatment for repeated folder/deck glyphs.
 
 ### Legacy folder color compatibility
 
@@ -348,7 +356,7 @@ Localization mechanisms:
 - `L10n.format(...)` for formatted strings
 - domain helpers such as `L10n.cards`, `L10n.decks`, and `L10n.questions`
 
-`L10n` resolves the selected language directly from the `settings.language` UserDefaults key. It also contains a small set of inline FR/EN/DE/ES translations for duplicate warnings/actions.
+`L10n` resolves the selected language directly from the `settings.language` UserDefaults key. It also contains inline FR/EN/DE/ES translations for duplicate warnings/actions and the external-AI creation flow.
 
 ### Important CI constraint
 
@@ -391,7 +399,7 @@ Pinned decks are filtered by `isPinned` and sorted by last-opened time, falling 
 
 ### Folders
 
-Folders are shown in a two-column `LazyVGrid` with neutral `FolderTile` cards, mint circular icon surfaces, title, and deck count.
+Folders are shown in a two-column `LazyVGrid` with neutral `FolderTile` cards, white SF Symbols on neutral icon surfaces, title, and deck count.
 
 An Unfiled entry appears when one or more decks have `folder == nil`.
 
@@ -399,8 +407,8 @@ An Unfiled entry appears when one or more decks have `folder == nil`.
 
 When there are no folders and no decks, Home shows a first-deck flow that can:
 
-- create a deck directly
-- create a folder first
+- create a deck directly, including the same AI/manual creation choice as later decks
+- create a folder first, then continue into deck creation
 - import cards / backup data
 
 ## 11. Folder reordering and drag behavior
@@ -453,7 +461,7 @@ Folder pages provide:
 
 Deck rows/tiles use:
 
-- mint deck glyph surface
+- a white deck glyph on a neutral reusable icon surface
 - one-line deck title
 - card count metadata
 - optional folder context
@@ -472,7 +480,15 @@ Folder deletion can either preserve decks by moving them to Unfiled or delete th
 
 ## 13. Card creation and editing
 
-`DeckFormView` handles both deck editing and new-deck creation. New decks can be created with several initial card drafts in one flow.
+`DeckFormView` is the public entry point for deck creation/editing.
+
+For an existing deck, it opens the existing editor behavior directly. For a new deck, it coordinates a staged flow:
+
+1. choose the deck name
+2. choose **Create with AI — Recommended** or **Create manually**
+3. continue into the existing card editor with either empty manual drafts or parsed AI drafts
+
+The manual path deliberately reuses `DeckEditorForm` and the previous card-draft/save behavior rather than introducing a separate persistence path.
 
 `CardFormView` handles adding/editing an individual card.
 
@@ -485,6 +501,32 @@ Key rules:
 - new-deck initial drafts may be added/removed
 - incomplete non-empty drafts block save
 - duplicate analysis runs before committing relevant card creation/editing
+
+### External AI deck creation
+
+`NewDeckCreationFlow`, `ExternalAIProvider`, `ExternalAIFlashcardPromptBuilder`, and `ExternalAIFlashcardParser` implement the optional provider handoff.
+
+Provider behavior:
+
+- ChatGPT is presented first/recommended
+- Claude and Gemini are also available
+- the generated prompt is copied to `UIPasteboard` before every provider launch
+- provider launch uses stable public HTTPS entry points
+- the feature does not depend on undocumented prompt-prefill parameters
+- if a provider does not prefill the composer, the user pastes the already-copied prompt manually
+- source notes/images/documents are attached inside the provider, not read or uploaded by Flashcards
+
+Return/import behavior:
+
+- the AI prompt requests a strict JSON object with a `flashcards` array
+- the response tells the user to copy the JSON block and return to Flashcards
+- the parser accepts the expected object, fenced JSON embedded in explanatory text, and a bare top-level array as a defensive fallback
+- terms/definitions are trimmed and every imported entry must have both fields
+- valid output becomes `[ParsedCard]`
+- parsed cards are passed into the same editable new-deck draft UI used by manual creation
+- the same `BulkDuplicateDetector` and final SwiftData save path are reused
+
+No AI state is persisted and no AI response is sent anywhere by Flashcards.
 
 `EditCardsView` provides multi-card management including:
 
@@ -519,7 +561,7 @@ The detector compares candidates against:
 
 Current duplicate handling is used in:
 
-- new-deck card drafts
+- new-deck card drafts, including external-AI-imported drafts
 - individual card creation
 - card editing
 - bulk import
@@ -559,7 +601,9 @@ Parser behavior:
 - both sides are trimmed
 - missing delimiter / empty term / empty definition produce localized invalid-record reasons
 
-Everything runs locally.
+`BulkImportParser.swift` also hosts the Foundation-only external-AI provider/prompt/JSON parsing helpers so they can reuse `ParsedCard` and be exercised by the same smoke-test target without introducing another project file or UI dependency.
+
+Everything in both parsing paths runs locally.
 
 ## 16. Study flow
 
@@ -839,6 +883,8 @@ Do not assume a layered `.icon` edit automatically updates the static PNG path.
 
 The workflow compiles them directly with `xcrun swiftc -swift-version 6` and only the required source files.
 
+`BulkImportParserSmoke.swift` covers both the configurable plain-text importer and the external-AI JSON parser/prompt/provider helpers, including fenced JSON, punctuation-safe content, invalid/incomplete records, empty results, and provider host invariants.
+
 This is why service files used by these tests should stay deterministic and avoid unnecessary SwiftUI/UIKit/app-model dependencies.
 
 ## 24. GitHub Actions pipeline
@@ -944,7 +990,7 @@ Current examples:
 - library mutations → `LibraryActions`
 - backup DTO/codec/merge → `BackupModels`
 - SwiftData backup import/export → `BackupService`
-- text parsing and duplicate analysis → `BulkImportParser`
+- text parsing, duplicate analysis, and external-AI JSON/prompt/provider helpers → `BulkImportParser`
 - flashcard session state/persistence → `StudySessionState`
 - test generation/state → `TestSessionState`
 - haptics → `HapticService`
@@ -967,7 +1013,7 @@ Prefer:
 Avoid:
 
 - third-party dependencies
-- runtime network features
+- in-app runtime network features
 - remote state
 - speculative architecture layers
 - unrelated refactors during a feature fix
@@ -990,14 +1036,19 @@ Icon Composer appearance rendering can differ between Light, Dark, Clear, and Ti
 
 Some current CI assertions grep exact source literals. Refactors that are semantically harmless can still fail CI. Inspect the workflow before renaming/removing audited strings or helpers.
 
+### External provider handoff
+
+Provider websites/apps can change their URL handling independently of Flashcards. Keep clipboard copy as the reliable path, avoid depending on undocumented query parameters, and manually validate the ChatGPT/Claude/Gemini open-return experience on a real iPhone when this flow changes.
+
 ## 30. Definition of project consistency
 
 A repository change is architecturally consistent when:
 
-- the app remains native/local/offline
+- the app remains native/local/offline for all core workflows
+- optional external handoffs stay explicit and do not become a backend/API dependency
 - the data model and backup behavior remain compatible where relevant
 - user-visible strings follow localization conventions
-- v2 mint/neutral visual semantics remain coherent
+- the monochrome-first / selective-mint visual semantics remain coherent
 - direct-manipulation behavior remains spatially understandable
 - smoke tests cover changed deterministic logic when practical
 - CI assertions still describe the intended product
