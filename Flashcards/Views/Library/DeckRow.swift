@@ -44,37 +44,58 @@ struct DeckRow: View {
 struct DeckTile: View {
     let deck: Deck
 
-    private var folderIcon: String {
-        deck.folder?.iconName ?? "tray.fill"
+    private var folderName: String? {
+        deck.folder?.name
     }
 
-    private var folderColor: Color {
+    private var iconColor: Color {
         Theme.accent
     }
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 16) {
-            Image(systemName: folderIcon)
-                .font(.title2.weight(.semibold))
-                .foregroundStyle(Theme.foreground(on: folderColor))
-                .frame(width: 44, height: 44)
-                .background(folderColor.gradient, in: .circle)
+        HStack(spacing: 14) {
+            Image(systemName: "rectangle.stack.fill")
+                .font(.system(size: 18, weight: .semibold))
+                .foregroundStyle(Theme.foreground(on: iconColor))
+                .frame(width: 42, height: 42)
+                .background(
+                    iconColor.gradient,
+                    in: .rect(cornerRadius: 13, style: .continuous)
+                )
 
-            VStack(alignment: .leading, spacing: 3) {
+            VStack(alignment: .leading, spacing: 4) {
                 Text(deck.name)
                     .font(.headline)
                     .foregroundStyle(.primary)
                     .lineLimit(1)
                     .truncationMode(.tail)
-                Text(L10n.cards(deck.cards.count))
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
+
+                HStack(spacing: 6) {
+                    Text(L10n.cards(deck.cards.count))
+
+                    if let folderName {
+                        Text("•")
+                            .foregroundStyle(.tertiary)
+                        Text(folderName)
+                            .lineLimit(1)
+                            .truncationMode(.tail)
+                    }
+                }
+                .font(.subheadline)
+                .foregroundStyle(.secondary)
             }
+
+            Spacer(minLength: 8)
+
+            Image(systemName: "chevron.right")
+                .font(.caption.weight(.bold))
+                .foregroundStyle(.tertiary)
         }
-        .frame(maxWidth: .infinity, minHeight: 112, maxHeight: 112, alignment: .leading)
-        .padding(16)
-        .background(Theme.cardBackground, in: .rect(cornerRadius: 22, style: .continuous))
-        .contentShape(.rect(cornerRadius: 22, style: .continuous))
+        .frame(maxWidth: .infinity, minHeight: 42, alignment: .leading)
+        .padding(.horizontal, 15)
+        .padding(.vertical, 12)
+        .background(Theme.cardBackground, in: .rect(cornerRadius: 18, style: .continuous))
+        .contentShape(.rect(cornerRadius: 18, style: .continuous))
         .accessibilityElement(children: .combine)
         .accessibilityHint("Ouvrir ce deck")
     }
@@ -168,9 +189,7 @@ struct DeckSearchView: View {
                                             FolderTile(
                                                 name: folder.name,
                                                 systemImage: folder.iconName,
-                                                color: Color(folderHex: folder.colorHex),
-                                                deckCount: folder.decks.count,
-                                                showsMintGradient: false
+                                                deckCount: folder.decks.count
                                             )
                                         }
                                         .buttonStyle(.plain)
@@ -180,7 +199,7 @@ struct DeckSearchView: View {
 
                             if !matchingDecks.isEmpty {
                                 resultHeader("Decks", systemImage: "rectangle.stack")
-                                LazyVGrid(columns: columns, spacing: 14) {
+                                LazyVStack(spacing: 10) {
                                     ForEach(matchingDecks) { deck in
                                         NavigationLink {
                                             DeckDetailView(deck: deck)

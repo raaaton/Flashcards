@@ -15,7 +15,7 @@ enum HapticEvent {
 enum HapticService {
     private static var completionEngine: CHHapticEngine?
     private static let selectionGenerator = UIImpactFeedbackGenerator(style: .rigid)
-    private static let reorderGenerator = UISelectionFeedbackGenerator()
+    private static let reorderGenerator = UIImpactFeedbackGenerator(style: .rigid)
 
     static func play(_ event: HapticEvent) {
         guard AppPreferences.hapticsEnabled else { return }
@@ -27,7 +27,7 @@ enum HapticService {
             selectionGenerator.prepare()
         case .reorder:
             reorderGenerator.prepare()
-            reorderGenerator.selectionChanged()
+            reorderGenerator.impactOccurred(intensity: 0.82)
             reorderGenerator.prepare()
         case .flip:
             let generator = UIImpactFeedbackGenerator(style: .soft)

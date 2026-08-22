@@ -8,11 +8,6 @@ private struct ResumableDeck: Identifiable {
     var id: UUID { deck.id }
 }
 
-private enum FolderReorderHapticDestination: Equatable {
-    case before(UUID)
-    case end
-}
-
 struct HomeView: View {
     @Environment(\.modelContext) private var modelContext
     @Environment(AppSettings.self) private var settings
@@ -35,9 +30,15 @@ struct HomeView: View {
     @State private var showingQuickResume = false
     @State private var folderOrderIDs: [UUID] = []
     @State private var folderOrderRevision = 0
-    @State private var folderReorderHapticDestination: FolderReorderHapticDestination?
+    @State private var folderReorderVisualSlots: [UUID: Int] = [:]
+    @State private var folderReorderHapticsArmed = false
+    @State private var folderReorderHapticPending = false
+    @State private var folderReorderHapticRevision = 0
 
-    private let columns = [
+    private static let folderReorderCoordinateSpace = "folder-reorder-grid"
+    private let folderGridSpacing: CGFloat = 14
+    private let folderColumnCount = 2
+    private let folderColumns = [
         GridItem(.flexible(), spacing: 14),
         GridItem(.flexible(), spacing: 14)
     ]
@@ -378,7 +379,7 @@ struct HomeView: View {
                         .font(.title2.bold())
                         .padding(.horizontal)
 
-                    LazyVGrid(columns: columns, spacing: 14) {
+                    LazyVStack(spacing: 10) {
                         ForEach(recentDecks) { deck in
                             NavigationLink {
                                 DeckDetailView(deck: deck)
@@ -399,7 +400,7 @@ struct HomeView: View {
                         .padding(.horizontal)
                         .padding(.top, 10)
 
-                    LazyVGrid(columns: columns, spacing: 14) {
+                    LazyVStack(spacing: 10) {
                         ForEach(pinnedDecks) { deck in
                             NavigationLink {
                                 DeckDetailView(deck: deck)
@@ -422,7 +423,7 @@ struct HomeView: View {
                     folderEmptyState
                 }
 
-                LazyVGrid(columns: columns, spacing: 14) {
+                LazyVGrid(columns: folderColumns, spacing: folderGridSpacing) {
                     ForEach(displayedFolders, id: \.id) { folder in
                         NavigationLink {
                             FolderDetailView(folder: folder)
@@ -430,11 +431,15 @@ struct HomeView: View {
                             FolderTile(
                                 name: folder.name,
                                 systemImage: folder.iconName,
-                                color: Color(folderHex: folder.colorHex),
                                 deckCount: folder.decks.count
                             )
                         }
                         .buttonStyle(.plain)
+                        .onGeometryChange(for: CGRect.self) { proxy in
+                            proxy.frame(in: .named(Self.folderReorderCoordinateSpace))
+                        } action: { frame in
+                            updateFolderReorderVisualSlot(for: folder.id, frame: frame)
+                        }
                         .contextMenu {
                             Button("Modifier", systemImage: "pencil") { folderToEdit = folder }
                                 .normalActionColor()
@@ -457,7 +462,6 @@ struct HomeView: View {
                             FolderTile(
                                 name: L10n.text("folder.unfiled"),
                                 systemImage: "tray.fill",
-                                color: .gray,
                                 deckCount: orphanedDeckCount
                             )
                         }
@@ -465,11 +469,9 @@ struct HomeView: View {
                         .transition(.scale(scale: 0.92).combined(with: .opacity))
                     }
                 }
+                .coordinateSpace(name: Self.folderReorderCoordinateSpace)
                 .reorderContainer(for: Folder.self, itemID: \.id) { difference in
                     applyFolderReorder(difference)
-                }
-                .onDropSessionUpdated { session in
-                    updateFolderReorderHaptic(with: session)
                 }
                 .padding(.horizontal)
             }
@@ -478,6 +480,7 @@ struct HomeView: View {
         }
         .onChange(of: folders.map(\.id), initial: true) { _, _ in
             synchronizeFolderOrderFromPersistence()
+            resetFolderReorderHapticTracking()
         }
         .animation(.spring(duration: 0.35), value: orphanedDeckCount)
         .animation(.spring(duration: 0.35), value: recentDecks.map(\.id))
@@ -511,44 +514,54 @@ struct HomeView: View {
         folderOrderIDs = persistedIDs
     }
 
-    private func updateFolderReorderHaptic(with session: DropSession) {
-        switch session.phase {
-        case .entering:
-            folderReorderHapticDestination = folderReorderDestination(from: session)
-        case .active:
-            guard let destination = folderReorderDestination(from: session) else {
-                return
-            }
+    private func resetFolderReorderHapticTracking() {
+        folderReorderHapticRevision += 1
+        let revision = folderReorderHapticRevision
 
-            guard let previousDestination = folderReorderHapticDestination else {
-                folderReorderHapticDestination = destination
-                return
-            }
+        folderReorderHapticsArmed = false
+        folderReorderHapticPending = false
+        folderReorderVisualSlots.removeAll(keepingCapacity: true)
 
-            guard destination != previousDestination else { return }
-            folderReorderHapticDestination = destination
-            HapticService.play(.reorder)
-        default:
-            folderReorderHapticDestination = nil
+        Task { @MainActor in
+            try? await Task.sleep(for: .milliseconds(180))
+            guard folderReorderHapticRevision == revision else { return }
+            folderReorderHapticsArmed = true
         }
     }
 
-    private func folderReorderDestination(
-        from session: DropSession
-    ) -> FolderReorderHapticDestination? {
-        guard let destination = session.reorderDestination(
-            for: Folder.self,
-            itemID: \.id,
-            in: ReorderableSingleCollectionIdentifier.self
-        ) else {
-            return nil
+    private func updateFolderReorderVisualSlot(for folderID: UUID, frame: CGRect) {
+        guard frame.width > 0, frame.height > 0 else { return }
+
+        let horizontalStride = frame.width + folderGridSpacing
+        let verticalStride = frame.height + folderGridSpacing
+        guard horizontalStride > 0, verticalStride > 0 else { return }
+
+        let rawColumn = Int((frame.minX / horizontalStride).rounded())
+        let column = min(max(rawColumn, 0), folderColumnCount - 1)
+        let row = max(Int((frame.minY / verticalStride).rounded()), 0)
+        let slot = (row * folderColumnCount) + column
+        let previousSlot = folderReorderVisualSlots[folderID]
+
+        folderReorderVisualSlots[folderID] = slot
+
+        guard folderReorderHapticsArmed,
+              let previousSlot,
+              previousSlot != slot else {
+            return
         }
 
-        switch destination.position {
-        case let .before(folderID):
-            return .before(folderID)
-        case .end:
-            return .end
+        playFolderReorderHaptic()
+    }
+
+    private func playFolderReorderHaptic() {
+        guard !folderReorderHapticPending else { return }
+
+        folderReorderHapticPending = true
+        HapticService.play(.reorder)
+
+        Task { @MainActor in
+            try? await Task.sleep(for: .milliseconds(32))
+            folderReorderHapticPending = false
         }
     }
 
@@ -586,8 +599,8 @@ struct HomeView: View {
         reorderedIDs.insert(contentsOf: sourceIDs, at: destinationIndex)
         guard reorderedIDs != previousOrder else { return }
 
-        // The final move callback only persists the reorder. Live haptics are
-        // driven by DropSession destination updates while the drag is active.
+        // Keep the native reordering animation authoritative; visual slot
+        // changes above provide live feedback while this callback persists the drop.
         folderOrderIDs = reorderedIDs
         folderOrderRevision += 1
         let revision = folderOrderRevision
