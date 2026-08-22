@@ -399,7 +399,7 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 0.1;
+				CURRENT_PROJECT_VERSION = 1.0;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_KEY_CFBundleDisplayName = Flashcards;
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.education";
@@ -408,7 +408,7 @@
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
 				INFOPLIST_KEY_UIUserInterfaceStyle = Dark;
 				IPHONEOS_DEPLOYMENT_TARGET = 27.0;
-				MARKETING_VERSION = 2.0.1;
+				MARKETING_VERSION = 2.1.0;
 				PRODUCT_BUNDLE_IDENTIFIER = com.raton.flashcards;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SDKROOT = iphoneos;
@@ -426,7 +426,7 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 0.1;
+				CURRENT_PROJECT_VERSION = 1.0;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_KEY_CFBundleDisplayName = Flashcards;
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.education";
@@ -435,7 +435,7 @@
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
 				INFOPLIST_KEY_UIUserInterfaceStyle = Dark;
 				IPHONEOS_DEPLOYMENT_TARGET = 27.0;
-				MARKETING_VERSION = 2.0.1;
+				MARKETING_VERSION = 2.1.0;
 				PRODUCT_BUNDLE_IDENTIFIER = com.raton.flashcards;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SDKROOT = iphoneos;
