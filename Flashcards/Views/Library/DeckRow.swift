@@ -49,14 +49,14 @@ struct DeckTile: View {
     }
 
     private var folderColor: Color {
-        deck.folder.map { Color(folderHex: $0.colorHex) } ?? .gray
+        Theme.accent
     }
 
     var body: some View {
         VStack(alignment: .leading, spacing: 16) {
             Image(systemName: folderIcon)
                 .font(.title2.weight(.semibold))
-                .foregroundStyle(.white)
+                .foregroundStyle(Theme.foreground(on: folderColor))
                 .frame(width: 44, height: 44)
                 .background(folderColor.gradient, in: .circle)
 
