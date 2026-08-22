@@ -277,13 +277,20 @@ struct DeckDetailView: View {
             ? L10n.cards(entry.itemCount)
             : L10n.questions(entry.itemCount)
 
-        return L10n.format(
+        let summary = L10n.format(
             "study.history.summary",
             itemLabel,
             Int64(entry.correctCount),
             Int64(entry.incorrectCount),
             Int64(entry.successRate)
         )
+
+        guard entry.mode == .test,
+              let separator = summary.range(of: " · ") else {
+            return summary
+        }
+
+        return String(summary[separator.upperBound...])
     }
 
     private func deleteHistoryEntry(_ id: UUID) {

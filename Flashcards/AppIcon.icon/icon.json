@@ -67,5 +67,13 @@
   },
   "fill": {
     "solid": "srgb:0.04706,0.05490,0.07059,1.00000"
-  }
+  },
+  "fill-specializations": [
+    {
+      "appearance": "light",
+      "value": {
+        "automatic-gradient": "srgb:0.04706,0.05490,0.07059,1.00000"
+      }
+    }
+  ]
 }
