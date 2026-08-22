@@ -345,6 +345,7 @@ private struct NewDeckCreationFlow: View {
                                 systemImage: "doc.on.clipboard.fill"
                             )
                             .font(.headline)
+                            .foregroundStyle(Theme.foreground(on: Theme.accent))
                             .frame(maxWidth: .infinity, minHeight: 32)
                         }
                         .buttonStyle(.borderedProminent)

@@ -138,14 +138,10 @@ struct FolderDetailView: View {
         } message: {
             Text("Toutes ses cartes seront supprimées définitivement.")
         }
-        .confirmationDialog(
-            "Supprimer ce dossier ?",
-            isPresented: $confirmingFolderDeletion,
-            titleVisibility: .visible
-        ) {
+        .alert("Supprimer ce dossier ?", isPresented: $confirmingFolderDeletion) {
+            Button("Tout supprimer", role: .destructive) { deleteFolderWithDecks() }
             Button("Conserver les decks") { deleteFolderKeepingDecks() }
                 .normalActionColor()
-            Button("Tout supprimer", role: .destructive) { deleteFolderWithDecks() }
             Button("Annuler", role: .cancel) {}
                 .normalActionColor()
         } message: {

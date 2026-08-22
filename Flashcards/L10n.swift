@@ -106,10 +106,10 @@ enum L10n {
             "es": "Flashcards prepara el prompt. Tus documentos quedan entre tú y el servicio que elijas."
         ],
         "ai.chatgpt.free_note": [
-            "fr": "Avec l’offre gratuite, il est possible que tu ne puisses joindre qu’un petit nombre de documents à la fois.",
-            "en": "On the free plan, you may only be able to upload a small number of documents at once.",
-            "de": "Im kostenlosen Tarif kannst du möglicherweise nur eine kleine Anzahl von Dokumenten gleichzeitig hochladen.",
-            "es": "Con el plan gratuito, es posible que solo puedas subir un número reducido de documentos a la vez."
+            "fr": "L’offre gratuite peut limiter le nombre de documents que tu peux envoyer sur une journée, ce qui peut rendre ce workflow moins pratique.",
+            "en": "The free plan may limit the number of document uploads available per day, which can make this workflow less practical.",
+            "de": "Im kostenlosen Tarif kann die Anzahl der Dokument-Uploads pro Tag begrenzt sein, was diesen Ablauf weniger praktisch machen kann.",
+            "es": "El plan gratuito puede limitar la cantidad de documentos que puedes subir al día, lo que puede hacer este flujo menos práctico."
         ],
         "ai.instructions.title": [
             "fr": "Avant d’ouvrir %@",
