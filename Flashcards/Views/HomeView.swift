@@ -30,9 +30,6 @@ struct HomeView: View {
     @State private var showingQuickResume = false
     @State private var folderOrderIDs: [UUID] = []
     @State private var folderOrderRevision = 0
-    @State private var folderTileOrigins: [UUID: CGPoint] = [:]
-    @State private var folderVisualOrder: [UUID] = []
-    @State private var folderGeometryRevision = 0
 
     private let columns = [
         GridItem(.flexible(), spacing: 14),
@@ -432,11 +429,6 @@ struct HomeView: View {
                             )
                         }
                         .buttonStyle(.plain)
-                        .onGeometryChange(for: CGPoint.self) { proxy in
-                            proxy.frame(in: .named("folder-reorder-grid")).origin
-                        } action: { origin in
-                            updateFolderGeometry(folder.id, origin: origin)
-                        }
                         .contextMenu {
                             Button("Modifier", systemImage: "pencil") { folderToEdit = folder }
                                 .normalActionColor()
@@ -467,7 +459,6 @@ struct HomeView: View {
                         .transition(.scale(scale: 0.92).combined(with: .opacity))
                     }
                 }
-                .coordinateSpace(name: "folder-reorder-grid")
                 .reorderContainer(for: Folder.self, itemID: \.id) { difference in
                     applyFolderReorder(difference)
                 }
@@ -509,46 +500,6 @@ struct HomeView: View {
         let persistedIDs = persistedFolderOrderIDs
         guard persistedIDs != folderOrderIDs else { return }
         folderOrderIDs = persistedIDs
-        folderTileOrigins = folderTileOrigins.filter { persistedIDs.contains($0.key) }
-        folderVisualOrder = []
-    }
-
-    private func updateFolderGeometry(_ id: UUID, origin: CGPoint) {
-        guard folderTileOrigins[id] != origin else { return }
-        folderTileOrigins[id] = origin
-        folderGeometryRevision += 1
-        let revision = folderGeometryRevision
-
-        Task { @MainActor in
-            try? await Task.sleep(for: .milliseconds(20))
-            guard folderGeometryRevision == revision else { return }
-            playFolderReorderHapticIfNeeded()
-        }
-    }
-
-    private func playFolderReorderHapticIfNeeded() {
-        let liveIDs = Set(displayedFolders.map(\.id))
-        folderTileOrigins = folderTileOrigins.filter { liveIDs.contains($0.key) }
-        guard folderTileOrigins.count == liveIDs.count else { return }
-
-        let visualOrder = folderTileOrigins
-            .sorted { lhs, rhs in
-                if abs(lhs.value.y - rhs.value.y) > 8 {
-                    return lhs.value.y < rhs.value.y
-                }
-                return lhs.value.x < rhs.value.x
-            }
-            .map { $0.key }
-
-        guard !folderVisualOrder.isEmpty else {
-            folderVisualOrder = visualOrder
-            return
-        }
-        guard visualOrder != folderVisualOrder else { return }
-
-        folderVisualOrder = visualOrder
-        // No haptic here: scrolling updates tile geometry too, which made
-        // ordinary section scrolling feel like a selection event.
     }
 
     private func applyFolderReorder<CollectionID: Hashable & Sendable>(
@@ -567,6 +518,7 @@ struct HomeView: View {
             reorderedIDs.append(id)
         }
 
+        let previousOrder = reorderedIDs
         let sourceSet = Set(sourceIDs)
         reorderedIDs.removeAll { sourceSet.contains($0) }
 
@@ -583,10 +535,21 @@ struct HomeView: View {
 
         reorderedIDs.insert(contentsOf: sourceIDs, at: destinationIndex)
 
+        let previousIndexByID = Dictionary(
+            uniqueKeysWithValues: previousOrder.enumerated().map {
+                ($0.element, $0.offset)
+            }
+        )
+        let movedFolderCount = reorderedIDs.enumerated().reduce(into: 0) { count, entry in
+            if previousIndexByID[entry.element] != entry.offset {
+                count += 1
+            }
+        }
+
         // Update the displayed collection synchronously so SwiftUI can finish
         // the native drop animation without waiting for SwiftData/@Query.
         folderOrderIDs = reorderedIDs
-        folderVisualOrder = reorderedIDs
+        playFolderReorderHaptics(count: movedFolderCount)
         folderOrderRevision += 1
         let revision = folderOrderRevision
         let finalOrder = reorderedIDs
@@ -597,6 +560,20 @@ struct HomeView: View {
             try? await Task.sleep(for: .milliseconds(250))
             guard folderOrderRevision == revision else { return }
             persistFolderOrder(finalOrder)
+        }
+    }
+
+    private func playFolderReorderHaptics(count: Int) {
+        guard count > 0 else { return }
+
+        Task { @MainActor in
+            for index in 0..<count {
+                HapticService.play(.selection)
+
+                if index < count - 1 {
+                    try? await Task.sleep(for: .milliseconds(55))
+                }
+            }
         }
     }
 
