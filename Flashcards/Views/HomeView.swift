@@ -25,6 +25,8 @@ struct HomeView: View {
     @State private var showingSettings = false
     @State private var folderToEdit: Folder?
     @State private var folderToDelete: Folder?
+    @State private var deckToEdit: Deck?
+    @State private var deckToDelete: Deck?
     @State private var quickResumeDeck: Deck?
     @State private var quickResumeSnapshot: ActiveStudySessionSnapshot?
     @State private var showingQuickResume = false
@@ -202,6 +204,15 @@ struct HomeView: View {
         }
         .sheet(item: $folderToEdit) { folder in
             FolderFormView(folder: folder)
+        }
+        .sheet(item: $deckToEdit) { deck in
+            DeckFormView(deck: deck)
+        }
+        .alert("Supprimer ce deck ?", isPresented: deckDeleteBinding) {
+            Button("Supprimer", role: .destructive) { deletePendingDeck() }
+            Button("Annuler", role: .cancel) { deckToDelete = nil }
+        } message: {
+            Text("Toutes ses cartes seront supprimées définitivement.")
         }
         .confirmationDialog(
             "Supprimer ce dossier ?",
@@ -387,7 +398,7 @@ struct HomeView: View {
                                 DeckTile(deck: deck)
                             }
                             .buttonStyle(.plain)
-                            .contextMenu { pinAction(for: deck) }
+                            .contextMenu { deckContextMenu(for: deck) }
                         }
                     }
                     .padding(.horizontal)
@@ -408,7 +419,7 @@ struct HomeView: View {
                                 DeckTile(deck: deck)
                             }
                             .buttonStyle(.plain)
-                            .contextMenu { pinAction(for: deck) }
+                            .contextMenu { deckContextMenu(for: deck) }
                         }
                     }
                     .padding(.horizontal)
@@ -702,6 +713,13 @@ struct HomeView: View {
         )
     }
 
+    private var deckDeleteBinding: Binding<Bool> {
+        Binding(
+            get: { deckToDelete != nil },
+            set: { if !$0 { deckToDelete = nil } }
+        )
+    }
+
     private func deleteFolderKeepingDecks() {
         guard let folder = folderToDelete else { return }
         LibraryActions.deleteFolderKeepingDecks(folder, in: modelContext)
@@ -715,8 +733,15 @@ struct HomeView: View {
         folderToDelete = nil
     }
 
+    private func deletePendingDeck() {
+        guard let deck = deckToDelete else { return }
+        modelContext.delete(deck)
+        try? modelContext.save()
+        deckToDelete = nil
+    }
+
     @ViewBuilder
-    private func pinAction(for deck: Deck) -> some View {
+    private func deckContextMenu(for deck: Deck) -> some View {
         Button(
             deck.isPinned ? "Désépingler" : "Épingler",
             systemImage: deck.isPinned ? "pin.slash" : "pin"
@@ -727,6 +752,23 @@ struct HomeView: View {
             HapticService.play(.selection)
         }
         .normalActionColor()
+
+        Button("Modifier", systemImage: "pencil") {
+            deckToEdit = deck
+        }
+        .normalActionColor()
+
+        Button("Dupliquer", systemImage: "plus.square.on.square") {
+            LibraryActions.duplicateDeck(deck, in: modelContext)
+        }
+        .normalActionColor()
+
+        Button(role: .destructive) {
+            deckToDelete = deck
+        } label: {
+            Label("Supprimer", systemImage: "trash")
+        }
+        .destructiveActionColor()
     }
 
     private func resume(_ resumable: ResumableDeck) {
