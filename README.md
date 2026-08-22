@@ -46,9 +46,20 @@ The v2 generation is a major visual and interaction refresh rather than a simple
 - Duplicate detection extended beyond bulk import to normal card creation and editing
 - French, English, German, and Spanish localization
 
-# SCREEN NECESSAIRE : Home v2 showing Resume, Recent, Pinned and the redesigned Folder tiles
-
-# SCREEN NECESSAIRE : A folder page showing the new compact full-width Deck rows
+<p style="display:flex">
+  <img
+    width="197"
+    height="426"
+    alt="Home v2 showing Resume, Recent and the redesigned Folder tiles"
+    src="https://github.com/user-attachments/assets/50673124-6e5a-4d25-88d1-8178e9321f48"
+  />
+  <img
+    width="197"
+    height="426"
+    alt="A folder page showing the new compact full-width Deck rows"
+    src="https://github.com/user-attachments/assets/5ca1e592-4faf-4bf0-9f8b-7b1e617ee182"
+  />
+</p>
 
 ---
 
@@ -118,7 +129,20 @@ This applies when:
 
 When editing a card, the card itself is excluded from duplicate comparison.
 
-# SCREEN NECESSAIRE : New Deck or Add Card screen with an Exact duplicate / Possible duplicate warning visible
+<p style="display:flex">
+  <img
+    width="197"
+    height="426"
+    alt="New Deck screen with an Exact duplicate warning visible"
+    src="https://github.com/user-attachments/assets/52f1f070-a2b3-4cc2-be08-9177993df44a"
+  />
+  <img
+    width="197"
+    height="426"
+    alt="New Deck screen with an Exact duplicate popup warning visible"
+    src="https://github.com/user-attachments/assets/fa3531a6-dc5e-4779-846d-df9c759b0770"
+  />
+</p>
 
 ---
 
@@ -149,7 +173,24 @@ No external parser or online service is used.
 
 ---
 
-## Study with Flashcards
+## Study
+
+
+Every deck has a dedicated study hub that brings progress, study modes, and card management together in one place.
+
+From here, you can see your current deck progress, launch either **Flashcards** or **Test**, and review or edit the cards before starting a session.
+
+The goal is to keep everything related to a deck immediately accessible without adding extra navigation or setup screens.
+
+<img
+  width="197"
+  height="426"
+  alt="Deck study hub showing progress, Flashcards and Test modes, and the deck’s card list"
+  src="https://github.com/user-attachments/assets/3faaf9ef-5889-48b9-b589-7a5df680a362"
+/>
+
+
+### With Flashcards
 
 Flashcards mode is built around one card at a time, with the surrounding UI kept deliberately quiet.
 
@@ -172,11 +213,30 @@ Flashcards mode is built around one card at a time, with the surrounding UI kept
 
 Study preferences are remembered locally so repeated sessions do not need to be configured from scratch.
 
-# SCREEN NECESSAIRE : Flashcards study screen with a card flipped to its answer side
+<p style="display:flex">
+  <img
+    width="197"
+    height="426"
+    alt="Flashcards study hub"
+    src="https://github.com/user-attachments/assets/3e08646b-ee61-4d00-9218-14ab47e353a5"
+  />
+  <img
+    width="197"
+    height="426"
+    alt="Flashcards study screen with a card flipped to its answer side"
+    src="https://github.com/user-attachments/assets/c82d9364-5548-4e2c-a66e-3cea78f6e2c3"
+  />
+  <img
+    width="197"
+    height="426"
+    alt="Flashcards study screen with a card semi-flipped to its "I knew it" edge"
+    src="https://github.com/user-attachments/assets/8001a25d-6276-427c-9ffd-edb6967bfb4b"
+  />
+</p>
 
 ---
 
-## Test yourself
+### Test yourself
 
 The same deck can also generate mixed tests instead of swipe-based flashcards.
 
@@ -190,7 +250,32 @@ Tests reuse the same library and can respect the same study preferences such as 
 
 Written answers can be submitted directly from the keyboard, while every test run stays completely on-device.
 
-# SCREEN NECESSAIRE : Test screen showing either Multiple Choice or Written Answer mode
+<p style="display:flex">
+  <img
+    width="197"
+    height="426"
+    alt="Test study hub"
+    src="https://github.com/user-attachments/assets/cc8c000d-f808-437a-9cf6-8e807ee9c3e4"
+  />
+  <img
+    width="197"
+    height="426"
+    alt="Test study screen with a Multiple Choice question answered correctly"
+    src="https://github.com/user-attachments/assets/8f379e52-f330-4122-9c35-b859149c3110"
+  />
+  <img
+    width="197"
+    height="426"
+    alt="Test study screen with a True or False question answered correctly"
+    src="https://github.com/user-attachments/assets/eb8893e8-9795-4151-bdde-4e040180251c"
+  />
+  <img
+    width="197"
+    height="426"
+    alt="Test study screen with a Type question answered incorrectly"
+    src="https://github.com/user-attachments/assets/32207636-14fc-4453-ab06-321d822c069b"
+  />
+</p>
 
 ---
 
