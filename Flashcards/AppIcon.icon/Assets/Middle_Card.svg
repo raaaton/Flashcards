@@ -1,13 +1,13 @@
 <svg width="512" height="512" viewBox="0 0 512 512" fill="none" xmlns="http://www.w3.org/2000/svg">
 <g transform="rotate(-7 248 246)">
   <rect x="88" y="68" width="320" height="356" rx="56" fill="url(#rearBase)"/>
-  <rect x="88.75" y="68.75" width="318.5" height="354.5" rx="55.25" stroke="#F8FCFF" stroke-opacity="0.38" stroke-width="1.5"/>
+  <rect x="88.75" y="68.75" width="318.5" height="354.5" rx="55.25" stroke="#EFFFF9" stroke-opacity="0.34" stroke-width="1.5"/>
 </g>
 <defs>
   <linearGradient id="rearBase" x1="126" y1="82" x2="380" y2="410" gradientUnits="userSpaceOnUse">
-    <stop stop-color="#D6E7F3"/>
-    <stop offset="0.5" stop-color="#9AB5CA"/>
-    <stop offset="1" stop-color="#67869F"/>
+    <stop stop-color="#DDF5EC"/>
+    <stop offset="0.5" stop-color="#9ACDBB"/>
+    <stop offset="1" stop-color="#648F80"/>
   </linearGradient>
 </defs>
 </svg>
