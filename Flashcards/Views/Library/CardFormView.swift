@@ -107,7 +107,10 @@ struct CardFormView: View {
                 ) {
                     persistCard()
                 }
+                .normalActionColor()
+
                 Button("Annuler", role: .cancel) {}
+                    .normalActionColor()
             } message: {
                 Text(duplicateAlertMessage)
             }
