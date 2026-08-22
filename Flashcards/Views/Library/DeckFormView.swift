@@ -111,7 +111,8 @@ struct DeckFormView: View {
                         Section {
                             CardEditorSurface(
                                 term: $draft.term,
-                                definition: $draft.definition
+                                definition: $draft.definition,
+                                roundsBottomCorners: duplicateKind(for: draft.id) == nil
                             )
                             .listRowInsets(
                                 EdgeInsets(
@@ -183,9 +184,7 @@ struct DeckFormView: View {
                         } else if validDrafts.isEmpty {
                             Text("Ajoutez au moins une carte pour créer le deck.")
                         } else if duplicateAnalysis.exactCount > 0 || duplicateAnalysis.possibleCount > 0 {
-                            Text(
-                                "\(duplicateAnalysis.exactCount) doublon(s) exact(s), \(duplicateAnalysis.possibleCount) possible(s)."
-                            )
+                            Text(duplicateAlertMessage)
                         }
                     }
                     .listSectionSpacing(12)
@@ -213,14 +212,14 @@ struct DeckFormView: View {
                     }
                 }
             }
-            .alert("Doublons détectés", isPresented: $showingDuplicateChoice) {
+            .alert(L10n.text("Doublons détectés"), isPresented: $showingDuplicateChoice) {
                 if duplicateAnalysis.exactCount > 0 {
-                    Button("Ignorer les doublons exacts") {
+                    Button(L10n.text("Ignorer les doublons exacts")) {
                         save(skipExactDuplicates: true)
                     }
                 }
 
-                Button("Créer quand même") {
+                Button(L10n.text("duplicate.action.create_anyway")) {
                     save(skipExactDuplicates: false)
                 }
 
@@ -253,14 +252,14 @@ struct DeckFormView: View {
         switch kind {
         case .exact:
             Label(
-                "Doublon exact",
+                L10n.text("duplicate.label.exact"),
                 systemImage: "exclamationmark.octagon.fill"
             )
             .font(.caption.weight(.semibold))
             .foregroundStyle(.red)
         case .possible:
             Label(
-                "Doublon possible",
+                L10n.text("duplicate.label.possible"),
                 systemImage: "exclamationmark.triangle.fill"
             )
             .font(.caption.weight(.semibold))

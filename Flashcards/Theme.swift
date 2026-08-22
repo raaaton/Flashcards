@@ -179,6 +179,17 @@ struct CardEditorSurface: View {
     @Binding var definition: String
 
     var usesOwnBackground = true
+    var roundsBottomCorners = true
+
+    private var backgroundShape: UnevenRoundedRectangle {
+        UnevenRoundedRectangle(
+            topLeadingRadius: 12,
+            bottomLeadingRadius: roundsBottomCorners ? 12 : 0,
+            bottomTrailingRadius: roundsBottomCorners ? 12 : 0,
+            topTrailingRadius: 12,
+            style: .continuous
+        )
+    }
 
     var body: some View {
         VStack(spacing: 0) {
@@ -205,7 +216,7 @@ struct CardEditorSurface: View {
             usesOwnBackground
                 ? Color(uiColor: .secondarySystemGroupedBackground)
                 : Color.clear,
-            in: .rect(cornerRadius: 12, style: .continuous)
+            in: backgroundShape
         )
     }
 

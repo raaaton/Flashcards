@@ -55,22 +55,21 @@ struct CardFormView: View {
                 Section {
                     CardEditorSurface(
                         term: $term,
-                        definition: $definition
+                        definition: $definition,
+                        roundsBottomCorners: duplicateKind == nil
                     )
                     .listRowInsets(
                         EdgeInsets(
                             top: 12,
                             leading: 0,
-                            bottom: 12,
+                            bottom: duplicateKind == nil ? 12 : 0,
                             trailing: 0
                         )
                     )
                     .listRowBackground(Color.clear)
                     .listRowSeparator(.hidden)
-                }
 
-                if let duplicateKind {
-                    Section {
+                    if let duplicateKind {
                         duplicateWarning(for: duplicateKind)
                     }
                 }
@@ -98,8 +97,14 @@ struct CardFormView: View {
                     }
                 }
             }
-            .alert("Doublon détecté", isPresented: $showingDuplicateChoice) {
-                Button(card == nil ? "Ajouter quand même" : "Enregistrer quand même") {
+            .alert(L10n.text("Doublons détectés"), isPresented: $showingDuplicateChoice) {
+                Button(
+                    L10n.text(
+                        card == nil
+                            ? "duplicate.action.add_anyway"
+                            : "duplicate.action.save_anyway"
+                    )
+                ) {
                     persistCard()
                 }
                 Button("Annuler", role: .cancel) {}
@@ -114,15 +119,17 @@ struct CardFormView: View {
         switch kind {
         case .exact:
             Label(
-                "Une carte identique existe déjà dans ce deck.",
+                L10n.text("duplicate.label.exact"),
                 systemImage: "exclamationmark.octagon.fill"
             )
+            .font(.caption.weight(.semibold))
             .foregroundStyle(.red)
         case .possible:
             Label(
-                "Une carte avec le même terme existe déjà dans ce deck.",
+                L10n.text("duplicate.label.possible"),
                 systemImage: "exclamationmark.triangle.fill"
             )
+            .font(.caption.weight(.semibold))
             .foregroundStyle(.orange)
         }
     }
@@ -130,11 +137,11 @@ struct CardFormView: View {
     private var duplicateAlertMessage: String {
         switch duplicateKind {
         case .exact:
-            "Une carte avec le même terme et la même définition existe déjà dans ce deck."
+            L10n.format("import.duplicates.exact", Int64(1))
         case .possible:
-            "Une carte avec le même terme mais une définition différente existe déjà dans ce deck."
+            L10n.format("import.duplicates.possible", Int64(1))
         case nil:
-            "Cette carte ressemble à une carte déjà présente dans ce deck."
+            ""
         }
     }
 

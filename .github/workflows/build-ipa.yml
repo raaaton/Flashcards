@@ -29,7 +29,14 @@ jobs:
                     exit 1
                   fi
 
+                  MAJOR="${{ vars.RELEASE_MAJOR }}"
                   MINOR="${{ vars.RELEASE_MINOR }}"
+                  MAJOR="${MAJOR:-1}"
+
+                  if ! echo "$MAJOR" | grep -Eq '^[0-9]+$'; then
+                    echo "RELEASE_MAJOR must be an integer."
+                    exit 1
+                  fi
 
                   if ! echo "$MINOR" | grep -Eq '^[0-9]+$'; then
                     echo "RELEASE_MINOR must be an integer."
@@ -39,8 +46,8 @@ jobs:
                   git fetch origin --tags --force
 
                   LAST_TAG="$(
-                    git tag -l "v1.${MINOR}.*" --sort=-version:refname \
-                      | grep -E "^v1\.${MINOR}\.[0-9]+$" \
+                    git tag -l "v${MAJOR}.${MINOR}.*" --sort=-version:refname \
+                      | grep -E "^v${MAJOR}\.${MINOR}\.[0-9]+$" \
                       | head -n 1 \
                       || true
                   )"
@@ -52,7 +59,7 @@ jobs:
                     PATCH=$((PATCH + 1))
                   fi
 
-                  VERSION="1.${MINOR}.${PATCH}"
+                  VERSION="${MAJOR}.${MINOR}.${PATCH}"
                   TAG="v${VERSION}"
                   BUILD_VERSION="${MINOR}.${PATCH}"
 
