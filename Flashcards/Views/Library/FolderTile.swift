@@ -31,7 +31,17 @@ struct FolderTile: View {
                 .fill(Theme.cardBackground)
                 .overlay {
                     RoundedRectangle(cornerRadius: 22, style: .continuous)
-                        .fill(Theme.accent.opacity(0.075))
+                        .fill(
+                            LinearGradient(
+                                colors: [
+                                    Theme.accent.opacity(0.13),
+                                    Theme.accent.opacity(0.065),
+                                    Theme.accent.opacity(0.025)
+                                ],
+                                startPoint: .topLeading,
+                                endPoint: .bottomTrailing
+                            )
+                        )
                 }
         }
         .overlay {
