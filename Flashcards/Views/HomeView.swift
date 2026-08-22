@@ -235,14 +235,10 @@ struct HomeView: View {
         } message: {
             Text("Toutes ses cartes seront supprimées définitivement.")
         }
-        .confirmationDialog(
-            "Supprimer ce dossier ?",
-            isPresented: folderDeleteBinding,
-            titleVisibility: .visible
-        ) {
+        .alert("Supprimer ce dossier ?", isPresented: folderDeleteBinding) {
+            Button("Tout supprimer", role: .destructive) { deleteFolderWithDecks() }
             Button("Conserver les decks") { deleteFolderKeepingDecks() }
                 .normalActionColor()
-            Button("Tout supprimer", role: .destructive) { deleteFolderWithDecks() }
             Button("Annuler", role: .cancel) { folderToDelete = nil }
                 .normalActionColor()
         } message: {
