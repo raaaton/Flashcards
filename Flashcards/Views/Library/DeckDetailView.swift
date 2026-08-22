@@ -74,6 +74,7 @@ struct DeckDetailView: View {
                 dismiss()
             }
             Button("Annuler", role: .cancel) {}
+                .normalActionColor()
         } message: {
             Text("Toutes ses cartes seront supprimées définitivement.")
         }
@@ -252,6 +253,7 @@ struct DeckDetailView: View {
             }
 
             Button("Annuler", role: .cancel) {}
+                .normalActionColor()
         } message: {
             Text("Toutes les sessions d’étude enregistrées pour ce deck seront supprimées.")
         }
