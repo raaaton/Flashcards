@@ -1,4 +1,5 @@
-![header](https://github.com/user-attachments/assets/8a3f1708-168d-4d60-b3f7-4845d35b8ced)
+![header](https://github.com/user-attachments/assets/03162523-f774-46c7-8748-eeb635d48c92)
+
 
 <p align="center">
   <img alt="release" src="https://img.shields.io/github/v/release/raaaton/Flashcards" />
