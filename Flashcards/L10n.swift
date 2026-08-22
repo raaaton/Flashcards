@@ -50,6 +50,150 @@ enum L10n {
             "en": "Save Anyway",
             "de": "Trotzdem speichern",
             "es": "Guardar de todos modos"
+        ],
+        "ai.creation.method.title": [
+            "fr": "Comment veux-tu créer ce deck ?",
+            "en": "How do you want to create this deck?",
+            "de": "Wie möchtest du dieses Deck erstellen?",
+            "es": "¿Cómo quieres crear este deck?"
+        ],
+        "ai.create.with_ai": [
+            "fr": "Créer avec l’IA",
+            "en": "Create with AI",
+            "de": "Mit KI erstellen",
+            "es": "Crear con IA"
+        ],
+        "ai.create.manual": [
+            "fr": "Créer manuellement",
+            "en": "Create manually",
+            "de": "Manuell erstellen",
+            "es": "Crear manualmente"
+        ],
+        "ai.recommended": [
+            "fr": "Recommandé",
+            "en": "Recommended",
+            "de": "Empfohlen",
+            "es": "Recomendado"
+        ],
+        "ai.continue": [
+            "fr": "Continuer",
+            "en": "Continue",
+            "de": "Weiter",
+            "es": "Continuar"
+        ],
+        "ai.back": [
+            "fr": "Retour",
+            "en": "Back",
+            "de": "Zurück",
+            "es": "Atrás"
+        ],
+        "ai.provider.title": [
+            "fr": "Choisis ton IA",
+            "en": "Choose your AI",
+            "de": "Wähle deine KI",
+            "es": "Elige tu IA"
+        ],
+        "ai.provider.subtitle": [
+            "fr": "Flashcards prépare le prompt. Tes documents restent entre toi et le service que tu choisis.",
+            "en": "Flashcards prepares the prompt. Your documents stay between you and the service you choose.",
+            "de": "Flashcards bereitet den Prompt vor. Deine Dokumente bleiben zwischen dir und dem gewählten Dienst.",
+            "es": "Flashcards prepara el prompt. Tus documentos quedan entre tú y el servicio que elijas."
+        ],
+        "ai.chatgpt.free_note": [
+            "fr": "Avec l’offre gratuite, il est possible que tu ne puisses joindre qu’un petit nombre de documents à la fois.",
+            "en": "On the free plan, you may only be able to upload a small number of documents at once.",
+            "de": "Im kostenlosen Tarif kannst du möglicherweise nur eine kleine Anzahl von Dokumenten gleichzeitig hochladen.",
+            "es": "Con el plan gratuito, es posible que solo puedas subir un número reducido de documentos a la vez."
+        ],
+        "ai.instructions.title": [
+            "fr": "Avant d’ouvrir %@",
+            "en": "Before you open %@",
+            "de": "Bevor du %@ öffnest",
+            "es": "Antes de abrir %@"
+        ],
+        "ai.instructions.body": [
+            "fr": "Nous préparons et copions le prompt. Dans %@, colle-le s’il n’est pas déjà présent, joins tes notes ou documents, puis appuie sur Envoyer.",
+            "en": "We’ll prepare and copy the prompt. In %@, paste it if it isn’t already there, attach your notes or documents, then press Send.",
+            "de": "Wir bereiten den Prompt vor und kopieren ihn. Füge ihn in %@ ein, falls er nicht bereits vorhanden ist, hänge deine Notizen oder Dokumente an und tippe dann auf Senden.",
+            "es": "Prepararemos y copiaremos el prompt. En %@, pégalo si aún no aparece, adjunta tus apuntes o documentos y pulsa Enviar."
+        ],
+        "ai.open": [
+            "fr": "Ouvrir %@",
+            "en": "Open %@",
+            "de": "%@ öffnen",
+            "es": "Abrir %@"
+        ],
+        "ai.copy_prompt": [
+            "fr": "Copier le prompt",
+            "en": "Copy prompt",
+            "de": "Prompt kopieren",
+            "es": "Copiar prompt"
+        ],
+        "ai.prompt_copied": [
+            "fr": "Prompt copié dans le presse-papiers",
+            "en": "Prompt copied to the clipboard",
+            "de": "Prompt in die Zwischenablage kopiert",
+            "es": "Prompt copiado al portapapeles"
+        ],
+        "ai.return.title": [
+            "fr": "De retour de %@ ?",
+            "en": "Back from %@?",
+            "de": "Zurück von %@?",
+            "es": "¿Has vuelto de %@?"
+        ],
+        "ai.return.body": [
+            "fr": "Copie le bloc JSON généré dans %@, puis colle-le ici. Tu pourras vérifier et modifier les cartes avant de créer le deck.",
+            "en": "Copy the JSON block generated in %@, then paste it here. You can review and edit the cards before creating the deck.",
+            "de": "Kopiere den in %@ erzeugten JSON-Block und füge ihn hier ein. Du kannst die Karten vor dem Erstellen des Decks prüfen und bearbeiten.",
+            "es": "Copia el bloque JSON generado en %@ y pégalo aquí. Podrás revisar y editar las tarjetas antes de crear el deck."
+        ],
+        "ai.paste": [
+            "fr": "Coller depuis %@",
+            "en": "Paste from %@",
+            "de": "Aus %@ einfügen",
+            "es": "Pegar desde %@"
+        ],
+        "ai.open_again": [
+            "fr": "Rouvrir %@",
+            "en": "Open %@ again",
+            "de": "%@ erneut öffnen",
+            "es": "Volver a abrir %@"
+        ],
+        "ai.error.clipboard_title": [
+            "fr": "Presse-papiers vide",
+            "en": "Clipboard empty",
+            "de": "Zwischenablage leer",
+            "es": "Portapapeles vacío"
+        ],
+        "ai.error.clipboard_body": [
+            "fr": "Copie d’abord le bloc JSON généré par l’IA, puis réessaie.",
+            "en": "Copy the JSON block generated by the AI first, then try again.",
+            "de": "Kopiere zuerst den von der KI erzeugten JSON-Block und versuche es erneut.",
+            "es": "Copia primero el bloque JSON generado por la IA y vuelve a intentarlo."
+        ],
+        "ai.error.invalid_title": [
+            "fr": "JSON non reconnu",
+            "en": "JSON not recognized",
+            "de": "JSON nicht erkannt",
+            "es": "JSON no reconocido"
+        ],
+        "ai.error.invalid_body": [
+            "fr": "Le contenu collé ne correspond pas au format de flashcards attendu. Recopie le bloc JSON complet depuis l’IA.",
+            "en": "The pasted content doesn’t match the expected flashcard format. Copy the complete JSON block from the AI and try again.",
+            "de": "Der eingefügte Inhalt entspricht nicht dem erwarteten Flashcard-Format. Kopiere den vollständigen JSON-Block aus der KI und versuche es erneut.",
+            "es": "El contenido pegado no coincide con el formato de tarjetas esperado. Copia el bloque JSON completo de la IA y vuelve a intentarlo."
+        ],
+        "ai.error.empty_title": [
+            "fr": "Aucune carte trouvée",
+            "en": "No flashcards found",
+            "de": "Keine Flashcards gefunden",
+            "es": "No se encontraron tarjetas"
+        ],
+        "ai.error.empty_body": [
+            "fr": "Le JSON est valide mais ne contient aucune flashcard utilisable.",
+            "en": "The JSON is valid but contains no usable flashcards.",
+            "de": "Das JSON ist gültig, enthält aber keine nutzbaren Flashcards.",
+            "es": "El JSON es válido, pero no contiene tarjetas utilizables."
         ]
     ]
 

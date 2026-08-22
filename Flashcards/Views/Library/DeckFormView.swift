@@ -1,6 +1,7 @@
 import Foundation
 import SwiftData
 import SwiftUI
+import UIKit
 
 private struct DeckCardDraft: Identifiable {
     let id = UUID()
@@ -24,12 +25,512 @@ private struct DeckCardDraft: Identifiable {
     var isComplete: Bool { !cleanTerm.isEmpty && !cleanDefinition.isEmpty }
 }
 
+private enum NewDeckCreationStep {
+    case name
+    case method
+    case ai
+    case manual
+    case aiPreview
+}
+
 struct DeckFormView: View {
+    let deck: Deck?
+    let initialFolder: Folder?
+
+    init(deck: Deck? = nil, initialFolder: Folder? = nil) {
+        self.deck = deck
+        self.initialFolder = initialFolder
+    }
+
+    var body: some View {
+        if let deck {
+            DeckEditorForm(deck: deck)
+        } else {
+            NewDeckCreationFlow(initialFolder: initialFolder)
+        }
+    }
+}
+
+private struct NewDeckCreationFlow: View {
+    @Environment(\.dismiss) private var dismiss
+    @Environment(\.openURL) private var openURL
+
+    let initialFolder: Folder?
+
+    @State private var step = NewDeckCreationStep.name
+    @State private var name = ""
+    @State private var selectedProvider = ExternalAIProvider.chatGPT
+    @State private var importedCards: [ParsedCard] = []
+    @State private var hasOpenedProvider = false
+    @State private var promptWasCopied = false
+    @State private var alertTitle = ""
+    @State private var alertMessage = ""
+    @State private var showingAlert = false
+    @FocusState private var nameFieldFocused: Bool
+
+    private var cleanName: String {
+        name.trimmingCharacters(in: .whitespacesAndNewlines)
+    }
+
+    var body: some View {
+        Group {
+            switch step {
+            case .name:
+                nameStep
+            case .method:
+                methodStep
+            case .ai:
+                aiStep
+            case .manual:
+                DeckEditorForm(
+                    initialFolder: initialFolder,
+                    initialName: cleanName
+                )
+            case .aiPreview:
+                DeckEditorForm(
+                    initialFolder: initialFolder,
+                    initialName: cleanName,
+                    initialCards: importedCards
+                )
+            }
+        }
+        .alert(alertTitle, isPresented: $showingAlert) {
+            Button("OK", role: .cancel) {}
+        } message: {
+            Text(alertMessage)
+        }
+    }
+
+    private var nameStep: some View {
+        NavigationStack {
+            Form {
+                Section("Deck") {
+                    TextField("Nom", text: $name)
+                        .focused($nameFieldFocused)
+                }
+
+                Section {
+                    Button {
+                        guard !cleanName.isEmpty else { return }
+                        HapticService.play(.selection)
+                        step = .method
+                    } label: {
+                        Text(L10n.text("ai.continue"))
+                            .font(.headline)
+                            .frame(maxWidth: .infinity, minHeight: 28)
+                    }
+                    .buttonStyle(.borderedProminent)
+                    .tint(Theme.accent)
+                    .disabled(cleanName.isEmpty)
+                }
+                .listRowBackground(Color.clear)
+            }
+            .navigationTitle(L10n.text("deck.new.title"))
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .cancellationAction) {
+                    Button("Annuler") { dismiss() }
+                        .tint(.white)
+                }
+            }
+            .task {
+                try? await Task.sleep(for: .milliseconds(120))
+                nameFieldFocused = true
+            }
+        }
+    }
+
+    private var methodStep: some View {
+        NavigationStack {
+            ScrollView {
+                VStack(alignment: .leading, spacing: 18) {
+                    VStack(alignment: .leading, spacing: 6) {
+                        Text(L10n.text("ai.creation.method.title"))
+                            .font(.title2.bold())
+                        Text(cleanName)
+                            .font(.subheadline)
+                            .foregroundStyle(.secondary)
+                    }
+
+                    creationChoice(
+                        title: L10n.text("ai.create.with_ai"),
+                        subtitle: L10n.text("ai.recommended"),
+                        systemImage: "sparkles",
+                        isRecommended: true
+                    ) {
+                        hasOpenedProvider = false
+                        promptWasCopied = false
+                        step = .ai
+                    }
+
+                    creationChoice(
+                        title: L10n.text("ai.create.manual"),
+                        subtitle: nil,
+                        systemImage: "square.and.pencil",
+                        isRecommended: false
+                    ) {
+                        step = .manual
+                    }
+                }
+                .padding(20)
+            }
+            .navigationTitle(L10n.text("deck.new.title"))
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .topBarLeading) {
+                    Button(L10n.text("ai.back")) {
+                        step = .name
+                    }
+                    .tint(.white)
+                }
+
+                ToolbarItem(placement: .cancellationAction) {
+                    Button("Annuler") { dismiss() }
+                        .tint(.white)
+                }
+            }
+        }
+    }
+
+    private var aiStep: some View {
+        NavigationStack {
+            ScrollView {
+                VStack(alignment: .leading, spacing: 20) {
+                    VStack(alignment: .leading, spacing: 6) {
+                        Text(L10n.text("ai.provider.title"))
+                            .font(.title2.bold())
+                        Text(L10n.text("ai.provider.subtitle"))
+                            .font(.subheadline)
+                            .foregroundStyle(.secondary)
+                    }
+
+                    VStack(spacing: 10) {
+                        ForEach(ExternalAIProvider.allCases) { provider in
+                            providerRow(provider)
+                        }
+                    }
+
+                    VStack(alignment: .leading, spacing: 10) {
+                        Label(
+                            L10n.format("ai.instructions.title", selectedProvider.displayName),
+                            systemImage: "doc.on.clipboard"
+                        )
+                        .font(.headline)
+
+                        Text(
+                            L10n.format(
+                                "ai.instructions.body",
+                                selectedProvider.displayName
+                            )
+                        )
+                        .font(.subheadline)
+                        .foregroundStyle(.secondary)
+                    }
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .padding(16)
+                    .background(
+                        Theme.cardBackground,
+                        in: .rect(cornerRadius: 18, style: .continuous)
+                    )
+
+                    if hasOpenedProvider {
+                        VStack(alignment: .leading, spacing: 12) {
+                            Text(
+                                L10n.format(
+                                    "ai.return.title",
+                                    selectedProvider.displayName
+                                )
+                            )
+                            .font(.headline)
+
+                            Text(
+                                L10n.format(
+                                    "ai.return.body",
+                                    selectedProvider.displayName
+                                )
+                            )
+                            .font(.subheadline)
+                            .foregroundStyle(.secondary)
+
+                            Button {
+                                pasteAIResult()
+                            } label: {
+                                Label(
+                                    L10n.format(
+                                        "ai.paste",
+                                        selectedProvider.displayName
+                                    ),
+                                    systemImage: "doc.on.clipboard.fill"
+                                )
+                                .font(.headline)
+                                .frame(maxWidth: .infinity, minHeight: 32)
+                            }
+                            .buttonStyle(.borderedProminent)
+                            .tint(Theme.accent)
+
+                            Button {
+                                openSelectedProvider()
+                            } label: {
+                                Label(
+                                    L10n.format(
+                                        "ai.open_again",
+                                        selectedProvider.displayName
+                                    ),
+                                    systemImage: "arrow.up.right.square"
+                                )
+                                .frame(maxWidth: .infinity, minHeight: 28)
+                            }
+                            .buttonStyle(.bordered)
+                            .tint(.white)
+                        }
+                        .padding(16)
+                        .background(
+                            Theme.cardBackground,
+                            in: .rect(cornerRadius: 18, style: .continuous)
+                        )
+                    } else {
+                        Button {
+                            openSelectedProvider()
+                        } label: {
+                            Label(
+                                L10n.format(
+                                    "ai.open",
+                                    selectedProvider.displayName
+                                ),
+                                systemImage: "arrow.up.right.square"
+                            )
+                            .font(.headline)
+                            .frame(maxWidth: .infinity, minHeight: 36)
+                        }
+                        .buttonStyle(.borderedProminent)
+                        .tint(Theme.accent)
+                    }
+
+                    Button {
+                        copyPrompt()
+                    } label: {
+                        Label(
+                            promptWasCopied
+                                ? L10n.text("ai.prompt_copied")
+                                : L10n.text("ai.copy_prompt"),
+                            systemImage: promptWasCopied
+                                ? "checkmark.circle.fill"
+                                : "doc.on.doc"
+                        )
+                        .frame(maxWidth: .infinity, minHeight: 28)
+                    }
+                    .buttonStyle(.bordered)
+                    .tint(promptWasCopied ? Theme.accent : .white)
+                }
+                .padding(20)
+            }
+            .navigationTitle(L10n.text("ai.create.with_ai"))
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .topBarLeading) {
+                    Button(L10n.text("ai.back")) {
+                        step = .method
+                    }
+                    .tint(.white)
+                }
+
+                ToolbarItem(placement: .cancellationAction) {
+                    Button("Annuler") { dismiss() }
+                        .tint(.white)
+                }
+            }
+        }
+    }
+
+    private func creationChoice(
+        title: String,
+        subtitle: String?,
+        systemImage: String,
+        isRecommended: Bool,
+        action: @escaping () -> Void
+    ) -> some View {
+        Button {
+            HapticService.play(.selection)
+            action()
+        } label: {
+            HStack(spacing: 14) {
+                NeutralIconBadge(
+                    systemName: systemImage,
+                    size: 46,
+                    cornerRadius: 15,
+                    symbolSize: 19
+                )
+
+                VStack(alignment: .leading, spacing: 5) {
+                    Text(title)
+                        .font(.headline)
+                        .foregroundStyle(.primary)
+
+                    if let subtitle {
+                        Text(subtitle)
+                            .font(.caption.weight(.semibold))
+                            .foregroundStyle(isRecommended ? Theme.accent : .secondary)
+                    }
+                }
+
+                Spacer()
+
+                Image(systemName: "chevron.right")
+                    .font(.caption.weight(.bold))
+                    .foregroundStyle(.tertiary)
+            }
+            .padding(16)
+            .background(
+                Theme.cardBackground,
+                in: .rect(cornerRadius: 20, style: .continuous)
+            )
+            .overlay {
+                RoundedRectangle(cornerRadius: 20, style: .continuous)
+                    .stroke(
+                        isRecommended ? Theme.accent.opacity(0.35) : Theme.subtleStroke,
+                        lineWidth: 0.75
+                    )
+            }
+            .contentShape(.rect(cornerRadius: 20, style: .continuous))
+        }
+        .buttonStyle(.plain)
+    }
+
+    private func providerRow(_ provider: ExternalAIProvider) -> some View {
+        Button {
+            HapticService.play(.selection)
+            selectedProvider = provider
+            hasOpenedProvider = false
+            promptWasCopied = false
+        } label: {
+            HStack(alignment: .top, spacing: 14) {
+                NeutralIconBadge(
+                    systemName: provider.systemImage,
+                    size: 42,
+                    cornerRadius: 13,
+                    symbolSize: 17
+                )
+
+                VStack(alignment: .leading, spacing: 5) {
+                    HStack(spacing: 8) {
+                        Text(provider.displayName)
+                            .font(.headline)
+                            .foregroundStyle(.primary)
+
+                        if provider.isRecommended {
+                            Text(L10n.text("ai.recommended"))
+                                .font(.caption2.weight(.bold))
+                                .foregroundStyle(Theme.accent)
+                        }
+                    }
+
+                    if provider == .chatGPT {
+                        Text(L10n.text("ai.chatgpt.free_note"))
+                            .font(.caption)
+                            .foregroundStyle(.secondary)
+                            .multilineTextAlignment(.leading)
+                    }
+                }
+
+                Spacer(minLength: 8)
+
+                Image(
+                    systemName: selectedProvider == provider
+                        ? "checkmark.circle.fill"
+                        : "circle"
+                )
+                .font(.title3)
+                .foregroundStyle(
+                    selectedProvider == provider
+                        ? Theme.accent
+                        : Color.secondary
+                )
+            }
+            .padding(15)
+            .background(
+                Theme.cardBackground,
+                in: .rect(cornerRadius: 18, style: .continuous)
+            )
+            .overlay {
+                RoundedRectangle(cornerRadius: 18, style: .continuous)
+                    .stroke(
+                        selectedProvider == provider
+                            ? Theme.accent.opacity(0.55)
+                            : Theme.subtleStroke,
+                        lineWidth: selectedProvider == provider ? 1 : 0.5
+                    )
+            }
+            .contentShape(.rect(cornerRadius: 18, style: .continuous))
+        }
+        .buttonStyle(.plain)
+    }
+
+    private func copyPrompt() {
+        UIPasteboard.general.string = ExternalAIFlashcardPromptBuilder.makePrompt(
+            deckName: cleanName
+        )
+        promptWasCopied = true
+        HapticService.play(.selection)
+    }
+
+    private func openSelectedProvider() {
+        let prompt = ExternalAIFlashcardPromptBuilder.makePrompt(deckName: cleanName)
+        UIPasteboard.general.string = prompt
+        promptWasCopied = true
+        hasOpenedProvider = true
+        HapticService.play(.selection)
+        openURL(selectedProvider.launchURL(for: prompt))
+    }
+
+    private func pasteAIResult() {
+        guard let clipboardText = UIPasteboard.general.string,
+              !clipboardText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else {
+            showAlert(
+                title: L10n.text("ai.error.clipboard_title"),
+                message: L10n.text("ai.error.clipboard_body")
+            )
+            return
+        }
+
+        do {
+            importedCards = try ExternalAIFlashcardParser.parse(clipboardText)
+            HapticService.play(.selection)
+            step = .aiPreview
+        } catch let error as ExternalAIFlashcardParserError {
+            switch error {
+            case .emptyResult:
+                showAlert(
+                    title: L10n.text("ai.error.empty_title"),
+                    message: L10n.text("ai.error.empty_body")
+                )
+            case .invalidJSON, .incompleteRecord:
+                showAlert(
+                    title: L10n.text("ai.error.invalid_title"),
+                    message: L10n.text("ai.error.invalid_body")
+                )
+            }
+        } catch {
+            showAlert(
+                title: L10n.text("ai.error.invalid_title"),
+                message: L10n.text("ai.error.invalid_body")
+            )
+        }
+    }
+
+    private func showAlert(title: String, message: String) {
+        alertTitle = title
+        alertMessage = message
+        showingAlert = true
+    }
+}
+
+private struct DeckEditorForm: View {
     @Environment(\.dismiss) private var dismiss
     @Environment(\.modelContext) private var modelContext
     @Query(sort: \Folder.name) private var folders: [Folder]
 
     let deck: Deck?
+    private let shouldFocusName: Bool
     @State private var name: String
     @State private var selectedFolderID: UUID?
     @State private var cardDrafts: [DeckCardDraft]
@@ -37,11 +538,26 @@ struct DeckFormView: View {
     @State private var showingDuplicateChoice = false
     @FocusState private var nameFieldFocused: Bool
 
-    init(deck: Deck? = nil, initialFolder: Folder? = nil) {
+    init(
+        deck: Deck? = nil,
+        initialFolder: Folder? = nil,
+        initialName: String = "",
+        initialCards: [ParsedCard] = []
+    ) {
         self.deck = deck
-        _name = State(initialValue: deck?.name ?? "")
+        shouldFocusName = deck == nil
+            && initialName.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+        _name = State(initialValue: deck?.name ?? initialName)
         _selectedFolderID = State(initialValue: deck?.folder?.id ?? initialFolder?.id)
-        _cardDrafts = State(initialValue: deck == nil ? [DeckCardDraft()] : [])
+        _cardDrafts = State(
+            initialValue: deck == nil
+                ? (initialCards.isEmpty
+                    ? [DeckCardDraft()]
+                    : initialCards.map {
+                        DeckCardDraft(term: $0.term, definition: $0.definition)
+                    })
+                : []
+        )
     }
 
     private var cleanName: String {
@@ -89,7 +605,7 @@ struct DeckFormView: View {
                     TextField("Nom", text: $name)
                         .focused($nameFieldFocused)
                         .task {
-                            guard deck == nil else { return }
+                            guard shouldFocusName else { return }
                             try? await Task.sleep(nanoseconds: 120_000_000)
                             nameFieldFocused = true
                         }
@@ -171,12 +687,12 @@ struct DeckFormView: View {
                                 cardDrafts.append(DeckCardDraft())
                             }
                         }
-                        .normalActionColor(controlAccent)
+                        .normalActionColor()
 
                         Button("Ajout en masse", systemImage: "text.badge.plus") {
                             showingBulkAdd = true
                         }
-                        .normalActionColor(controlAccent)
+                        .normalActionColor()
                     } footer: {
                         if hasIncompleteDraft {
                             Text("Chaque carte commencée doit avoir un terme et une définition.")
