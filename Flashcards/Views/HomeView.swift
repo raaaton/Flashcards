@@ -465,63 +465,73 @@ struct HomeView: View {
 
                 LazyVGrid(columns: folderColumns, spacing: folderGridSpacing) {
                     ForEach(displayedFolders, id: \.id) { folder in
-                        NavigationLink {
-                            FolderDetailView(folder: folder)
-                        } label: {
+                        ZStack {
                             FolderTile(
                                 name: folder.name,
                                 systemImage: folder.iconName,
                                 deckCount: folder.decks.count
                             )
-                        }
-                        .buttonStyle(.plain)
-                        .onGeometryChange(for: CGRect.self) { proxy in
-                            proxy.frame(in: .named(Self.folderReorderCoordinateSpace))
-                        } action: { frame in
-                            folderDragPreviewSize = frame.size
-                            updateFolderReorderVisualSlot(for: folder.id, frame: frame)
-                        }
-                        .onDrag {
-                            draggedFolderID = folder.id
-                            return NSItemProvider(
-                                object: folder.id.uuidString as NSString
+                            .allowsHitTesting(false)
+                            .accessibilityHidden(true)
+
+                            NavigationLink {
+                                FolderDetailView(folder: folder)
+                            } label: {
+                                FolderTile(
+                                    name: folder.name,
+                                    systemImage: folder.iconName,
+                                    deckCount: folder.decks.count
+                                )
+                            }
+                            .buttonStyle(.plain)
+                            .onGeometryChange(for: CGRect.self) { proxy in
+                                proxy.frame(in: .named(Self.folderReorderCoordinateSpace))
+                            } action: { frame in
+                                folderDragPreviewSize = frame.size
+                                updateFolderReorderVisualSlot(for: folder.id, frame: frame)
+                            }
+                            .onDrag {
+                                draggedFolderID = folder.id
+                                return NSItemProvider(
+                                    object: folder.id.uuidString as NSString
+                                )
+                            } preview: {
+                                FolderTile(
+                                    name: folder.name,
+                                    systemImage: folder.iconName,
+                                    deckCount: folder.decks.count
+                                )
+                                .frame(
+                                    width: folderDragPreviewSize.width > 0
+                                        ? folderDragPreviewSize.width
+                                        : 170
+                                )
+                                .contentShape(
+                                    .dragPreview,
+                                    .rect(cornerRadius: 22, style: .continuous)
+                                )
+                            }
+                            .onDrop(
+                                of: [UTType.text],
+                                delegate: FolderReorderDropDelegate(
+                                    destinationID: folder.id,
+                                    draggedID: $draggedFolderID,
+                                    move: moveFolderDuringCustomDrag,
+                                    finish: finishFolderCustomDrag
+                                )
                             )
-                        } preview: {
-                            FolderTile(
-                                name: folder.name,
-                                systemImage: folder.iconName,
-                                deckCount: folder.decks.count
-                            )
-                            .frame(
-                                width: folderDragPreviewSize.width > 0
-                                    ? folderDragPreviewSize.width
-                                    : 170
-                            )
-                            .contentShape(
-                                .dragPreview,
-                                .rect(cornerRadius: 22, style: .continuous)
-                            )
-                        }
-                        .onDrop(
-                            of: [UTType.text],
-                            delegate: FolderReorderDropDelegate(
-                                destinationID: folder.id,
-                                draggedID: $draggedFolderID,
-                                move: moveFolderDuringCustomDrag,
-                                finish: finishFolderCustomDrag
-                            )
-                        )
-                        .contextMenu {
-                            Button("Modifier", systemImage: "pencil") { folderToEdit = folder }
+                            .contextMenu {
+                                Button("Modifier", systemImage: "pencil") { folderToEdit = folder }
+                                    .normalActionColor()
+                                Button("Dupliquer", systemImage: "plus.square.on.square") {
+                                    LibraryActions.duplicateFolder(folder, in: modelContext)
+                                }
                                 .normalActionColor()
-                            Button("Dupliquer", systemImage: "plus.square.on.square") {
-                                LibraryActions.duplicateFolder(folder, in: modelContext)
+                                Button(role: .destructive) { folderToDelete = folder } label: {
+                                    Label("Supprimer", systemImage: "trash")
+                                }
+                                .destructiveActionColor()
                             }
-                            .normalActionColor()
-                            Button(role: .destructive) { folderToDelete = folder } label: {
-                                Label("Supprimer", systemImage: "trash")
-                            }
-                            .destructiveActionColor()
                         }
                     }
 
