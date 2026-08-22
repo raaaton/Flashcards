@@ -15,10 +15,6 @@ struct FolderDetailView: View {
     @State private var deckToEdit: Deck?
     @State private var deckToDelete: Deck?
 
-    private let columns = [
-        GridItem(.adaptive(minimum: 150, maximum: 220), spacing: 14)
-    ]
-
     private var decks: [Deck] {
         let scoped = allDecks.filter { deck in
             if let folder {
@@ -41,7 +37,7 @@ struct FolderDetailView: View {
                 )
             } else {
                 ScrollView {
-                    LazyVGrid(columns: columns, spacing: 14) {
+                    LazyVStack(spacing: 10) {
                         ForEach(decks) { deck in
                             deckTileLink(deck)
                         }
