@@ -15,6 +15,27 @@ It is written entirely with **SwiftUI**, **SwiftData**, and Apple system APIs. T
 
 Version 2 introduces a redesigned visual system, a new mint identity, a rebuilt Home experience, compact deck rows, improved duplicate detection, configurable Home sections, expanded localization, and a more consistent Apple-native interaction model throughout the app.
 
+<p align="center" style="display:flex; justify-content:center; gap:12px;">
+  <img
+    width="197"
+    height="426"
+    alt="Home v2 showing Resume, Recent and the redesigned Folder tiles"
+    src="https://github.com/user-attachments/assets/50673124-6e5a-4d25-88d1-8178e9321f48"
+  />
+  <img
+    width="197"
+    height="426"
+    alt="A folder page showing the new compact full-width Deck rows"
+    src="https://github.com/user-attachments/assets/5ca1e592-4faf-4bf0-9f8b-7b1e617ee182"
+  />
+  <img
+    width="197"
+    height="426"
+    alt="Flashcards study screen with a card flipped to its answer side"
+    src="https://github.com/user-attachments/assets/c82d9364-5548-4e2c-a66e-3cea78f6e2c3"
+  />
+</p>
+
 ---
 
 ## Development Build
@@ -175,7 +196,6 @@ No external parser or online service is used.
 
 ## Study
 
-
 Every deck has a dedicated study hub that brings progress, study modes, and card management together in one place.
 
 From here, you can see your current deck progress, launch either **Flashcards** or **Test**, and review or edit the cards before starting a session.
@@ -188,7 +208,6 @@ The goal is to keep everything related to a deck immediately accessible without 
   alt="Deck study hub showing progress, Flashcards and Test modes, and the deck’s card list"
   src="https://github.com/user-attachments/assets/3faaf9ef-5889-48b9-b589-7a5df680a362"
 />
-
 
 ### With Flashcards
 
@@ -229,7 +248,7 @@ Study preferences are remembered locally so repeated sessions do not need to be 
   <img
     width="197"
     height="426"
-    alt="Flashcards study screen with a card semi-flipped to its "I knew it" edge"
+    alt="Flashcards study screen with a card semi-flipped to its &quot;I knew it&quot; edge"
     src="https://github.com/user-attachments/assets/8001a25d-6276-427c-9ffd-edb6967bfb4b"
   />
 </p>
