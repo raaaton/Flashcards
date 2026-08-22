@@ -14,6 +14,8 @@ struct FolderDetailView: View {
     @State private var confirmingFolderDeletion = false
     @State private var deckToEdit: Deck?
     @State private var deckToDelete: Deck?
+    @State private var createdDeckToOpen: Deck?
+    @State private var showingCreatedDeck = false
 
     private var decks: [Deck] {
         let scoped = allDecks.filter { deck in
@@ -51,6 +53,11 @@ struct FolderDetailView: View {
         }
         .navigationTitle(folder?.name ?? L10n.text("folder.unfiled"))
         .navigationBarTitleDisplayMode(.large)
+        .navigationDestination(isPresented: $showingCreatedDeck) {
+            if let createdDeckToOpen {
+                DeckDetailView(deck: createdDeckToOpen)
+            }
+        }
         .toolbar {
             ToolbarItemGroup(placement: .topBarTrailing) {
                 Button {
@@ -103,8 +110,14 @@ struct FolderDetailView: View {
             .accessibilityLabel("Nouveau deck")
             .accessibilityHint("Créer un nouveau deck dans ce dossier")
         }
-        .sheet(isPresented: $showingNewDeck) {
-            DeckFormView(initialFolder: folder)
+        .sheet(
+            isPresented: $showingNewDeck,
+            onDismiss: openCreatedDeckIfNeeded
+        ) {
+            DeckFormView(
+                initialFolder: folder,
+                onCreated: queueCreatedDeck
+            )
         }
         .sheet(isPresented: $showingSearch) {
             DeckSearchView(decks: decks, showsFolderContext: false)
@@ -172,6 +185,19 @@ struct FolderDetailView: View {
             get: { deckToDelete != nil },
             set: { if !$0 { deckToDelete = nil } }
         )
+    }
+
+    private func queueCreatedDeck(_ deck: Deck) {
+        createdDeckToOpen = deck
+    }
+
+    private func openCreatedDeckIfNeeded() {
+        guard createdDeckToOpen != nil else { return }
+
+        Task { @MainActor in
+            await Task.yield()
+            showingCreatedDeck = true
+        }
     }
 
     private func deletePendingDeck() {
