@@ -1,292 +1,1005 @@
 # Flashcards — Project Guide
 
-This document is the technical map of the Flashcards repository. It complements `README.md`: the README explains the product to users, while this file explains how the application is structured and which constraints should guide development.
+`PROJECT.md` is the technical map of the Flashcards repository. It complements `README.md`, which is user-facing, and `AGENTS.md`, which contains operational rules for coding agents.
 
-## Product
+This document describes the current v2 architecture on `main`. When documentation and implementation disagree, the current source code, tests, and workflow are the final behavioral truth.
 
-Flashcards is a native iOS flashcards application focused on fast card creation, distraction-free study, and complete local ownership of user data.
+## 1. Product summary
 
-The product deliberately stays small and native:
+Flashcards is a native, local-first iOS study app focused on fast card creation, simple organization, focused revision, and full ownership of study data.
 
-- no account
+The product intentionally avoids infrastructure that is unnecessary for a personal study tool:
+
+- no account system
 - no backend
-- no analytics or tracking
-- no advertising
+- no cloud database
 - no runtime network requests
+- no analytics or telemetry
+- no advertising
 - no third-party SDKs
-- no package dependencies
-- JSON backup and restore for user-owned data
+- no Swift package dependencies
+- no app entitlements
+- no CloudKit synchronization
+- JSON export/restore for user-owned data
 
-The app is designed around Apple platform conventions rather than a custom cross-platform design system.
+The app should feel like an Apple-native utility rather than a cross-platform product ported to iOS.
 
-## Platform and stack
+## 2. Platform and build facts
 
-| Area | Choice |
+| Area | Current choice |
 | --- | --- |
 | Platform | iOS |
-| Minimum OS | iOS 27.0 |
-| Language | Swift 6 |
+| Minimum deployment target | iOS 27.0 |
+| Language | Swift 6.0 |
 | UI | SwiftUI |
 | Persistence | SwiftData |
+| Preferences | `UserDefaults` through `AppPreferences` / `AppSettings` |
 | Localization | String Catalog + `L10n` helpers |
 | Dependencies | None |
 | Backend | None |
-| Network | None at runtime |
-| CI / release | GitHub Actions + Xcode 27 |
+| Runtime network | None |
+| CloudKit | Explicitly disabled |
+| App target count | 1 |
+| Bundle identifier | `com.raton.flashcards` |
+| CI / build runner | GitHub Actions on `xcode-27` |
+| Release artifact | Unsigned `.ipa` |
 
-`Flashcards.xcodeproj` contains one native app target.
+`Flashcards.xcodeproj` contains one native application target.
 
-## Core principles
+`FlashcardsApp.swift` creates a local SwiftData `ModelContainer` with `Folder`, `Deck`, and `Card`, using a `ModelConfiguration` named `Local` with `cloudKitDatabase: .none`. The app injects `AppSettings`, applies the selected locale, uses the app accent as the SwiftUI tint, and currently forces the interface to dark mode with `.preferredColorScheme(.dark)`.
+
+## 3. Product invariants
 
 ### Native first
 
-Prefer Apple APIs and native SwiftUI interactions. Use system navigation, sheets, menus, alerts, pickers, SF Symbols, haptics, drag and drop, typography, and Liquid Glass where appropriate.
+Prefer Apple APIs and native SwiftUI behavior: navigation stacks, sheets, menus, alerts, confirmation dialogs, pickers, context menus, SF Symbols, native haptics, system typography, and platform materials.
+
+When reproducing an Apple interaction, behavior matters as much as appearance. Dragging, swiping, reordering, transitions, and sheet presentation should preserve spatial continuity.
 
 ### Local first
 
-Core functionality must keep working offline. Features should not introduce a server dependency, remote database, analytics endpoint, telemetry service, or hidden network requirement.
+All core workflows must work without a network connection. A feature must not silently introduce a server, API request, remote database, telemetry endpoint, or remote configuration dependency.
 
 ### User-owned data
 
-Folders, decks, cards, progress, active sessions, history, ordering, and other persistent state belong to the user and must remain exportable through the JSON backup system.
-
-### Fast interaction
-
-Creating, importing, reorganizing, and studying cards should remain low-friction. Prefer direct manipulation and immediate feedback over extra configuration screens.
+Folders, decks, cards, card order, folder order, study progress, starred state, resumable sessions, pin state, and study history belong to the user. Persistent state should be exportable when it is part of the user's library experience.
 
 ### Small architecture
 
-Do not add architectural frameworks for problems that can be solved clearly with SwiftUI, SwiftData, and small focused services.
+The project intentionally uses direct SwiftUI + SwiftData rather than a large architecture framework. Add helpers and services where they isolate real domain logic, not to satisfy architectural symmetry.
 
-## Repository layout
+### Compatibility over cleanup
+
+Stored data and backups can outlive a given UI generation. Legacy fields may remain intentionally even when the v2 interface no longer exposes them.
+
+## 4. v2 visual identity
+
+The current v2 visual system is intentionally fixed rather than theme-selectable.
+
+- brand accent: mint `#46D7A7`
+- `AppAccent` currently has exactly one case: `.mint`
+- black / white / system gray provide structure
+- red is reserved for destructive actions and exact-duplicate warnings
+- orange is used for possible-duplicate warnings
+- folder cards are neutral system-gray surfaces
+- folder icon surfaces use mint
+- deck accents resolve to the global mint accent
+- system typography and SF Symbols are preferred
+- continuous rounded shapes are used throughout
+- Liquid Glass is used selectively for native floating controls
+- the app itself currently renders dark-only even though the app icon has appearance-specific variants
+
+`Theme.deckAccent(for:)` currently returns the global accent and does not derive a visible color from a folder.
+
+### Legacy folder color compatibility
+
+`Folder.colorHex` and `FolderAppearance.presetColors` remain in the model/codebase for storage and backup compatibility. The v2 user-facing folder UI does **not** expose per-folder color branding. Do not remove these fields casually; old SwiftData stores and JSON backups may contain them.
+
+## 5. Repository layout
 
 ```text
 .
 ├── .github/
 │   └── workflows/
+│       └── build-ipa.yml
 ├── CITests/
+│   ├── BackupCodecSmoke.swift
+│   ├── BulkImportParserSmoke.swift
+│   ├── StudySessionSmoke.swift
+│   └── TestSessionSmoke.swift
 ├── Flashcards.xcodeproj/
 ├── Flashcards/
+│   ├── AppIcon.icon/
+│   │   ├── Assets/
+│   │   │   ├── Back_Card.svg
+│   │   │   ├── Front_Card.svg
+│   │   │   └── Middle_Card.svg
+│   │   └── icon.json
+│   ├── Assets.xcassets/
 │   ├── Models/
+│   │   ├── Card.swift
+│   │   ├── Deck.swift
+│   │   └── Folder.swift
 │   ├── Services/
+│   │   ├── BackupModels.swift
+│   │   ├── BackupService.swift
+│   │   ├── BulkImportParser.swift
+│   │   ├── HapticService.swift
+│   │   ├── LibraryActions.swift
+│   │   ├── StudySessionState.swift
+│   │   └── TestSessionState.swift
 │   ├── Views/
 │   │   ├── Backup/
+│   │   │   └── BackupView.swift
+│   │   ├── Celebration/
 │   │   ├── Import/
+│   │   │   └── BulkImportView.swift
 │   │   ├── Library/
+│   │   │   ├── CardFormView.swift
+│   │   │   ├── DeckDetailView.swift
+│   │   │   ├── DeckFormView.swift
+│   │   │   ├── DeckRow.swift
+│   │   │   ├── EditCardsView.swift
+│   │   │   ├── FolderDetailView.swift
+│   │   │   ├── FolderFormView.swift
+│   │   │   └── FolderTile.swift
 │   │   ├── Settings/
+│   │   │   └── SettingsView.swift
 │   │   ├── Study/
-│   │   └── Test/
-│   ├── Assets.xcassets/
+│   │   │   ├── StudyCardFace.swift
+│   │   │   ├── StudySetupView.swift
+│   │   │   └── StudyView.swift
+│   │   ├── Test/
+│   │   │   ├── TestRunView.swift
+│   │   │   └── TestSetupView.swift
+│   │   └── HomeView.swift
 │   ├── AppPreferences.swift
 │   ├── AppSettings.swift
 │   ├── FlashcardsApp.swift
 │   ├── FolderAppearance.swift
 │   ├── L10n.swift
 │   ├── Localizable.xcstrings
-│   └── Theme.swift
+│   ├── StudyAnimationMetrics.swift
+│   ├── TestAnimationMetrics.swift
+│   ├── Theme.swift
+│   └── icon.png
+├── AGENTS.md
+├── PROJECT.md
 ├── README.md
 └── LICENSE
 ```
 
-## Data model
+## 6. Source-of-truth hierarchy
 
-SwiftData is the source of truth for the library.
+Use these files for different kinds of truth:
+
+1. **Current source + tests** — final runtime behavior.
+2. **`.github/workflows/build-ipa.yml`** — build, release, and CI contract.
+3. **`PROJECT.md`** — architecture, product constraints, data model, and subsystem map.
+4. **`AGENTS.md`** — implementation rules for automated coding agents.
+5. **`README.md`** — public product documentation and screenshots.
+
+If a README claim conflicts with source, source wins. If a CI grep assertion conflicts with an intentional product redesign, the workflow assertion should be updated atomically with the source rather than preserving obsolete behavior only to satisfy grep.
+
+## 7. Data model
+
+SwiftData is the primary source of truth for the study library.
 
 ### `Folder`
 
-A folder owns zero or more decks and stores:
+Stored fields:
 
-- stable UUID
-- name
-- creation date
-- SF Symbol name
-- color hex value
-- persistent `sortOrder` used by Home drag-and-drop reordering
+- `id: UUID`
+- `name: String`
+- `createdAt: Date`
+- `iconName: String`
+- `colorHex: String`
+- `sortOrder: Int`
+- `decks: [Deck]`
 
-Deleting a folder can either cascade to its decks or, through library actions, preserve the decks by moving them to Unfiled.
+Relationship behavior:
+
+- `Folder.decks` has a cascade delete rule.
+- `Deck.folder` is the inverse.
+- The UI can delete a folder while preserving decks by first setting each deck's folder to `nil`, then deleting the folder through `LibraryActions.deleteFolderKeepingDecks`.
+
+Ordering:
+
+- Home folder order is persisted explicitly through `sortOrder`.
+- Ties fall back to creation date and then stable identity where needed.
+- Do not use relationship array order as user-visible ordering.
+
+Compatibility note:
+
+- `colorHex` is still serialized but is no longer a user-facing v2 brand control.
 
 ### `Deck`
 
-A deck stores:
+Stored fields:
 
-- stable UUID
-- name
-- timestamps (`createdAt`, `updatedAt`, optional `lastOpenedAt`)
-- optional folder relationship
-- cards
-- pin state
-- completed study session count
-- resumable study session data
-- local study history data
-- last study activity timestamp
+- `id: UUID`
+- `name: String`
+- `deckDescription: String?`
+- `createdAt: Date`
+- `updatedAt: Date`
+- `lastOpenedAt: Date?`
+- `completedStudySessions: Int`
+- `activeStudySessionData: Data?`
+- `studyHistoryData: Data?`
+- `lastStudyActivityAt: Date?`
+- `isPinned: Bool`
+- `folder: Folder?`
+- `cards: [Card]`
 
-Study history is encoded locally and intentionally bounded to recent entries.
+Relationship behavior:
+
+- `Deck.cards` has a cascade delete rule.
+- `Card.deck` is the inverse.
+
+Usage notes:
+
+- `lastOpenedAt` drives Recent ordering.
+- `isPinned` drives the Pinned Home section.
+- `activeStudySessionData` stores an encoded `ActiveStudySessionSnapshot` for Resume.
+- `lastStudyActivityAt` participates in ordering resumable decks.
+- `studyHistoryData` stores encoded study history entries.
+- `completedStudySessions` is part of study progress/reset state.
+- `deckDescription` exists in the SwiftData model but is not currently surfaced by `DeckFormView`. It is also not currently represented in `BackupDeckDTO`, so do not assume it survives JSON export/import without explicitly extending the backup format.
+
+### `StudyHistoryEntry`
+
+A deck's history is encoded as local JSON data inside `studyHistoryData`.
+
+Each entry stores:
+
+- `id`
+- `completedAt`
+- mode: `.flashcards` or `.test`
+- `itemCount`
+- `correctCount`
+- `incorrectCount`
+
+`successRate` is computed from `correctCount / itemCount`.
+
+History is intentionally bounded to the five most recent entries per deck.
 
 ### `Card`
 
-A card stores:
+Stored fields:
 
-- stable UUID
+- `id: UUID`
+- `term: String`
+- `definition: String`
+- `position: Int`
+- `mastered: Bool`
+- `timesStudied: Int`
+- `timesCorrect: Int`
+- `isStarred: Bool`
+- `deck: Deck?`
+
+Ordering:
+
+- card order is explicit through `position`
+- all card-list operations should sort by `position`
+- move/delete operations normalize positions when required
+
+## 8. Preferences and settings
+
+Persistent preferences live in `UserDefaults` through `AppPreferences`. `AppSettings` is an `@Observable`, `@MainActor` wrapper injected into SwiftUI.
+
+### Language
+
+`AppLanguage` supports:
+
+- Automatic
+- French (`fr`)
+- English (`en`)
+- German (`de`)
+- Spanish (`es`)
+
+Automatic mode uses the current system locale.
+
+### Current settings toggles
+
+`SettingsView` exposes:
+
+- haptics
+- celebration animations
+- study history
+- Resume Home section
+- Recent Home section
+- Pinned Home section
+- folder-scoped search behavior
+- app language
+- backup / restore entry point
+
+### Study preferences
+
+The following are also persisted:
+
+- study direction
+- shuffle
+- starred-only mode
+
+These preferences are reused so repeated sessions do not require full setup every time.
+
+### Accent preference compatibility
+
+`AppPreferences.accentColor` and `AppSettings.accentColor` still exist, but `AppAccent` has only `.mint`. There is no user-facing accent picker in the current UI.
+
+## 9. Localization
+
+The String Catalog source language is French.
+
+Supported app languages:
+
+- French
+- English
+- German
+- Spanish
+- Automatic system selection
+
+Localization mechanisms:
+
+- localized SwiftUI string-key initializers
+- `LocalizedStringKey`
+- `Localizable.xcstrings`
+- `L10n.text(...)` for concrete strings
+- `L10n.format(...)` for formatted strings
+- domain helpers such as `L10n.cards`, `L10n.decks`, and `L10n.questions`
+
+`L10n` resolves the selected language directly from the `settings.language` UserDefaults key. It also contains a small set of inline FR/EN/DE/ES translations for duplicate warnings/actions.
+
+### Important CI constraint
+
+`L10n.swift` is compiled directly by Foundation smoke tests without the whole app target. Keep it Foundation-only: it must not depend on `AppSettings`, SwiftUI, SwiftData models, or other app-only types unless the smoke-test compilation is deliberately updated.
+
+The workflow also requires every String Catalog entry to have an English localization marked `translated`.
+
+## 10. Home architecture
+
+`HomeView` is the root library experience.
+
+The main section order is intentionally:
+
+1. Resume
+2. Recent
+3. Pinned
+4. Folders
+
+Resume, Recent, and Pinned are individually configurable in Settings. Folders remain the permanent primary library section.
+
+### Resume
+
+A deck appears in Resume only when:
+
+- `activeStudySessionData` decodes successfully
+- the session belongs to that deck
+- the current index is greater than zero
+- the current index is still before the end
+- all remaining card IDs still exist in the deck
+
+Resumable decks are sorted by `lastStudyActivityAt` descending.
+
+### Recent
+
+Recent is based on `lastOpenedAt`, sorted newest first, and currently shows at most two decks.
+
+### Pinned
+
+Pinned decks are filtered by `isPinned` and sorted by last-opened time, falling back to `updatedAt`.
+
+### Folders
+
+Folders are shown in a two-column `LazyVGrid` with neutral `FolderTile` cards, mint circular icon surfaces, title, and deck count.
+
+An Unfiled entry appears when one or more decks have `folder == nil`.
+
+### First-use onboarding
+
+When there are no folders and no decks, Home shows a first-deck flow that can:
+
+- create a deck directly
+- create a folder first
+- import cards / backup data
+
+## 11. Folder reordering and drag behavior
+
+Folder drag/reordering has been a regression-sensitive area on iOS 27 and should be treated separately from ordinary library mutations.
+
+### Current implementation
+
+Current `HomeView` uses the classic SwiftUI drag/drop path rather than depending on the newer `reorderable` / `reorderContainer` API for the active UI:
+
+- `draggedFolderID` identifies the active folder
+- `onDrag` provides an `NSItemProvider`
+- the drag preview explicitly rebuilds a `FolderTile`
+- `FolderReorderDropDelegate` receives drop-enter events
+- `moveFolderDuringCustomDrag` updates `folderOrderIDs` live
+- `finishFolderCustomDrag` persists the final order
+- `sortOrder` is written back to every affected `Folder`
+
+### Haptics
+
+Folder reorder haptics are intentionally tied to **visual slot changes**, not just final persistence:
+
+- each tile reports its frame in the named `folder-reorder-grid` coordinate space
+- row/column are converted to a two-column visual slot
+- a reorder haptic fires when a tile's slot actually changes
+- haptics are armed after a short reset delay
+- duplicate rapid haptics are coalesced over a very small interval
+
+This separation is intentional: visual movement drives feedback; persistence stores the result.
+
+### Platform note
+
+Recent development found that iOS 27 runtime behavior can affect system drag previews even for older app builds. Do not assume a drag visual regression is necessarily caused by the most recent source change. Validate on the actual runtime before replacing a working strategy.
+
+## 12. Library UI
+
+### Folder detail
+
+`FolderDetailView` displays decks as compact full-width rows rather than a card grid. The same deck visual language is shared with Home/search where appropriate.
+
+Folder pages provide:
+
+- deck list
+- deck creation
+- scoped search entry
+- context actions
+- Unfiled support when the folder argument is `nil`
+
+### Deck presentation
+
+Deck rows/tiles use:
+
+- mint deck glyph surface
+- one-line deck title
+- card count metadata
+- optional folder context
+- disclosure affordance
+
+### Context actions
+
+Home and library context menus provide operations such as:
+
+- pin / unpin deck
+- edit
+- duplicate
+- delete
+
+Folder deletion can either preserve decks by moving them to Unfiled or delete the full folder contents.
+
+## 13. Card creation and editing
+
+`DeckFormView` handles both deck editing and new-deck creation. New decks can be created with several initial card drafts in one flow.
+
+`CardFormView` handles adding/editing an individual card.
+
+Shared editor visuals are implemented by `CardEditorSurface` in `Theme.swift`.
+
+Key rules:
+
+- trim whitespace before validation/save
+- a card needs both term and definition
+- new-deck initial drafts may be added/removed
+- incomplete non-empty drafts block save
+- duplicate analysis runs before committing relevant card creation/editing
+
+`EditCardsView` provides multi-card management including:
+
+- selection
+- star / unstar
+- delete
+- move to another deck
+- copy to another deck
+- card reordering
+
+`LibraryActions` centralizes reusable mutations and normalizes positions where required.
+
+## 14. Duplicate detection
+
+Duplicate detection is shared through `BulkDuplicateDetector`.
+
+Normalization:
+
+- trim whitespace/newlines
+- case-insensitive folding
+- diacritic-insensitive folding
+
+Classification:
+
+- **Exact**: normalized term and normalized definition both match a known card
+- **Possible**: normalized term matches but definition differs
+
+The detector compares candidates against:
+
+- existing deck cards supplied to the analysis
+- candidates already seen earlier in the same batch
+
+Current duplicate handling is used in:
+
+- new-deck card drafts
+- individual card creation
+- card editing
+- bulk import
+
+When editing, the edited card should be excluded from its own comparison set.
+
+UI semantics:
+
+- exact duplicate → red
+- possible duplicate → orange
+- user can deliberately continue when appropriate
+
+## 15. Bulk Add / Import
+
+`BulkImportView` and `BulkImportParser` implement offline text-to-card import.
+
+Features include:
+
+- direct clipboard paste
+- configurable term/definition delimiter
+- configurable card delimiter
+- custom delimiters
+- preview before import
+- invalid-record reporting
+- ignored-empty-record reporting
+- duplicate preview
+- skip exact duplicates
+- import anyway
+- import into an existing deck
+- create a new deck from the importer
+
+Parser behavior:
+
+- input is split by the configured card delimiter
+- empty records are ignored and counted
+- the first term delimiter separates term from definition
+- both sides are trimmed
+- missing delimiter / empty term / empty definition produce localized invalid-record reasons
+
+Everything runs locally.
+
+## 16. Study flow
+
+Study mode is split between setup/state/rendering:
+
+- `StudySetupView`
+- `StudySessionState`
+- `StudyView`
+- `StudyCardFace`
+- `StudyAnimationMetrics`
+
+### Direction
+
+`StudyDirection` supports:
+
+- term → definition
+- definition → term
+- random per card
+
+### Session options
+
+Current session size choices:
+
+- 10
+- 20
+- all
+
+Other options:
+
+- shuffle
+- starred-only
+
+### Session state
+
+Each study item stores a card snapshot plus whether the card is reversed.
+
+Tracked session state includes:
+
+- current index
+- cards seen
+- correct answers
+- review answers
+- completion state
+- judgments used for undo/review
+
+Study outcomes are:
+
+- `.knew`
+- `.review`
+
+The state can restore the previous card-progress snapshot when undoing.
+
+### Resume
+
+`ActiveStudySessionSnapshot` contains:
+
+- deck ID
+- session number
+- `StudySessionState`
+
+It is encoded into the deck's `activeStudySessionData` and validated against the deck ID when decoding.
+
+### User-facing behavior
+
+Study supports:
+
+- card flip animation
+- swipe/answer judgments
+- undo
+- progress
+- haptics
+- mistake review
+- resumable sessions
+- completion celebration when enabled
+- study history recording when enabled
+
+## 17. Test flow
+
+Test mode is split between:
+
+- `TestSetupView`
+- `TestQuestionFactory`
+- `TestSessionState`
+- `TestRunView`
+- `TestAnimationMetrics`
+
+Question types:
+
+- multiple choice
+- true / false
+- written answer
+
+### Question generation
+
+The factory:
+
+- selects cards based on requested count
+- respects direction
+- optionally shuffles cards/questions
+- cycles through enabled question types
+- generates up to three unique distractors for multiple choice
+- creates true/false propositions from other cards when possible
+
+### Answer normalization
+
+Test answers are normalized case-insensitively, diacritic-insensitively, width-insensitively, and with normalized whitespace before comparison.
+
+### Session behavior
+
+`TestSessionState` tracks:
+
+- current question
+- submitted answers
+- correct count
+- score
+- current feedback state
+
+Written answers can be manually overridden to correct when the automatic matcher is too strict. Incorrect questions can be retried through `retryErrors()`.
+
+## 18. Study history and progress
+
+Deck detail shows mastered-card progress with `DeckProgressBar`.
+
+When enabled, completed Flashcards/Test sessions are recorded in each deck's bounded study history.
+
+History can be:
+
+- disabled globally from Settings
+- cleared per deck
+- deleted entry by entry
+
+The current Test history UI intentionally keeps the summary compact by omitting the redundant leading question-count segment while retaining correctness/score information.
+
+## 19. Search
+
+Search is presented through the native navigation flow rather than as a permanent Home field.
+
+Current scopes support matching data such as:
+
+- folder names
+- deck names
+- card terms
+- card definitions
+
+Global search is opened from Home with folder context visible. Folder search can remain scoped to the current folder depending on the Search setting.
+
+The workflow currently expects `.searchable` to live only in `DeckRow.swift`; this is an implementation/CI contract, not a general architectural rule forever.
+
+## 20. Backup and restore
+
+Backup is a core product invariant.
+
+### Schema
+
+Current envelope:
+
+- `BackupEnvelopeV1`
+- `schemaVersion = 1`
+- scopes: `.deck` and `.database`
+- ISO-8601 date encoding
+- pretty-printed, sorted-key JSON
+
+### Exported folder fields
+
+- ID
+- name
+- creation date
+- icon name
+- legacy color hex
+- sort order
+
+### Exported deck fields
+
+- ID
+- name
+- created/updated timestamps
+- last opened date
+- completed study session count
+- active study session data
+- study history data
+- last study activity date
+- pin state
+- folder ID
+- cards
+
+Current caveat: `Deck.deckDescription` is not yet part of `BackupDeckDTO`.
+
+### Exported card fields
+
+- ID
 - term
 - definition
-- explicit position inside its deck
+- position
 - mastered state
-- study/correct counters
+- studied count
+- correct count
 - starred state
-- optional deck relationship
 
-Do not rely on relationship array order for cards; use `position`.
+### Backward-compatible decoding
 
-## Main UI domains
+Additive fields use `decodeIfPresent` + defaults where appropriate. Existing schema-v1 backups without newer optional fields should remain readable.
 
-### Home
+### Import semantics
 
-`HomeView` is the entry point for the library. It contains:
+Import is a merge/upsert, not a destructive replacement:
 
-- first-use empty-library onboarding
-- resumable sessions
-- recent decks
-- pinned decks
-- folder grid
-- persistent folder drag-and-drop ordering
-- Unfiled access
-- global search
-- creation actions
+- items are matched by stable UUID
+- existing matching items are updated
+- missing local items are added
+- local objects absent from the incoming file are not deleted
+- folder/deck/card relationships are reconstructed from IDs
+- a missing incoming `lastOpenedAt` does not erase an existing local value
+- the `ModelContext` is rolled back if import fails
 
-Folder reordering is a direct-manipulation interaction: the dragged folder leaves a visual slot while the surrounding grid reflows, and the resulting `sortOrder` is persisted.
+`BackupView` previews the incoming counts before merge and reports added/updated totals afterward.
 
-### Library
+## 21. Haptics and celebration
 
-`Views/Library` contains creation/editing and library-detail flows for folders, decks, and cards.
+`HapticService` is the centralized haptic entry point.
 
-Important behaviors include:
+Current event categories include:
 
-- folder colors and SF Symbols
-- contextual deck accent derived from the folder
-- gray visual identity for Unfiled, while primary form controls can continue using the global blue accent
-- individual and bulk card creation
-- card movement/copying between decks
-- duplicate detection
+- selection
+- reorder
+- flip
+- correct
+- review
+- wrong
+- completion
 
-### Import
+The completion effect uses Core Haptics when available and falls back to a sequence of impact generators.
 
-`Views/Import` handles fast plain-text card import and parsing. It is separate from database backup/restore.
+Respect the user's global haptics setting before generating feedback.
 
-Bulk card import supports configurable separators, preview, duplicate handling, and direct paste workflows.
+Celebration visuals are optional and controlled through Settings.
 
-### Backup
+## 22. App icon pipeline
 
-`Views/Backup` plus `BackupModels` / `BackupService` implement JSON export and restore.
+The repository contains both a modern layered icon and a static fallback/verification path.
 
-Backup compatibility is an important invariant. New optional or additive fields must decode older backups safely. Model state that affects the user's library experience — including ordering — should be represented in backups when appropriate.
+### Layered icon
 
-### Study
+`Flashcards/AppIcon.icon/` is the Icon Composer-compatible bundle.
 
-The study flow supports direction choice, shuffle, starred-only sessions, session sizing, swipe judgments, undo, resume, mistake review, progress tracking, haptics, and completion feedback.
+Current `icon.json`:
 
-### Test
+- uses `Front_Card.svg` as the front glass group
+- uses `Middle_Card.svg` as the rear glass group
+- applies per-group scale/translation, glass, blur, shadow, and translucency
+- uses an automatic dark base gradient
+- has an explicit neutral linear-gradient specialization for Light
+- has an explicit Dark specialization using the automatic gradient
 
-The test flow derives questions from the same cards and supports multiple choice, true/false, and written answers while reusing relevant session preferences.
+`Back_Card.svg` remains in the asset folder even though the current layer graph references `Front_Card.svg` and `Middle_Card.svg`.
 
-## Styling and interaction
+Clear/tinted behavior is intentionally left to the platform unless explicit specializations are added.
 
-`Theme.swift` contains shared visual helpers and reusable controls. `FolderAppearance.swift` owns folder icons and preset colors.
+### Static icon
 
-Design expectations:
+The project also keeps:
 
-- dark interface
-- system typography
-- SF Symbols
-- native SwiftUI controls
-- Liquid Glass where it fits the platform
-- contextual folder accents
-- semantic green/red feedback
-- subtle, responsive haptics
-- animations should communicate state changes rather than decorate them
+- `Flashcards/icon.png`
+- `Flashcards/Assets.xcassets/AppIcon.appiconset/AppIcon.png`
 
-When reproducing an Apple interaction, match the behavior as well as the appearance. Direct-manipulation interactions should preserve spatial continuity and avoid visual duplication or abrupt pop-outs.
+CI requires these 1024×1024 PNGs to be byte-identical and requires the asset catalog to contain exactly the expected universal iOS icon entry.
 
-## Localization
+Do not assume a layered `.icon` edit automatically updates the static PNG path.
 
-The app currently supports French, English, German, and Spanish.
+## 23. CI smoke tests
 
-User-facing strings should use the existing localization system where practical:
+`CITests/` contains lightweight Foundation-level smoke/regression harnesses:
 
-- `Localizable.xcstrings`
-- `LocalizedStringKey` / localized SwiftUI initializers
-- `L10n.text`, `L10n.format`, and domain helpers when a concrete `String` is needed
+- `BulkImportParserSmoke.swift`
+- `StudySessionSmoke.swift`
+- `TestSessionSmoke.swift`
+- `BackupCodecSmoke.swift`
 
-Pluralization/formatting helpers should remain centralized instead of being reimplemented in individual views.
+The workflow compiles them directly with `xcrun swiftc -swift-version 6` and only the required source files.
 
-## Persistence and migrations
+This is why service files used by these tests should stay deterministic and avoid unnecessary SwiftUI/UIKit/app-model dependencies.
 
-Because SwiftData stores real user libraries, model evolution should be conservative.
+## 24. GitHub Actions pipeline
 
-For additive model changes:
+`.github/workflows/build-ipa.yml` is both a build pipeline and an executable repository contract.
 
-- provide a sensible default when possible
-- keep existing stored data readable
-- avoid destructive migrations unless explicitly required
-- preserve stable IDs and relationships
-- update backup DTOs/services when the field is part of user-owned state
-- make older JSON backups decode safely with defaults
+### Every push to `main`
 
-Ordering should use explicit persisted fields (`Card.position`, `Folder.sortOrder`) rather than implicit array order.
+The workflow:
 
-## Services
+1. checks out full history/tags
+2. reads the project version
+3. verifies Xcode/Swift/iOS toolchain
+4. verifies static app-icon invariants
+5. runs offline/single-target audits
+6. runs Foundation smoke tests
+7. builds the Release app for generic iPhone with signing disabled
+8. packages an unsigned IPA
+9. uploads a workflow artifact
+10. replaces the `dev` prerelease with the latest development IPA
 
-Keep non-trivial reusable domain logic out of large views when it has a clear service boundary.
+### Manual `workflow_dispatch`
 
-Examples include:
+Manual dispatch additionally:
 
-- `LibraryActions` for library mutations
-- backup codec/import/export services
-- bulk import parsing and duplicate detection
-- study session persistence/state
-- haptics
+1. computes the next release version
+2. updates project marketing/build versions in the checked-out workspace
+3. updates the README development IPA link
+4. runs a simulator build/launch smoke test on an iPhone 17 Pro simulator
+5. packages and publishes the development IPA
+6. commits release metadata back to `main` with `[skip ci]` when changed
+7. creates the official GitHub Release/tag
 
-Services should remain small and deterministic where possible.
+### Version computation
 
-## CI and releases
+Repository variables:
 
-`.github/workflows/build-ipa.yml` is the source of truth for builds when development occurs outside macOS.
+- `RELEASE_MAJOR`
+- `RELEASE_MINOR`
 
-The workflow performs project audits, build checks, simulator validation, test harnesses, IPA packaging, and release-related tasks.
+Behavior:
 
-A normal push to `main` produces/updates development build outputs. A manual workflow dispatch is used for versioned releases and computes the next release version from repository configuration/tags.
+- missing `RELEASE_MAJOR` falls back to `1`
+- both values must be integers
+- patch is derived from the highest matching `vMAJOR.MINOR.PATCH` tag
+- no matching tag → patch `0`
+- otherwise patch increments by one
+- marketing version = `MAJOR.MINOR.PATCH`
+- build version = `MINOR.PATCH`
 
-Do not manually bump the Xcode marketing/build version, release tag, or README development IPA link as part of an ordinary feature/fix unless the release workflow itself is being changed.
+Ordinary feature/fix commits should not manually bump release metadata.
 
-## CI tests
+## 25. CI audit contract
 
-`CITests/` contains lightweight smoke/regression harnesses for logic that should remain testable without depending on a full UI interaction.
+The workflow contains deliberate text/structure audits to enforce architecture and UI invariants. Important examples include:
 
-When changing backup formats, parsers, persistence behavior, or similarly testable logic, update/add a CI test when useful.
+- no runtime networking / CloudKit / analytics patterns
+- exactly one native target
+- iOS 27.0 deployment target
+- Swift 6.0
+- no Swift packages
+- no entitlements
+- fixed bundle identifier
+- source-language / English localization checks
+- Home section order
+- recent deck count behavior
+- required search placement
+- required library actions
+- required study/test state APIs
+- required reusable controls
+- expected form toolbar patterns
 
-## Development style
+These checks can become stale after legitimate redesigns. When source behavior is intentionally changed, update the corresponding CI assertion in the same change instead of inserting dead code or obsolete strings solely to satisfy grep.
+
+See `AGENTS.md` for the current high-risk exact assertions.
+
+## 26. Persistence and model evolution
+
+SwiftData stores real user libraries, so model evolution should be conservative.
+
+For additive stored fields:
+
+- provide a safe default when possible
+- keep old stores readable
+- avoid destructive changes unless explicitly required
+- preserve stable UUIDs and relationships
+- update backup DTO/service behavior if the field is meaningful user-owned data
+- update smoke tests where useful
+
+For ordering:
+
+- cards → `Card.position`
+- folders → `Folder.sortOrder`
+
+Never depend on relationship-array order for user-visible order.
+
+## 27. Service boundaries
+
+Use an existing service when a behavior is reusable and already has a domain boundary.
+
+Current examples:
+
+- library mutations → `LibraryActions`
+- backup DTO/codec/merge → `BackupModels`
+- SwiftData backup import/export → `BackupService`
+- text parsing and duplicate analysis → `BulkImportParser`
+- flashcard session state/persistence → `StudySessionState`
+- test generation/state → `TestSessionState`
+- haptics → `HapticService`
+
+Do not create a service for trivial state that belongs naturally to one view.
+
+## 28. Development principles
 
 Prefer:
 
-- focused changes
-- small helpers over duplicated logic
-- explicit persistent ordering
+- focused diffs
 - native SwiftUI behavior
-- backward-compatible data changes
-- clear names over comments that restate code
-- one logical commit per user-visible change when practical
+- small reusable helpers
+- explicit persisted ordering
+- compatibility-preserving model changes
+- centralized localization/pluralization
+- domain logic that can be smoke-tested without UI
+- real runtime validation for interaction-heavy changes
 
 Avoid:
 
 - third-party dependencies
-- network features
-- unnecessary abstractions
-- speculative refactors unrelated to the requested feature
-- rewriting established interactions when a smaller native fix preserves working behavior
+- runtime network features
+- remote state
+- speculative architecture layers
+- unrelated refactors during a feature fix
+- changing working interactions without a concrete reason
+- CI-only fake strings/dead code to satisfy an obsolete audit
 
-## Source-of-truth documents
+## 29. Current regression-sensitive areas
 
-- `README.md`: public product/readme documentation
-- `PROJECT.md`: architecture, constraints, and project map
-- `AGENTS.md`: repository instructions for coding agents
-- `.github/workflows/build-ipa.yml`: build/release/CI contract
-- source code and tests: final behavioral truth
+Some parts of the app deserve extra care because their behavior depends heavily on iOS runtime rendering/interaction details.
+
+### Folder drag/reorder
+
+The actual feel of the drag preview, finger-following behavior, grid reflow, and post-drop reconciliation cannot be fully validated by compile-only CI. Preserve the current haptic semantics and test on-device/IPA when changing this path.
+
+### App icon appearances
+
+Icon Composer appearance rendering can differ between Light, Dark, Clear, and Tinted system variants. A JSON configuration that looks equivalent structurally may not produce visually identical material/reflection behavior. Keep changes scoped to the requested appearance whenever possible.
+
+### String Catalog / literal UI strings
+
+Some current CI assertions grep exact source literals. Refactors that are semantically harmless can still fail CI. Inspect the workflow before renaming/removing audited strings or helpers.
+
+## 30. Definition of project consistency
+
+A repository change is architecturally consistent when:
+
+- the app remains native/local/offline
+- the data model and backup behavior remain compatible where relevant
+- user-visible strings follow localization conventions
+- v2 mint/neutral visual semantics remain coherent
+- direct-manipulation behavior remains spatially understandable
+- smoke tests cover changed deterministic logic when practical
+- CI assertions still describe the intended product
+- release/version ownership remains with the workflow
+- the final diff contains no unrelated architecture churn
