@@ -66,15 +66,22 @@
     ]
   },
   "fill": {
-    "automatic-gradient": "srgb:0.04706,0.05490,0.07059,1.00000"
+    "linear-gradient": [
+      "extended-gray:0.12157,1.00000",
+      "extended-gray:0.05882,1.00000"
+    ],
+    "orientation": {
+      "start": {
+        "x": 0.5,
+        "y": 0.0
+      },
+      "stop": {
+        "x": 0.5,
+        "y": 1.0
+      }
+    }
   },
   "fill-specializations": [
-    {
-      "appearance": "light",
-      "value": {
-        "automatic-gradient": "srgb:0.04706,0.05490,0.07059,1.00000"
-      }
-    },
     {
       "appearance": "dark",
       "value": {
