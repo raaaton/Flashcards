@@ -126,9 +126,47 @@ enum BulkImportParserSmoke {
             preconditionFailure("Unexpected error type for prepared prompt")
         }
 
-        precondition(ExternalAIProvider.chatGPT.launchURL.host == "chatgpt.com")
-        precondition(ExternalAIProvider.claude.launchURL.host == "claude.ai")
-        precondition(ExternalAIProvider.gemini.launchURL.host == "gemini.google.com")
+        let handoffPrompt = "Line 1\nLine 2 & 50% = yes? emoji 🤖 / colon:"
+        let chatGPTCandidates = ExternalAIProvider.chatGPT.nativeLaunchCandidates(
+            for: handoffPrompt
+        )
+        precondition(chatGPTCandidates.count == 6)
+
+        let chatGPTQ = URLComponents(
+            url: chatGPTCandidates[0],
+            resolvingAgainstBaseURL: false
+        )!
+        precondition(chatGPTQ.scheme == "chatgpt")
+        precondition(chatGPTQ.host == "chat.openai.com")
+        precondition(chatGPTQ.queryItems?.first?.name == "q")
+        precondition(chatGPTQ.queryItems?.first?.value == handoffPrompt)
+        precondition(chatGPTCandidates[0].absoluteString.contains("%0A"))
+
+        let chatGPTPrompt = URLComponents(
+            url: chatGPTCandidates[1],
+            resolvingAgainstBaseURL: false
+        )!
+        precondition(chatGPTPrompt.queryItems?.first?.name == "prompt")
+        precondition(chatGPTPrompt.queryItems?.first?.value == handoffPrompt)
+        precondition(chatGPTCandidates[2].host == "chatgpt.com")
+        precondition(chatGPTCandidates[4].absoluteString == "chatgpt://chatgpt.com/")
+        precondition(chatGPTCandidates[5].scheme == "chatgpt")
+
+        let claudeCandidates = ExternalAIProvider.claude.nativeLaunchCandidates(
+            for: handoffPrompt
+        )
+        precondition(claudeCandidates.count == 1)
+        precondition(claudeCandidates[0].absoluteString == "claude://")
+
+        let geminiCandidates = ExternalAIProvider.gemini.nativeLaunchCandidates(
+            for: handoffPrompt
+        )
+        precondition(geminiCandidates.count == 1)
+        precondition(geminiCandidates[0].absoluteString == "googlegemini://")
+
+        precondition(ExternalAIProvider.chatGPT.webURL.host == "chatgpt.com")
+        precondition(ExternalAIProvider.claude.webURL.host == "claude.ai")
+        precondition(ExternalAIProvider.gemini.webURL.host == "gemini.google.com")
 
         print("BulkImportParser smoke tests passed")
     }

@@ -321,6 +321,18 @@ private struct NewDeckCreationFlow: View {
                     }
                     .buttonStyle(.bordered)
                     .tint(promptWasCopied ? Theme.accent : .white)
+
+                    Button {
+                        openSelectedProviderWeb()
+                    } label: {
+                        Label(
+                            L10n.format("ai.open_web", selectedProvider.displayName),
+                            systemImage: "safari"
+                        )
+                        .frame(maxWidth: .infinity, minHeight: 28)
+                    }
+                    .buttonStyle(.bordered)
+                    .tint(.white)
                 }
                 .padding(20)
             }
@@ -339,6 +351,9 @@ private struct NewDeckCreationFlow: View {
                         .tint(.white)
                 }
             }
+        }
+        .onAppear {
+            copyPrompt(playsHaptic: false)
         }
     }
 
@@ -402,6 +417,7 @@ private struct NewDeckCreationFlow: View {
             selectedProvider = provider
             hasOpenedProvider = false
             promptWasCopied = false
+            copyPrompt(playsHaptic: false)
         } label: {
             HStack(alignment: .top, spacing: 14) {
                 NeutralIconBadge(
@@ -465,21 +481,58 @@ private struct NewDeckCreationFlow: View {
         .buttonStyle(.plain)
     }
 
-    private func copyPrompt() {
+    private func copyPrompt(playsHaptic: Bool = true) {
         UIPasteboard.general.string = ExternalAIFlashcardPromptBuilder.makePrompt(
             deckName: cleanName
         )
         promptWasCopied = true
-        HapticService.play(.selection)
+        if playsHaptic {
+            HapticService.play(.selection)
+        }
     }
 
     private func openSelectedProvider() {
         let prompt = ExternalAIFlashcardPromptBuilder.makePrompt(deckName: cleanName)
         UIPasteboard.general.string = prompt
         promptWasCopied = true
-        hasOpenedProvider = true
+        hasOpenedProvider = false
         HapticService.play(.selection)
-        openURL(selectedProvider.launchURL(for: prompt))
+
+        openNativeProvider(
+            selectedProvider.nativeLaunchCandidates(for: prompt),
+            at: 0
+        )
+    }
+
+    private func openNativeProvider(_ candidates: [URL], at index: Int) {
+        guard candidates.indices.contains(index) else {
+            showAlert(
+                title: L10n.format(
+                    "ai.error.app_not_installed_title",
+                    selectedProvider.displayName
+                ),
+                message: L10n.format(
+                    "ai.error.app_not_installed_body",
+                    selectedProvider.displayName
+                )
+            )
+            return
+        }
+
+        openURL(candidates[index]) { accepted in
+            if accepted {
+                hasOpenedProvider = true
+            } else {
+                openNativeProvider(candidates, at: index + 1)
+            }
+        }
+    }
+
+    private func openSelectedProviderWeb() {
+        copyPrompt(playsHaptic: false)
+        HapticService.play(.selection)
+        hasOpenedProvider = true
+        openURL(selectedProvider.webURL)
     }
 
     private func pasteAIResult() {

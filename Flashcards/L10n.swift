@@ -112,16 +112,22 @@ enum L10n {
             "es": "Antes de abrir %@"
         ],
         "ai.instructions.body": [
-            "fr": "Nous préparons et copions le prompt. Dans %@, colle-le s’il n’est pas déjà présent, joins tes notes ou documents, puis appuie sur Envoyer.",
-            "en": "We’ll prepare and copy the prompt. In %@, paste it if it isn’t already there, attach your notes or documents, then press Send.",
-            "de": "Wir bereiten den Prompt vor und kopieren ihn. Füge ihn in %@ ein, falls er nicht bereits vorhanden ist, hänge deine Notizen oder Dokumente an und tippe dann auf Senden.",
-            "es": "Prepararemos y copiaremos el prompt. En %@, pégalo si aún no aparece, adjunta tus apuntes o documentos y pulsa Enviar."
+            "fr": "Le prompt a été copié. S’il n’apparaît pas automatiquement dans %@, colle-le, joins tes notes ou documents, puis appuie sur Envoyer.",
+            "en": "The prompt has been copied. If it doesn’t appear automatically in %@, paste it, attach your notes or documents, then press Send.",
+            "de": "Der Prompt wurde kopiert. Falls er nicht automatisch in %@ erscheint, füge ihn ein, hänge deine Notizen oder Dokumente an und tippe dann auf Senden.",
+            "es": "El prompt se ha copiado. Si no aparece automáticamente en %@, pégalo, adjunta tus apuntes o documentos y pulsa Enviar."
         ],
         "ai.open": [
             "fr": "Ouvrir %@",
             "en": "Open %@",
             "de": "%@ öffnen",
             "es": "Abrir %@"
+        ],
+        "ai.open_web": [
+            "fr": "Ouvrir %@ sur le web",
+            "en": "Open %@ on the web",
+            "de": "%@ im Web öffnen",
+            "es": "Abrir %@ en la web"
         ],
         "ai.copy_prompt": [
             "fr": "Copier le prompt",
@@ -158,6 +164,18 @@ enum L10n {
             "en": "Open %@ again",
             "de": "%@ erneut öffnen",
             "es": "Volver a abrir %@"
+        ],
+        "ai.error.app_not_installed_title": [
+            "fr": "%@ n’est pas installé",
+            "en": "%@ isn’t installed",
+            "de": "%@ ist nicht installiert",
+            "es": "%@ no está instalado"
+        ],
+        "ai.error.app_not_installed_body": [
+            "fr": "Impossible d’ouvrir l’app %@ sur cet iPhone. Le prompt est toujours dans le presse-papiers. Tu peux utiliser l’option web ci-dessous.",
+            "en": "The %@ app couldn’t be opened on this iPhone. The prompt is still in your clipboard. You can use the web option below.",
+            "de": "Die %@-App konnte auf diesem iPhone nicht geöffnet werden. Der Prompt ist weiterhin in deiner Zwischenablage. Du kannst unten die Web-Version öffnen.",
+            "es": "No se pudo abrir la app %@ en este iPhone. El prompt sigue en el portapapeles. Puedes usar la opción web de abajo."
         ],
         "ai.error.clipboard_title": [
             "fr": "Presse-papiers vide",

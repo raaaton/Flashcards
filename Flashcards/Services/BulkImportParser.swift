@@ -235,7 +235,7 @@ enum ExternalAIProvider: String, CaseIterable, Identifiable, Sendable {
 
     var isRecommended: Bool { self == .chatGPT }
 
-    var launchURL: URL {
+    var webURL: URL {
         switch self {
         case .chatGPT:
             URL(string: "https://chatgpt.com/")!
@@ -246,9 +246,48 @@ enum ExternalAIProvider: String, CaseIterable, Identifiable, Sendable {
         }
     }
 
-    // These consumer chat routes intentionally do not rely on undocumented prompt-prefill parameters.
-    func launchURL(for _: String) -> URL {
-        launchURL
+    var nativeScheme: String {
+        switch self {
+        case .chatGPT: "chatgpt"
+        case .claude: "claude"
+        case .gemini: "googlegemini"
+        }
+    }
+
+    /// Ordered URLs to try for a native handoff. ChatGPT gets conservative prefill
+    /// attempts first; Claude and Gemini only use their app-launch schemes because no
+    /// consumer-chat prefill route is known to be reliable.
+    func nativeLaunchCandidates(for prompt: String) -> [URL] {
+        switch self {
+        case .chatGPT:
+            let hosts = ["chat.openai.com", "chatgpt.com"]
+            let queryNames = ["q", "prompt"]
+            let prefillCandidates = hosts.flatMap { host in
+                queryNames.compactMap { queryName in
+                    customURL(host: host, queryName: queryName, prompt: prompt)
+                }
+            }
+
+            return prefillCandidates + [
+                URL(string: "chatgpt://chatgpt.com/")!,
+                URL(string: "chatgpt://")!
+            ]
+        case .claude:
+            return [URL(string: "claude://")!]
+        case .gemini:
+            return [URL(string: "googlegemini://")!]
+        }
+    }
+
+    private func customURL(host: String, queryName: String, prompt: String) -> URL? {
+        var components = URLComponents()
+        components.scheme = nativeScheme
+        components.host = host
+        components.path = "/"
+        components.queryItems = [
+            URLQueryItem(name: queryName, value: prompt)
+        ]
+        return components.url
     }
 }
 
