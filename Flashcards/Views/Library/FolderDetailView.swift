@@ -15,6 +15,7 @@ struct FolderDetailView: View {
     @State private var deckToEdit: Deck?
     @State private var deckToDelete: Deck?
     @State private var createdDeckToOpen: Deck?
+    @State private var hasQueuedCreatedDeck = false
     @State private var showingCreatedDeck = false
 
     private var decks: [Deck] {
@@ -189,10 +190,12 @@ struct FolderDetailView: View {
 
     private func queueCreatedDeck(_ deck: Deck) {
         createdDeckToOpen = deck
+        hasQueuedCreatedDeck = true
     }
 
     private func openCreatedDeckIfNeeded() {
-        guard createdDeckToOpen != nil else { return }
+        guard hasQueuedCreatedDeck, createdDeckToOpen != nil else { return }
+        hasQueuedCreatedDeck = false
 
         Task { @MainActor in
             await Task.yield()
