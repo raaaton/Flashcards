@@ -263,12 +263,12 @@ enum ExternalAIFlashcardPromptBuilder {
 
         The user will attach notes, images, slides, PDFs, or other study documents with this message. Use those attachments as the source of truth. Create concise, accurate, useful flashcards for revision. Cover the important ideas without padding the set with redundant or trivial items. Keep each term focused and each definition short enough to review quickly. Preserve the language of the source material unless the user clearly asks otherwise.
 
-        Return machine-readable JSON using exactly this shape:
+        Return machine-readable JSON using exactly this shape (the angle-bracket values below describe the schema; replace them with actual JSON strings):
         {
           "flashcards": [
             {
-              "term": "A concise question, concept, or cue",
-              "definition": "A concise answer or explanation"
+              "term": <concise question, concept, or cue>,
+              "definition": <concise answer or explanation>
             }
           ]
         }

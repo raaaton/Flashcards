@@ -117,6 +117,15 @@ enum BulkImportParserSmoke {
         precondition(prompt.contains("\"flashcards\""))
         precondition(prompt.contains("Copy the JSON block below"))
 
+        do {
+            _ = try ExternalAIFlashcardParser.parse(prompt)
+            preconditionFailure("Prepared prompt must not be parseable as an AI result")
+        } catch let error as ExternalAIFlashcardParserError {
+            precondition(error == .invalidJSON)
+        } catch {
+            preconditionFailure("Unexpected error type for prepared prompt")
+        }
+
         precondition(ExternalAIProvider.chatGPT.launchURL.host == "chatgpt.com")
         precondition(ExternalAIProvider.claude.launchURL.host == "claude.ai")
         precondition(ExternalAIProvider.gemini.launchURL.host == "gemini.google.com")
