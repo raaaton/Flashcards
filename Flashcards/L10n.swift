@@ -1,17 +1,32 @@
 import Foundation
 
 enum L10n {
+    private static var locale: Locale {
+        switch UserDefaults.standard.string(forKey: "settings.language") {
+        case "french":
+            Locale(identifier: "fr")
+        case "english":
+            Locale(identifier: "en")
+        case "german":
+            Locale(identifier: "de")
+        case "spanish":
+            Locale(identifier: "es")
+        default:
+            Locale.autoupdatingCurrent
+        }
+    }
+
     static func text(_ key: String) -> String {
         String(
             localized: String.LocalizationValue(key),
-            locale: AppPreferences.language.locale ?? Locale.autoupdatingCurrent
+            locale: locale
         )
     }
 
     static func format(_ key: String, _ arguments: any CVarArg...) -> String {
         String(
             format: text(key),
-            locale: AppPreferences.language.locale ?? Locale.autoupdatingCurrent,
+            locale: locale,
             arguments: arguments
         )
     }
