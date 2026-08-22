@@ -3,6 +3,7 @@ import UIKit
 
 enum HapticEvent {
     case selection
+    case reorder
     case flip
     case correct
     case review
@@ -14,18 +15,20 @@ enum HapticEvent {
 enum HapticService {
     private static var completionEngine: CHHapticEngine?
     private static let selectionGenerator = UIImpactFeedbackGenerator(style: .rigid)
+    private static let reorderGenerator = UISelectionFeedbackGenerator()
 
     static func play(_ event: HapticEvent) {
         guard AppPreferences.hapticsEnabled else { return }
 
         switch event {
         case .selection:
-            // A crisp, maximum-strength tick fits reorder interactions much
-            // better than the previous light impact. Reusing and preparing
-            // the generator keeps rapid successive reorder ticks responsive.
             selectionGenerator.prepare()
             selectionGenerator.impactOccurred(intensity: 1)
             selectionGenerator.prepare()
+        case .reorder:
+            reorderGenerator.prepare()
+            reorderGenerator.selectionChanged()
+            reorderGenerator.prepare()
         case .flip:
             let generator = UIImpactFeedbackGenerator(style: .soft)
             generator.impactOccurred(intensity: 0.42)
