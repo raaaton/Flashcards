@@ -25,14 +25,14 @@ Version 2 introduces a redesigned visual system, a new mint identity, a rebuilt 
   <img
     width="197"
     height="426"
-    alt="A folder page showing the new compact full-width Deck rows"
-    src="https://github.com/user-attachments/assets/5ca1e592-4faf-4bf0-9f8b-7b1e617ee182"
+    alt="Deck study hub showing progress, Flashcards and Test modes, and the deck’s card list"
+    src="https://github.com/user-attachments/assets/3faaf9ef-5889-48b9-b589-7a5df680a362"
   />
   <img
     width="197"
     height="426"
-    alt="Flashcards study screen with a card flipped to its answer side"
-    src="https://github.com/user-attachments/assets/c82d9364-5548-4e2c-a66e-3cea78f6e2c3"
+    alt="Flashcards study screen with a card semi-flipped to its &quot;I knew it&quot; edge"
+    src="https://github.com/user-attachments/assets/8001a25d-6276-427c-9ffd-edb6967bfb4b"
   />
 </p>
 
