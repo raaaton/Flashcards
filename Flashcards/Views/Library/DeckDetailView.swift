@@ -194,7 +194,7 @@ struct DeckDetailView: View {
 
             VStack(spacing: 0) {
                 ForEach(Array(deck.studyHistory.prefix(5))) { entry in
-                    HStack(alignment: .top, spacing: 12) {
+                    HStack(alignment: .center, spacing: 12) {
                         Image(
                             systemName: entry.mode == .flashcards
                                 ? "rectangle.stack"

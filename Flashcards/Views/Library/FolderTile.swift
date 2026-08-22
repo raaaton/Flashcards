@@ -31,6 +31,8 @@ struct FolderTile: View {
         .frame(maxWidth: .infinity, minHeight: 112, maxHeight: 112, alignment: .leading)
         .padding(16)
         .background(Theme.cardBackground, in: .rect(cornerRadius: 22, style: .continuous))
+        .compositingGroup()
+        .contentShape(.dragPreview, .rect(cornerRadius: 22, style: .continuous))
         .contentShape(.rect(cornerRadius: 22, style: .continuous))
         .accessibilityElement(children: .combine)
     }
