@@ -38,7 +38,7 @@ enum Theme {
     static let cardBackground = Color(uiColor: .secondarySystemBackground)
 
     static func deckAccent(for deck: Deck) -> Color {
-        deck.folder.map { Color(folderHex: $0.colorHex) } ?? .gray
+        accent
     }
 
     static func foreground(on color: Color) -> Color {
@@ -217,7 +217,7 @@ struct CardEditorSurface: View {
                 lineLimits: 2...8
             )
         }
-                .background(
+        .background(
             usesOwnBackground
                 ? Color(uiColor: .secondarySystemGroupedBackground)
                 : Color.clear,
@@ -282,7 +282,6 @@ struct StudyDirectionMenu: View {
         .accessibilityValue(selection.title)
     }
 }
-
 
 private struct ConcentricFloatingActionModifier<FloatingContent: View>: ViewModifier {
     let floatingContent: FloatingContent
