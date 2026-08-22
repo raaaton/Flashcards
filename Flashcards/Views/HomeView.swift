@@ -8,6 +8,11 @@ private struct ResumableDeck: Identifiable {
     var id: UUID { deck.id }
 }
 
+private enum FolderReorderHapticDestination: Equatable {
+    case before(UUID)
+    case end
+}
+
 struct HomeView: View {
     @Environment(\.modelContext) private var modelContext
     @Environment(AppSettings.self) private var settings
@@ -30,6 +35,7 @@ struct HomeView: View {
     @State private var showingQuickResume = false
     @State private var folderOrderIDs: [UUID] = []
     @State private var folderOrderRevision = 0
+    @State private var folderReorderHapticDestination: FolderReorderHapticDestination?
 
     private let columns = [
         GridItem(.flexible(), spacing: 14),
@@ -462,6 +468,9 @@ struct HomeView: View {
                 .reorderContainer(for: Folder.self, itemID: \.id) { difference in
                     applyFolderReorder(difference)
                 }
+                .onDropSessionUpdated { session in
+                    updateFolderReorderHaptic(with: session)
+                }
                 .padding(.horizontal)
             }
             .padding(.top, 8)
@@ -502,6 +511,47 @@ struct HomeView: View {
         folderOrderIDs = persistedIDs
     }
 
+    private func updateFolderReorderHaptic(with session: DropSession) {
+        switch session.phase {
+        case .entering:
+            folderReorderHapticDestination = folderReorderDestination(from: session)
+        case .active:
+            guard let destination = folderReorderDestination(from: session) else {
+                return
+            }
+
+            guard let previousDestination = folderReorderHapticDestination else {
+                folderReorderHapticDestination = destination
+                return
+            }
+
+            guard destination != previousDestination else { return }
+            folderReorderHapticDestination = destination
+            HapticService.play(.reorder)
+        default:
+            folderReorderHapticDestination = nil
+        }
+    }
+
+    private func folderReorderDestination(
+        from session: DropSession
+    ) -> FolderReorderHapticDestination? {
+        guard let destination = session.reorderDestination(
+            for: Folder.self,
+            itemID: \.id,
+            in: ReorderableSingleCollectionIdentifier.self
+        ) else {
+            return nil
+        }
+
+        switch destination.position {
+        case let .before(folderID):
+            return .before(folderID)
+        case .end:
+            return .end
+        }
+    }
+
     private func applyFolderReorder<CollectionID: Hashable & Sendable>(
         _ difference: ReorderDifference<UUID, CollectionID>
     ) {
@@ -536,13 +586,8 @@ struct HomeView: View {
         reorderedIDs.insert(contentsOf: sourceIDs, at: destinationIndex)
         guard reorderedIDs != previousOrder else { return }
 
-        // The reorder callback fires exactly when the dragged folder changes
-        // position. Trigger one immediate haptic for that move — no batching,
-        // counting, delay, or geometry-based scroll detection.
-        HapticService.play(.selection)
-
-        // Update the displayed collection synchronously so SwiftUI can finish
-        // the native drop animation without waiting for SwiftData/@Query.
+        // The final move callback only persists the reorder. Live haptics are
+        // driven by DropSession destination updates while the drag is active.
         folderOrderIDs = reorderedIDs
         folderOrderRevision += 1
         let revision = folderOrderRevision
