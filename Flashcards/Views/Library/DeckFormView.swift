@@ -34,6 +34,7 @@ struct DeckFormView: View {
     @State private var selectedFolderID: UUID?
     @State private var cardDrafts: [DeckCardDraft]
     @State private var showingBulkAdd = false
+    @State private var showingDuplicateChoice = false
     @FocusState private var nameFieldFocused: Bool
 
     init(deck: Deck? = nil, initialFolder: Folder? = nil) {
@@ -63,6 +64,22 @@ struct DeckFormView: View {
 
     private var controlAccent: Color {
         Theme.accent
+    }
+
+    private var duplicateAnalysis: BulkDuplicateAnalysis {
+        let candidates = cardDrafts.enumerated().compactMap { index, draft -> ParsedCard? in
+            guard draft.isComplete else { return nil }
+            return ParsedCard(
+                recordIndex: index,
+                term: draft.cleanTerm,
+                definition: draft.cleanDefinition
+            )
+        }
+
+        return BulkDuplicateDetector.analyze(
+            candidates: candidates,
+            existingCards: []
+        )
     }
 
     var body: some View {
@@ -135,6 +152,10 @@ struct DeckFormView: View {
                                 .move(edge: .bottom)
                                     .combined(with: .opacity)
                             )
+
+                            if let kind = duplicateKind(for: draft.id) {
+                                duplicateWarning(for: kind)
+                            }
                         } header: {
                             if draft.id == cardDrafts.first?.id {
                                 Text("Cartes initiales")
@@ -161,6 +182,10 @@ struct DeckFormView: View {
                                 .foregroundStyle(.red)
                         } else if validDrafts.isEmpty {
                             Text("Ajoutez au moins une carte pour créer le deck.")
+                        } else if duplicateAnalysis.exactCount > 0 || duplicateAnalysis.possibleCount > 0 {
+                            Text(
+                                "\(duplicateAnalysis.exactCount) doublon(s) exact(s), \(duplicateAnalysis.possibleCount) possible(s)."
+                            )
                         }
                     }
                     .listSectionSpacing(12)
@@ -184,9 +209,24 @@ struct DeckFormView: View {
                         accent: controlAccent,
                         isEnabled: canSave
                     ) {
-                        save()
+                        prepareSave()
                     }
                 }
+            }
+            .alert("Doublons détectés", isPresented: $showingDuplicateChoice) {
+                if duplicateAnalysis.exactCount > 0 {
+                    Button("Ignorer les doublons exacts") {
+                        save(skipExactDuplicates: true)
+                    }
+                }
+
+                Button("Créer quand même") {
+                    save(skipExactDuplicates: false)
+                }
+
+                Button("Annuler", role: .cancel) {}
+            } message: {
+                Text(duplicateAlertMessage)
             }
         }
         .sheet(isPresented: $showingBulkAdd) {
@@ -208,7 +248,65 @@ struct DeckFormView: View {
         }
     }
 
-    private func save() {
+    @ViewBuilder
+    private func duplicateWarning(for kind: BulkDuplicateKind) -> some View {
+        switch kind {
+        case .exact:
+            Label(
+                "Doublon exact",
+                systemImage: "exclamationmark.octagon.fill"
+            )
+            .font(.caption.weight(.semibold))
+            .foregroundStyle(.red)
+        case .possible:
+            Label(
+                "Doublon possible",
+                systemImage: "exclamationmark.triangle.fill"
+            )
+            .font(.caption.weight(.semibold))
+            .foregroundStyle(.orange)
+        }
+    }
+
+    private func duplicateKind(for draftID: UUID) -> BulkDuplicateKind? {
+        guard let index = cardDrafts.firstIndex(where: { $0.id == draftID }) else {
+            return nil
+        }
+        return duplicateAnalysis.kind(for: index)
+    }
+
+    private var duplicateAlertMessage: String {
+        if duplicateAnalysis.exactCount > 0 && duplicateAnalysis.possibleCount > 0 {
+            return L10n.format(
+                "import.duplicates.both",
+                Int64(duplicateAnalysis.exactCount),
+                Int64(duplicateAnalysis.possibleCount)
+            )
+        }
+        if duplicateAnalysis.possibleCount > 0 {
+            return L10n.format(
+                "import.duplicates.possible",
+                Int64(duplicateAnalysis.possibleCount)
+            )
+        }
+        return L10n.format(
+            "import.duplicates.exact",
+            Int64(duplicateAnalysis.exactCount)
+        )
+    }
+
+    private func prepareSave() {
+        guard canSave else { return }
+
+        if deck == nil,
+           duplicateAnalysis.exactCount > 0 || duplicateAnalysis.possibleCount > 0 {
+            showingDuplicateChoice = true
+        } else {
+            save(skipExactDuplicates: false)
+        }
+    }
+
+    private func save(skipExactDuplicates: Bool) {
         let selectedFolder = folders.first { $0.id == selectedFolderID }
 
         if let deck {
@@ -219,7 +317,17 @@ struct DeckFormView: View {
             guard canSave else { return }
             let newDeck = Deck(name: cleanName, folder: selectedFolder)
             modelContext.insert(newDeck)
-            for (position, draft) in validDrafts.enumerated() {
+
+            let draftsToSave = cardDrafts.enumerated().compactMap { index, draft -> DeckCardDraft? in
+                guard draft.isComplete else { return nil }
+                if skipExactDuplicates,
+                   duplicateAnalysis.exactRecordIndexes.contains(index) {
+                    return nil
+                }
+                return draft
+            }
+
+            for (position, draft) in draftsToSave.enumerated() {
                 let card = Card(
                     term: draft.cleanTerm,
                     definition: draft.cleanDefinition,
