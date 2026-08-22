@@ -100,7 +100,9 @@ struct BackupView: View {
         }
         .alert("Fusionner cette sauvegarde ?", isPresented: pendingBinding) {
             Button("Importer") { importPendingEnvelope() }
+                .normalActionColor()
             Button("Annuler", role: .cancel) { pendingEnvelope = nil }
+                .normalActionColor()
         } message: {
             if let pendingEnvelope {
                 Text(L10n.format(
@@ -113,6 +115,7 @@ struct BackupView: View {
         }
         .alert(statusTitle, isPresented: $showingStatus) {
             Button("OK", role: .cancel) {}
+                .normalActionColor()
         } message: {
             Text(statusMessage)
         }
