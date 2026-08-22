@@ -28,6 +28,7 @@ struct HomeView: View {
     @State private var deckToEdit: Deck?
     @State private var deckToDelete: Deck?
     @State private var createdDeckToOpen: Deck?
+    @State private var hasQueuedCreatedDeck = false
     @State private var showingCreatedDeck = false
     @State private var quickResumeDeck: Deck?
     @State private var quickResumeSnapshot: ActiveStudySessionSnapshot?
@@ -662,10 +663,12 @@ struct HomeView: View {
 
     private func queueCreatedDeck(_ deck: Deck) {
         createdDeckToOpen = deck
+        hasQueuedCreatedDeck = true
     }
 
     private func openCreatedDeckIfNeeded() {
-        guard createdDeckToOpen != nil else { return }
+        guard hasQueuedCreatedDeck, createdDeckToOpen != nil else { return }
+        hasQueuedCreatedDeck = false
 
         Task { @MainActor in
             await Task.yield()
