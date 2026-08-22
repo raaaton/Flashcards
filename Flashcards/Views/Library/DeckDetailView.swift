@@ -318,15 +318,20 @@ struct DeckDetailView: View {
         } label: {
             HStack(spacing: 8) {
                 Image(systemName: systemImage)
+                    .foregroundStyle(Theme.deckAccent(for: deck))
                 Text(title)
+                    .foregroundStyle(.primary)
             }
             .font(.headline)
-            .foregroundStyle(Theme.foreground(on: Theme.deckAccent(for: deck)))
             .frame(maxWidth: .infinity, minHeight: 72)
             .background(
-                Theme.deckAccent(for: deck),
+                Theme.cardBackground,
                 in: .rect(cornerRadius: 18, style: .continuous)
             )
+            .overlay {
+                RoundedRectangle(cornerRadius: 18, style: .continuous)
+                    .stroke(Theme.subtleStroke, lineWidth: 0.5)
+            }
             .contentShape(.rect(cornerRadius: 18, style: .continuous))
         }
         .buttonStyle(.plain)
