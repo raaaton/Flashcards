@@ -67,16 +67,19 @@ struct DeckDetailView: View {
         .sheet(isPresented: $showingExport) {
             BackupView(deck: deck)
         }
-        .alert("Supprimer ce deck ?", isPresented: $confirmingDeletion) {
-            Button("Supprimer", role: .destructive) {
-                modelContext.delete(deck)
-                try? modelContext.save()
-                dismiss()
-            }
-            Button("Annuler", role: .cancel) {}
-                .normalActionColor()
-        } message: {
-            Text("Toutes ses cartes seront supprimées définitivement.")
+        .background {
+            Color.clear
+                .tint(.white)
+                .alert("Supprimer ce deck ?", isPresented: $confirmingDeletion) {
+                    Button("Supprimer", role: .destructive) {
+                        modelContext.delete(deck)
+                        try? modelContext.save()
+                        dismiss()
+                    }
+                    Button("Annuler", role: .cancel) {}
+                } message: {
+                    Text("Toutes ses cartes seront supprimées définitivement.")
+                }
         }
     }
 
@@ -244,18 +247,20 @@ struct DeckDetailView: View {
                 in: .rect(cornerRadius: 20, style: .continuous)
             )
         }
-        .alert(
-            "Effacer l’historique ?",
-            isPresented: $confirmingHistoryReset
-        ) {
-            Button("Effacer l’historique", role: .destructive) {
-                clearStudyHistory()
-            }
-
-            Button("Annuler", role: .cancel) {}
-                .normalActionColor()
-        } message: {
-            Text("Toutes les sessions d’étude enregistrées pour ce deck seront supprimées.")
+        .background {
+            Color.clear
+                .tint(.white)
+                .alert(
+                    "Effacer l’historique ?",
+                    isPresented: $confirmingHistoryReset
+                ) {
+                    Button("Effacer l’historique", role: .destructive) {
+                        clearStudyHistory()
+                    }
+                    Button("Annuler", role: .cancel) {}
+                } message: {
+                    Text("Toutes les sessions d’étude enregistrées pour ce deck seront supprimées.")
+                }
         }
     }
 
