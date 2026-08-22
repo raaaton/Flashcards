@@ -5,6 +5,21 @@ struct FolderTile: View {
     let systemImage: String
     let color: Color
     let deckCount: Int
+    let showsMintGradient: Bool
+
+    init(
+        name: String,
+        systemImage: String,
+        color: Color,
+        deckCount: Int,
+        showsMintGradient: Bool = true
+    ) {
+        self.name = name
+        self.systemImage = systemImage
+        self.color = color
+        self.deckCount = deckCount
+        self.showsMintGradient = showsMintGradient
+    }
 
     var body: some View {
         VStack(alignment: .leading, spacing: 16) {
@@ -30,18 +45,23 @@ struct FolderTile: View {
             RoundedRectangle(cornerRadius: 22, style: .continuous)
                 .fill(Theme.cardBackground)
                 .overlay {
-                    RoundedRectangle(cornerRadius: 22, style: .continuous)
-                        .fill(
-                            LinearGradient(
-                                colors: [
-                                    Theme.accent.opacity(0.13),
-                                    Theme.accent.opacity(0.065),
-                                    Theme.accent.opacity(0.025)
-                                ],
-                                startPoint: .topLeading,
-                                endPoint: .bottomTrailing
+                    if showsMintGradient {
+                        RoundedRectangle(cornerRadius: 22, style: .continuous)
+                            .fill(
+                                LinearGradient(
+                                    colors: [
+                                        Theme.accent.opacity(0.13),
+                                        Theme.accent.opacity(0.065),
+                                        Theme.accent.opacity(0.025)
+                                    ],
+                                    startPoint: .topLeading,
+                                    endPoint: .bottomTrailing
+                                )
                             )
-                        )
+                    } else {
+                        RoundedRectangle(cornerRadius: 22, style: .continuous)
+                            .fill(Theme.accent.opacity(0.075))
+                    }
                 }
         }
         .overlay {
