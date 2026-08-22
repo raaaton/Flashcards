@@ -10,23 +10,34 @@ struct FolderTile: View {
         VStack(alignment: .leading, spacing: 16) {
             Image(systemName: systemImage)
                 .font(.title2.weight(.semibold))
-                .foregroundStyle(.white)
+                .foregroundStyle(Theme.accent)
                 .frame(width: 44, height: 44)
-                .background(.white.opacity(0.18), in: .circle)
+                .background(Theme.accent.opacity(0.14), in: .circle)
 
             VStack(alignment: .leading, spacing: 3) {
                 Text(name)
                     .font(.headline)
-                    .foregroundStyle(.white)
+                    .foregroundStyle(.primary)
                     .lineLimit(1)
                 Text(L10n.decks(deckCount))
                     .font(.caption)
-                    .foregroundStyle(.white.opacity(0.8))
+                    .foregroundStyle(.secondary)
             }
         }
         .frame(maxWidth: .infinity, minHeight: 112, alignment: .leading)
         .padding(16)
-        .background(color.gradient, in: .rect(cornerRadius: 22, style: .continuous))
+        .background {
+            RoundedRectangle(cornerRadius: 22, style: .continuous)
+                .fill(Theme.cardBackground)
+                .overlay {
+                    RoundedRectangle(cornerRadius: 22, style: .continuous)
+                        .fill(color.opacity(0.08))
+                }
+        }
+        .overlay {
+            RoundedRectangle(cornerRadius: 22, style: .continuous)
+                .strokeBorder(.white.opacity(0.05))
+        }
         .contentShape(.rect(cornerRadius: 22, style: .continuous))
         .accessibilityElement(children: .combine)
     }
