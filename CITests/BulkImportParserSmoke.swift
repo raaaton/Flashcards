@@ -58,6 +58,69 @@ enum BulkImportParserSmoke {
         )
         precondition(internalOnly.exactRecordIndexes == [1])
 
+        let aiResponse = """
+        Your flashcards are ready for Flashcards. Copy the JSON block below, then return to Flashcards.
+
+        ```json
+        {
+          "flashcards": [
+            {
+              "term": "Ratio 2:1",
+              "definition": "Two units for one; the colon remains valid JSON content."
+            },
+            {
+              "term": "Second concept",
+              "definition": "A concise answer with punctuation, commas, and: colons."
+            }
+          ]
+        }
+        ```
+        """
+        let aiCards = try! ExternalAIFlashcardParser.parse(aiResponse)
+        precondition(aiCards.count == 2)
+        precondition(aiCards[0].term == "Ratio 2:1")
+        precondition(aiCards[0].definition.contains("colon remains"))
+        precondition(aiCards[1].recordIndex == 1)
+
+        let bareArray = """
+        [
+          {"term":"  Alpha  ","definition":"  First answer  "},
+          {"term":"Beta","definition":"Second answer"}
+        ]
+        """
+        let bareArrayCards = try! ExternalAIFlashcardParser.parse(bareArray)
+        precondition(bareArrayCards.map(\.term) == ["Alpha", "Beta"])
+        precondition(bareArrayCards[0].definition == "First answer")
+
+        do {
+            _ = try ExternalAIFlashcardParser.parse(
+                "{\"flashcards\":[{\"term\":\"Only a term\",\"definition\":\"   \"}]}"
+            )
+            preconditionFailure("Incomplete AI flashcard should fail")
+        } catch let error as ExternalAIFlashcardParserError {
+            precondition(error == .incompleteRecord(0))
+        } catch {
+            preconditionFailure("Unexpected error type for incomplete AI flashcard")
+        }
+
+        do {
+            _ = try ExternalAIFlashcardParser.parse("{\"flashcards\":[]}")
+            preconditionFailure("Empty AI result should fail")
+        } catch let error as ExternalAIFlashcardParserError {
+            precondition(error == .emptyResult)
+        } catch {
+            preconditionFailure("Unexpected error type for empty AI result")
+        }
+
+        let prompt = ExternalAIFlashcardPromptBuilder.makePrompt(deckName: "History: 1848")
+        precondition(prompt.contains("History: 1848"))
+        precondition(prompt.contains("\"flashcards\""))
+        precondition(prompt.contains("Copy the JSON block below"))
+
+        precondition(ExternalAIProvider.chatGPT.launchURL.host == "chatgpt.com")
+        precondition(ExternalAIProvider.claude.launchURL.host == "claude.ai")
+        precondition(ExternalAIProvider.gemini.launchURL.host == "gemini.google.com")
+
         print("BulkImportParser smoke tests passed")
     }
 }
