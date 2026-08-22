@@ -534,22 +534,16 @@ struct HomeView: View {
         }
 
         reorderedIDs.insert(contentsOf: sourceIDs, at: destinationIndex)
+        guard reorderedIDs != previousOrder else { return }
 
-        let previousIndexByID = Dictionary(
-            uniqueKeysWithValues: previousOrder.enumerated().map {
-                ($0.element, $0.offset)
-            }
-        )
-        let movedFolderCount = reorderedIDs.enumerated().reduce(into: 0) { count, entry in
-            if previousIndexByID[entry.element] != entry.offset {
-                count += 1
-            }
-        }
+        // The reorder callback fires exactly when the dragged folder changes
+        // position. Trigger one immediate haptic for that move — no batching,
+        // counting, delay, or geometry-based scroll detection.
+        HapticService.play(.selection)
 
         // Update the displayed collection synchronously so SwiftUI can finish
         // the native drop animation without waiting for SwiftData/@Query.
         folderOrderIDs = reorderedIDs
-        playFolderReorderHaptics(count: movedFolderCount)
         folderOrderRevision += 1
         let revision = folderOrderRevision
         let finalOrder = reorderedIDs
@@ -560,20 +554,6 @@ struct HomeView: View {
             try? await Task.sleep(for: .milliseconds(250))
             guard folderOrderRevision == revision else { return }
             persistFolderOrder(finalOrder)
-        }
-    }
-
-    private func playFolderReorderHaptics(count: Int) {
-        guard count > 0 else { return }
-
-        Task { @MainActor in
-            for index in 0..<count {
-                HapticService.play(.selection)
-
-                if index < count - 1 {
-                    try? await Task.sleep(for: .milliseconds(55))
-                }
-            }
         }
     }
 
