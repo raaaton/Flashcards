@@ -25,12 +25,40 @@ private struct DeckCardDraft: Identifiable {
     var isComplete: Bool { !cleanTerm.isEmpty && !cleanDefinition.isEmpty }
 }
 
-private enum NewDeckCreationStep {
-    case name
+private enum NewDeckCreationStep: Hashable {
     case method
     case ai
     case manual
     case aiPreview
+}
+
+private struct DeckCreationStepFade: ViewModifier {
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @State private var isVisible: Bool
+
+    init(initiallyVisible: Bool = false) {
+        _isVisible = State(initialValue: initiallyVisible)
+    }
+
+    func body(content: Content) -> some View {
+        content
+            .opacity(isVisible ? 1 : (reduceMotion ? 0.88 : 0.94))
+            .onAppear {
+                guard !isVisible else { return }
+                withAnimation(.easeOut(duration: reduceMotion ? 0.14 : 0.20)) {
+                    isVisible = true
+                }
+            }
+            .onDisappear {
+                isVisible = false
+            }
+    }
+}
+
+private extension View {
+    func deckCreationStepFade(initiallyVisible: Bool = false) -> some View {
+        modifier(DeckCreationStepFade(initiallyVisible: initiallyVisible))
+    }
 }
 
 private struct DeckCreationBackButton: View {
@@ -87,7 +115,7 @@ private struct NewDeckCreationFlow: View {
     let initialFolder: Folder?
     let onCreated: ((Deck) -> Void)?
 
-    @State private var step = NewDeckCreationStep.name
+    @State private var path: [NewDeckCreationStep] = []
     @State private var name = ""
     @State private var selectedProvider = ExternalAIProvider.chatGPT
     @State private var importedCards: [ParsedCard] = []
@@ -103,30 +131,13 @@ private struct NewDeckCreationFlow: View {
     }
 
     var body: some View {
-        Group {
-            switch step {
-            case .name:
-                nameStep
-            case .method:
-                methodStep
-            case .ai:
-                aiStep
-            case .manual:
-                DeckEditorForm(
-                    initialFolder: initialFolder,
-                    initialName: cleanName,
-                    onBack: returnFromManualEditor,
-                    onCreated: onCreated
-                )
-            case .aiPreview:
-                DeckEditorForm(
-                    initialFolder: initialFolder,
-                    initialName: cleanName,
-                    initialCards: importedCards,
-                    onBack: returnFromAIPreview,
-                    onCreated: onCreated
-                )
-            }
+        NavigationStack(path: $path) {
+            nameStep
+                .deckCreationStepFade(initiallyVisible: true)
+                .navigationDestination(for: NewDeckCreationStep.self) { destination in
+                    destinationView(destination)
+                        .deckCreationStepFade()
+                }
         }
         .alert(alertTitle, isPresented: $showingAlert) {
             Button("OK", role: .cancel) {}
@@ -135,204 +146,227 @@ private struct NewDeckCreationFlow: View {
         }
     }
 
-    private var nameStep: some View {
-        NavigationStack {
-            Form {
-                Section("Deck") {
-                    TextField("Nom", text: $name)
-                        .focused($nameFieldFocused)
-                        .submitLabel(.continue)
-                        .onSubmit(advanceFromName)
-                }
-            }
-            .navigationTitle(L10n.text("deck.new.title"))
-            .navigationBarTitleDisplayMode(.inline)
-            .toolbar {
-                ToolbarItem(placement: .cancellationAction) {
-                    Button("Annuler") { dismiss() }
-                        .tint(.white)
-                }
+    @ViewBuilder
+    private func destinationView(_ destination: NewDeckCreationStep) -> some View {
+        switch destination {
+        case .method:
+            methodStep
+        case .ai:
+            aiStep
+        case .manual:
+            DeckEditorForm(
+                initialFolder: initialFolder,
+                initialName: cleanName,
+                onBack: returnFromManualEditor,
+                onCreated: onCreated,
+                embedsInNavigationStack: false
+            )
+        case .aiPreview:
+            DeckEditorForm(
+                initialFolder: initialFolder,
+                initialName: cleanName,
+                initialCards: importedCards,
+                onBack: returnFromAIPreview,
+                onCreated: onCreated,
+                embedsInNavigationStack: false
+            )
+        }
+    }
 
-                ToolbarItem(placement: .confirmationAction) {
-                    CircularSaveButton(
-                        accent: Theme.accent,
-                        isEnabled: !cleanName.isEmpty
-                    ) {
-                        advanceFromName()
-                    }
+    private var nameStep: some View {
+        Form {
+            Section("Deck") {
+                TextField("Nom", text: $name)
+                    .focused($nameFieldFocused)
+                    .submitLabel(.continue)
+                    .onSubmit(advanceFromName)
+            }
+        }
+        .navigationTitle(L10n.text("deck.new.title"))
+        .navigationBarTitleDisplayMode(.inline)
+        .toolbar {
+            ToolbarItem(placement: .cancellationAction) {
+                Button("Annuler") { dismiss() }
+                    .tint(.white)
+            }
+
+            ToolbarItem(placement: .confirmationAction) {
+                CircularSaveButton(
+                    accent: Theme.accent,
+                    isEnabled: !cleanName.isEmpty
+                ) {
+                    advanceFromName()
                 }
             }
-            .task {
-                try? await Task.sleep(for: .milliseconds(120))
-                nameFieldFocused = true
-            }
+        }
+        .task {
+            try? await Task.sleep(for: .milliseconds(120))
+            nameFieldFocused = true
         }
     }
 
     private var methodStep: some View {
-        NavigationStack {
-            ScrollView {
-                VStack(alignment: .leading, spacing: 18) {
-                    Text(L10n.text("ai.creation.method.title"))
-                        .font(.title2.bold())
+        ScrollView {
+            VStack(alignment: .leading, spacing: 18) {
+                Text(L10n.text("ai.creation.method.title"))
+                    .font(.title2.bold())
 
-                    creationChoice(
-                        title: L10n.text("ai.create.with_ai"),
-                        subtitle: L10n.text("ai.recommended"),
-                        systemImage: "sparkles",
-                        isRecommended: true
-                    ) {
-                        hasOpenedProvider = false
-                        promptWasCopied = false
-                        step = .ai
-                    }
-
-                    creationChoice(
-                        title: L10n.text("ai.create.manual"),
-                        subtitle: nil,
-                        systemImage: "square.and.pencil",
-                        isRecommended: false
-                    ) {
-                        step = .manual
-                    }
+                creationChoice(
+                    title: L10n.text("ai.create.with_ai"),
+                    subtitle: L10n.text("ai.recommended"),
+                    systemImage: "sparkles",
+                    isRecommended: true
+                ) {
+                    hasOpenedProvider = false
+                    promptWasCopied = false
+                    navigateForward(to: .ai)
                 }
-                .padding(20)
+
+                creationChoice(
+                    title: L10n.text("ai.create.manual"),
+                    subtitle: nil,
+                    systemImage: "square.and.pencil",
+                    isRecommended: false
+                ) {
+                    navigateForward(to: .manual)
+                }
             }
-            .navigationTitle(L10n.text("deck.new.title"))
-            .navigationBarTitleDisplayMode(.inline)
-            .toolbar {
-                ToolbarItem(placement: .topBarLeading) {
-                    DeckCreationBackButton {
-                        step = .name
-                    }
+            .padding(20)
+        }
+        .navigationTitle(L10n.text("deck.new.title"))
+        .navigationBarTitleDisplayMode(.inline)
+        .navigationBarBackButtonHidden(true)
+        .toolbar {
+            ToolbarItem(placement: .topBarLeading) {
+                DeckCreationBackButton {
+                    navigateBack()
                 }
             }
         }
     }
 
     private var aiStep: some View {
-        NavigationStack {
-            ScrollView {
-                VStack(alignment: .leading, spacing: 20) {
-                    VStack(alignment: .leading, spacing: 6) {
-                        Text(L10n.text("ai.provider.title"))
-                            .font(.title2.bold())
-                        Text(L10n.text("ai.provider.subtitle"))
-                            .font(.subheadline)
-                            .foregroundStyle(.secondary)
-                    }
+        ScrollView {
+            VStack(alignment: .leading, spacing: 20) {
+                VStack(alignment: .leading, spacing: 6) {
+                    Text(L10n.text("ai.provider.title"))
+                        .font(.title2.bold())
+                    Text(L10n.text("ai.provider.subtitle"))
+                        .font(.subheadline)
+                        .foregroundStyle(.secondary)
+                }
 
-                    VStack(spacing: 10) {
-                        ForEach(ExternalAIProvider.allCases) { provider in
-                            providerRow(provider)
-                        }
+                VStack(spacing: 10) {
+                    ForEach(ExternalAIProvider.allCases) { provider in
+                        providerRow(provider)
                     }
+                }
 
-                    VStack(alignment: .leading, spacing: 10) {
-                        Label(
-                            L10n.format("ai.instructions.title", selectedProvider.displayName),
-                            systemImage: "doc.on.clipboard"
+                VStack(alignment: .leading, spacing: 10) {
+                    Label(
+                        L10n.format("ai.instructions.title", selectedProvider.displayName),
+                        systemImage: "doc.on.clipboard"
+                    )
+                    .font(.headline)
+
+                    Text(
+                        L10n.format(
+                            "ai.instructions.body",
+                            selectedProvider.displayName
+                        )
+                    )
+                    .font(.subheadline)
+                    .foregroundStyle(.secondary)
+                }
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .padding(16)
+                .background(
+                    Theme.cardBackground,
+                    in: .rect(cornerRadius: 18, style: .continuous)
+                )
+
+                if hasOpenedProvider {
+                    VStack(alignment: .leading, spacing: 12) {
+                        Text(
+                            L10n.format(
+                                "ai.return.title",
+                                selectedProvider.displayName
+                            )
                         )
                         .font(.headline)
 
                         Text(
                             L10n.format(
-                                "ai.instructions.body",
+                                "ai.return.body",
                                 selectedProvider.displayName
                             )
                         )
                         .font(.subheadline)
                         .foregroundStyle(.secondary)
-                    }
-                    .frame(maxWidth: .infinity, alignment: .leading)
-                    .padding(16)
-                    .background(
-                        Theme.cardBackground,
-                        in: .rect(cornerRadius: 18, style: .continuous)
-                    )
 
-                    if hasOpenedProvider {
-                        VStack(alignment: .leading, spacing: 12) {
-                            Text(
+                        Button {
+                            pasteAIResult()
+                        } label: {
+                            Label(
                                 L10n.format(
-                                    "ai.return.title",
+                                    "ai.paste",
                                     selectedProvider.displayName
-                                )
+                                ),
+                                systemImage: "doc.on.clipboard.fill"
                             )
                             .font(.headline)
-
-                            Text(
-                                L10n.format(
-                                    "ai.return.body",
-                                    selectedProvider.displayName
-                                )
-                            )
-                            .font(.subheadline)
-                            .foregroundStyle(.secondary)
-
-                            Button {
-                                pasteAIResult()
-                            } label: {
-                                Label(
-                                    L10n.format(
-                                        "ai.paste",
-                                        selectedProvider.displayName
-                                    ),
-                                    systemImage: "doc.on.clipboard.fill"
-                                )
-                                .font(.headline)
-                                .frame(maxWidth: .infinity, minHeight: 32)
-                            }
-                            .buttonStyle(.borderedProminent)
-                            .tint(Theme.accent)
-
-                            Button {
-                                openSelectedProvider()
-                            } label: {
-                                Label(
-                                    L10n.format(
-                                        "ai.open_again",
-                                        selectedProvider.displayName
-                                    ),
-                                    systemImage: "arrow.up.right.square"
-                                )
-                                .frame(maxWidth: .infinity, minHeight: 28)
-                            }
-                            .buttonStyle(.bordered)
-                            .tint(.white)
+                            .frame(maxWidth: .infinity, minHeight: 32)
                         }
-                        .padding(16)
-                        .background(
-                            Theme.cardBackground,
-                            in: .rect(cornerRadius: 18, style: .continuous)
-                        )
-                    } else {
+                        .buttonStyle(.borderedProminent)
+                        .tint(Theme.accent)
+
                         Button {
                             openSelectedProvider()
                         } label: {
                             Label(
                                 L10n.format(
-                                    "ai.open",
+                                    "ai.open_again",
                                     selectedProvider.displayName
                                 ),
                                 systemImage: "arrow.up.right.square"
                             )
-                            .font(.headline)
-                            .frame(maxWidth: .infinity, minHeight: 36)
+                            .frame(maxWidth: .infinity, minHeight: 28)
                         }
-                        .buttonStyle(.borderedProminent)
-                        .tint(Theme.accent)
+                        .buttonStyle(.bordered)
+                        .tint(.white)
                     }
+                    .padding(16)
+                    .background(
+                        Theme.cardBackground,
+                        in: .rect(cornerRadius: 18, style: .continuous)
+                    )
+                } else {
+                    Button {
+                        openSelectedProvider()
+                    } label: {
+                        Label(
+                            L10n.format(
+                                "ai.open",
+                                selectedProvider.displayName
+                            ),
+                            systemImage: "arrow.up.right.square"
+                        )
+                        .font(.headline)
+                        .frame(maxWidth: .infinity, minHeight: 36)
+                    }
+                    .buttonStyle(.borderedProminent)
+                    .tint(Theme.accent)
                 }
-                .padding(20)
             }
-            .navigationTitle(L10n.text("ai.create.with_ai"))
-            .navigationBarTitleDisplayMode(.inline)
-            .toolbar {
-                ToolbarItem(placement: .topBarLeading) {
-                    DeckCreationBackButton {
-                        step = .method
-                    }
+            .padding(20)
+        }
+        .navigationTitle(L10n.text("ai.create.with_ai"))
+        .navigationBarTitleDisplayMode(.inline)
+        .navigationBarBackButtonHidden(true)
+        .toolbar {
+            ToolbarItem(placement: .topBarLeading) {
+                DeckCreationBackButton {
+                    navigateBack()
                 }
             }
         }
@@ -345,17 +379,26 @@ private struct NewDeckCreationFlow: View {
         guard !cleanName.isEmpty else { return }
         HapticService.play(.selection)
         nameFieldFocused = false
-        step = .method
+        navigateForward(to: .method)
+    }
+
+    private func navigateForward(to destination: NewDeckCreationStep) {
+        path.append(destination)
+    }
+
+    private func navigateBack() {
+        guard !path.isEmpty else { return }
+        path.removeLast()
     }
 
     private func returnFromManualEditor(_ updatedName: String) {
         name = updatedName
-        step = .method
+        navigateBack()
     }
 
     private func returnFromAIPreview(_ updatedName: String) {
         name = updatedName
-        step = .ai
+        navigateBack()
     }
 
     private func creationChoice(
@@ -542,7 +585,7 @@ private struct NewDeckCreationFlow: View {
         do {
             importedCards = try ExternalAIFlashcardParser.parse(clipboardText)
             HapticService.play(.selection)
-            step = .aiPreview
+            navigateForward(to: .aiPreview)
         } catch let error as ExternalAIFlashcardParserError {
             switch error {
             case .emptyResult:
@@ -579,6 +622,7 @@ private struct DeckEditorForm: View {
     let deck: Deck?
     let onBack: ((String) -> Void)?
     let onCreated: ((Deck) -> Void)?
+    let embedsInNavigationStack: Bool
     private let shouldFocusName: Bool
     @State private var name: String
     @State private var selectedFolderID: UUID?
@@ -593,11 +637,13 @@ private struct DeckEditorForm: View {
         initialName: String = "",
         initialCards: [ParsedCard] = [],
         onBack: ((String) -> Void)? = nil,
-        onCreated: ((Deck) -> Void)? = nil
+        onCreated: ((Deck) -> Void)? = nil,
+        embedsInNavigationStack: Bool = true
     ) {
         self.deck = deck
         self.onBack = onBack
         self.onCreated = onCreated
+        self.embedsInNavigationStack = embedsInNavigationStack
         shouldFocusName = deck == nil
             && initialName.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
         _name = State(initialValue: deck?.name ?? initialName)
@@ -652,157 +698,13 @@ private struct DeckEditorForm: View {
     }
 
     var body: some View {
-        NavigationStack {
-            Form {
-                Section("Deck") {
-                    TextField("Nom", text: $name)
-                        .focused($nameFieldFocused)
-                        .task {
-                            guard shouldFocusName else { return }
-                            try? await Task.sleep(nanoseconds: 120_000_000)
-                            nameFieldFocused = true
-                        }
+        Group {
+            if embedsInNavigationStack {
+                NavigationStack {
+                    editorContent
                 }
-
-                Section("Dossier") {
-                    Picker("Emplacement", selection: $selectedFolderID) {
-                        Text("Sans dossier").tag(nil as UUID?)
-
-                        ForEach(folders) { folder in
-                            Text(folder.name).tag(folder.id as UUID?)
-                        }
-                    }
-                    .tint(controlAccent)
-                }
-
-                if deck == nil {
-                    ForEach($cardDrafts) { $draft in
-                        Section {
-                            CardEditorSurface(
-                                term: $draft.term,
-                                definition: $draft.definition,
-                                roundsBottomCorners: duplicateKind(for: draft.id) == nil
-                            )
-                            .listRowInsets(
-                                EdgeInsets(
-                                    top: 0,
-                                    leading: 0,
-                                    bottom: 0,
-                                    trailing: 0
-                                )
-                            )
-                            .listRowBackground(Color.clear)
-                            .listRowSeparator(.hidden)
-                            .swipeActions(
-                                edge: .trailing,
-                                allowsFullSwipe: true
-                            ) {
-                                Button(role: .destructive) {
-                                    removeDraft(draft.id)
-                                } label: {
-                                    Label(
-                                        "Supprimer",
-                                        systemImage: "trash"
-                                    )
-                                }
-                                .tint(.red)
-                            }
-                            .contextMenu {
-                                Button(role: .destructive) {
-                                    removeDraft(draft.id)
-                                } label: {
-                                    Label(
-                                        "Supprimer",
-                                        systemImage: "trash"
-                                    )
-                                }
-                                .destructiveActionColor()
-                            }
-                            .transition(
-                                .move(edge: .bottom)
-                                    .combined(with: .opacity)
-                            )
-
-                            if let kind = duplicateKind(for: draft.id) {
-                                duplicateWarning(for: kind)
-                            }
-                        } header: {
-                            if draft.id == cardDrafts.first?.id {
-                                Text("Cartes initiales")
-                            }
-                        }
-                        .listSectionSpacing(6)
-                    }
-
-                    Section {
-                        Button("Ajouter une carte", systemImage: "plus") {
-                            withAnimation(.snappy(duration: 0.28)) {
-                                cardDrafts.append(DeckCardDraft())
-                            }
-                        }
-                        .normalActionColor()
-
-                        Button("Ajout en masse", systemImage: "text.badge.plus") {
-                            showingBulkAdd = true
-                        }
-                        .normalActionColor()
-                    } footer: {
-                        if hasIncompleteDraft {
-                            Text("Chaque carte commencée doit avoir un terme et une définition.")
-                                .foregroundStyle(.red)
-                        } else if validDrafts.isEmpty {
-                            Text("Ajoutez au moins une carte pour créer le deck.")
-                        } else if duplicateAnalysis.exactCount > 0 || duplicateAnalysis.possibleCount > 0 {
-                            Text(duplicateAlertMessage)
-                        }
-                    }
-                    .listSectionSpacing(12)
-                }
-            }
-            .scrollDismissesKeyboard(.interactively)
-            .navigationTitle(
-                deck == nil
-                    ? L10n.text("deck.new.title")
-                    : L10n.text("deck.edit.title")
-            )
-            .navigationBarTitleDisplayMode(.inline)
-            .toolbar {
-                if let onBack {
-                    ToolbarItem(placement: .topBarLeading) {
-                        DeckCreationBackButton {
-                            onBack(cleanName)
-                        }
-                    }
-                } else {
-                    ToolbarItem(placement: .cancellationAction) {
-                        Button("Annuler") { dismiss() }
-                            .tint(.white)
-                    }
-                }
-
-                ToolbarItem(placement: .confirmationAction) {
-                    CircularSaveButton(
-                        accent: controlAccent,
-                        isEnabled: canSave
-                    ) {
-                        prepareSave()
-                    }
-                }
-            }
-            .alert(L10n.text("Doublons détectés"), isPresented: $showingDuplicateChoice) {
-                if duplicateAnalysis.exactCount > 0 {
-                    Button(L10n.text("Ignorer les doublons exacts")) {
-                        save(skipExactDuplicates: true)
-                    }
-                }
-
-                Button(L10n.text("duplicate.action.create_anyway")) {
-                    save(skipExactDuplicates: false)
-                }
-
-                Button("Annuler", role: .cancel) {}
-            } message: {
-                Text(duplicateAlertMessage)
+            } else {
+                editorContent
             }
         }
         .sheet(isPresented: $showingBulkAdd) {
@@ -821,6 +723,161 @@ private struct DeckEditorForm: View {
                     DeckCardDraft(term: $0.term, definition: $0.definition)
                 })
             }
+        }
+    }
+
+    private var editorContent: some View {
+        Form {
+            Section("Deck") {
+                TextField("Nom", text: $name)
+                    .focused($nameFieldFocused)
+                    .task {
+                        guard shouldFocusName else { return }
+                        try? await Task.sleep(nanoseconds: 120_000_000)
+                        nameFieldFocused = true
+                    }
+            }
+
+            Section("Dossier") {
+                Picker("Emplacement", selection: $selectedFolderID) {
+                    Text("Sans dossier").tag(nil as UUID?)
+
+                    ForEach(folders) { folder in
+                        Text(folder.name).tag(folder.id as UUID?)
+                    }
+                }
+                .tint(controlAccent)
+            }
+
+            if deck == nil {
+                ForEach($cardDrafts) { $draft in
+                    Section {
+                        CardEditorSurface(
+                            term: $draft.term,
+                            definition: $draft.definition,
+                            roundsBottomCorners: duplicateKind(for: draft.id) == nil
+                        )
+                        .listRowInsets(
+                            EdgeInsets(
+                                top: 0,
+                                leading: 0,
+                                bottom: 0,
+                                trailing: 0
+                            )
+                        )
+                        .listRowBackground(Color.clear)
+                        .listRowSeparator(.hidden)
+                        .swipeActions(
+                            edge: .trailing,
+                            allowsFullSwipe: true
+                        ) {
+                            Button(role: .destructive) {
+                                removeDraft(draft.id)
+                            } label: {
+                                Label(
+                                    "Supprimer",
+                                    systemImage: "trash"
+                                )
+                            }
+                            .tint(.red)
+                        }
+                        .contextMenu {
+                            Button(role: .destructive) {
+                                removeDraft(draft.id)
+                            } label: {
+                                Label(
+                                    "Supprimer",
+                                    systemImage: "trash"
+                                )
+                            }
+                            .destructiveActionColor()
+                        }
+                        .transition(
+                            .move(edge: .bottom)
+                                .combined(with: .opacity)
+                        )
+
+                        if let kind = duplicateKind(for: draft.id) {
+                            duplicateWarning(for: kind)
+                        }
+                    } header: {
+                        if draft.id == cardDrafts.first?.id {
+                            Text("Cartes initiales")
+                        }
+                    }
+                    .listSectionSpacing(6)
+                }
+
+                Section {
+                    Button("Ajouter une carte", systemImage: "plus") {
+                        withAnimation(.snappy(duration: 0.28)) {
+                            cardDrafts.append(DeckCardDraft())
+                        }
+                    }
+                    .normalActionColor()
+
+                    Button("Ajout en masse", systemImage: "text.badge.plus") {
+                        showingBulkAdd = true
+                    }
+                    .normalActionColor()
+                } footer: {
+                    if hasIncompleteDraft {
+                        Text("Chaque carte commencée doit avoir un terme et une définition.")
+                            .foregroundStyle(.red)
+                    } else if validDrafts.isEmpty {
+                        Text("Ajoutez au moins une carte pour créer le deck.")
+                    } else if duplicateAnalysis.exactCount > 0 || duplicateAnalysis.possibleCount > 0 {
+                        Text(duplicateAlertMessage)
+                    }
+                }
+                .listSectionSpacing(12)
+            }
+        }
+        .scrollDismissesKeyboard(.interactively)
+        .navigationTitle(
+            deck == nil
+                ? L10n.text("deck.new.title")
+                : L10n.text("deck.edit.title")
+        )
+        .navigationBarTitleDisplayMode(.inline)
+        .navigationBarBackButtonHidden(onBack != nil)
+        .toolbar {
+            if let onBack {
+                ToolbarItem(placement: .topBarLeading) {
+                    DeckCreationBackButton {
+                        onBack(cleanName)
+                    }
+                }
+            } else {
+                ToolbarItem(placement: .cancellationAction) {
+                    Button("Annuler") { dismiss() }
+                        .tint(.white)
+                }
+            }
+
+            ToolbarItem(placement: .confirmationAction) {
+                CircularSaveButton(
+                    accent: controlAccent,
+                    isEnabled: canSave
+                ) {
+                    prepareSave()
+                }
+            }
+        }
+        .alert(L10n.text("Doublons détectés"), isPresented: $showingDuplicateChoice) {
+            if duplicateAnalysis.exactCount > 0 {
+                Button(L10n.text("Ignorer les doublons exacts")) {
+                    save(skipExactDuplicates: true)
+                }
+            }
+
+            Button(L10n.text("duplicate.action.create_anyway")) {
+                save(skipExactDuplicates: false)
+            }
+
+            Button("Annuler", role: .cancel) {}
+        } message: {
+            Text(duplicateAlertMessage)
         }
     }
 
