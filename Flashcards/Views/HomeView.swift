@@ -547,7 +547,8 @@ struct HomeView: View {
         guard visualOrder != folderVisualOrder else { return }
 
         folderVisualOrder = visualOrder
-        HapticService.play(.selection)
+        // No haptic here: scrolling updates tile geometry too, which made
+        // ordinary section scrolling feel like a selection event.
     }
 
     private func applyFolderReorder<CollectionID: Hashable & Sendable>(

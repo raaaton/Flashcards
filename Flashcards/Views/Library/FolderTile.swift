@@ -50,12 +50,12 @@ struct FolderTile: View {
                             .fill(
                                 LinearGradient(
                                     colors: [
+                                        Theme.accent.opacity(0.28),
                                         Theme.accent.opacity(0.13),
-                                        Theme.accent.opacity(0.065),
-                                        Theme.accent.opacity(0.025)
+                                        Theme.accent.opacity(0.03)
                                     ],
-                                    startPoint: .topLeading,
-                                    endPoint: .bottomTrailing
+                                    startPoint: .top,
+                                    endPoint: .bottom
                                 )
                             )
                     } else {
