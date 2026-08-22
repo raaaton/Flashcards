@@ -123,26 +123,28 @@ struct EditCardsView: View {
                 endSelection()
             }
         }
-        .alert(
-            L10n.text("edit_cards.delete.title"),
-            isPresented: $showingDeleteConfirmation
-        ) {
-            Button("Annuler", role: .cancel) {
-                if !isSelecting { selectedCardIDs.removeAll() }
-            }
-            .normalActionColor()
-            Button("Supprimer", role: .destructive) {
-                LibraryActions.deleteCards(selectedCards, from: deck, in: modelContext)
-                endSelection()
-            }
-            .tint(.red)
-        } message: {
-            Text(
-                L10n.format(
-                    "edit_cards.delete.message",
-                    L10n.cards(selectedCardIDs.count)
-                )
-            )
+        .background {
+            Color.clear
+                .tint(.white)
+                .alert(
+                    L10n.text("edit_cards.delete.title"),
+                    isPresented: $showingDeleteConfirmation
+                ) {
+                    Button("Annuler", role: .cancel) {
+                        if !isSelecting { selectedCardIDs.removeAll() }
+                    }
+                    Button("Supprimer", role: .destructive) {
+                        LibraryActions.deleteCards(selectedCards, from: deck, in: modelContext)
+                        endSelection()
+                    }
+                } message: {
+                    Text(
+                        L10n.format(
+                            "edit_cards.delete.message",
+                            L10n.cards(selectedCardIDs.count)
+                        )
+                    )
+                }
         }
     }
 
