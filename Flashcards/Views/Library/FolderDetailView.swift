@@ -20,7 +20,7 @@ struct FolderDetailView: View {
     ]
 
     private var accent: Color {
-        folder.map { Color(folderHex: $0.colorHex) } ?? .gray
+        Theme.accent
     }
 
     private var decks: [Deck] {
@@ -100,7 +100,7 @@ struct FolderDetailView: View {
             } label: {
                 Image(systemName: "rectangle.stack.badge.plus")
                     .font(.title.weight(.semibold))
-                    .foregroundStyle(.white)
+                    .foregroundStyle(Theme.foreground(on: accent))
                     .frame(width: 72, height: 72)
                     .glassEffect(
                         .regular.tint(accent).interactive(),
