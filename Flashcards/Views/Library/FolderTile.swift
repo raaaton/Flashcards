@@ -45,23 +45,8 @@ struct FolderTile: View {
             RoundedRectangle(cornerRadius: 22, style: .continuous)
                 .fill(Theme.cardBackground)
                 .overlay {
-                    if showsMintGradient {
-                        RoundedRectangle(cornerRadius: 22, style: .continuous)
-                            .fill(
-                                LinearGradient(
-                                    colors: [
-                                        Theme.accent.opacity(0.18),
-                                        Theme.accent.opacity(0.08),
-                                        Theme.accent.opacity(0.02)
-                                    ],
-                                    startPoint: .topLeading,
-                                    endPoint: .bottomTrailing
-                                )
-                            )
-                    } else {
-                        RoundedRectangle(cornerRadius: 22, style: .continuous)
-                            .fill(Theme.accent.opacity(0.075))
-                    }
+                    RoundedRectangle(cornerRadius: 22, style: .continuous)
+                        .fill(Theme.accent.opacity(0.075))
                 }
         }
         .overlay {
