@@ -134,6 +134,7 @@ struct FolderDetailView: View {
         .alert("Supprimer ce deck ?", isPresented: deckDeleteBinding) {
             Button("Supprimer", role: .destructive) { deletePendingDeck() }
             Button("Annuler", role: .cancel) { deckToDelete = nil }
+                .normalActionColor()
         } message: {
             Text("Toutes ses cartes seront supprimées définitivement.")
         }
@@ -143,8 +144,10 @@ struct FolderDetailView: View {
             titleVisibility: .visible
         ) {
             Button("Conserver les decks") { deleteFolderKeepingDecks() }
+                .normalActionColor()
             Button("Tout supprimer", role: .destructive) { deleteFolderWithDecks() }
             Button("Annuler", role: .cancel) {}
+                .normalActionColor()
         } message: {
             Text("Vous pouvez déplacer les decks vers « Sans dossier » ou supprimer définitivement tout le contenu.")
         }
