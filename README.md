@@ -1,6 +1,5 @@
 ![header](https://github.com/user-attachments/assets/03162523-f774-46c7-8748-eeb635d48c92)
 
-
 <p align="center">
   <img alt="release" src="https://img.shields.io/github/v/release/raaaton/Flashcards" />
   <img alt="stars" src="https://img.shields.io/github/stars/raaaton/Flashcards" />
@@ -10,8 +9,11 @@
 
 # Flashcards
 
-Native iOS flashcards app focused on fast creation, distraction-free studying, and complete offline ownership of your data.<br />
-Built entirely with SwiftUI, SwiftData, Apple system APIs and ❤️.
+**Flashcards** is a native, local-first iOS study app built for fast card creation, focused revision, and full ownership of your data.
+
+It is written entirely with **SwiftUI**, **SwiftData**, and Apple system APIs. There is no account, backend, analytics SDK, advertising layer, or runtime network dependency.
+
+Version 2 introduces a redesigned visual system, a new mint identity, a rebuilt Home experience, compact deck rows, improved duplicate detection, configurable Home sections, expanded localization, and a more consistent Apple-native interaction model throughout the app.
 
 ---
 
@@ -21,91 +23,257 @@ Built entirely with SwiftUI, SwiftData, Apple system APIs and ❤️.
 [⬇️ **Download latest development IPA**](https://github.com/raaaton/Flashcards/releases/download/dev/Flashcards-v2.0.0.ipa)
 <!-- DEV_IPA_END -->
 
-> Built automatically from the latest commit on `main`. Development builds may be unstable.
+> Built automatically from the latest commit on `main`. Development builds may contain unfinished or unstable changes.
+
+Stable releases are available from the repository's [Releases](https://github.com/raaaton/Flashcards/releases) page.
 
 ---
 
-## Preview
+## Version 2
 
-<p align="center">
-  <img width="197" height="426" src="https://github.com/user-attachments/assets/cfd723bc-fba5-4365-be3d-7612562d3db7" />
-  <img width="197" height="426" src="https://github.com/user-attachments/assets/5f040034-350c-4cf0-84f7-7f4d2de66e02" />
-  <img width="197" height="426" src="https://github.com/user-attachments/assets/284ad7da-6d84-4712-881a-7d12dfd04d99" />
-</p>
+The v2 generation is a major visual and interaction refresh rather than a simple coat of paint.
 
-<p align="center">
-  <sub>Organize your subjects, create decks, and study without leaving the app.</sub>
-</p>
+- New app-wide **mint identity** based around `#46D7A7`
+- New layered app icon using Apple's `.icon` format
+- Rebuilt Home hierarchy with **Resume**, **Recent**, **Pinned**, and **Folders**
+- Optional Home sections configurable from Settings
+- Uniform folder design with SF Symbols and mint icon surfaces
+- Compact, full-width deck rows instead of the previous card grid treatment
+- Matching deck presentation between Home, search, and folder pages
+- Expanded deck context menus with pin, edit, duplicate, and delete actions
+- Improved first-deck onboarding
+- More consistent native sheets, menus, alerts, haptics, and Liquid Glass controls
+- Duplicate detection extended beyond bulk import to normal card creation and editing
+- French, English, German, and Spanish localization
+
+# SCREEN NECESSAIRE : Home v2 showing Resume, Recent, Pinned and the redesigned Folder tiles
+
+# SCREEN NECESSAIRE : A folder page showing the new compact full-width Deck rows
 
 ---
 
 ## Features
 
-### Organize
+### Organize your library
 
-- Create folders with custom colors and SF Symbols
-- Create and manage multiple decks inside each folder
-- Pin important decks for quick access
+Flashcards uses a simple hierarchy:
+
+```text
+Folder
+└── Deck
+    └── Cards
+```
+
+Folders keep subjects or themes separated while decks remain the unit you actually study.
+
+- Create folders with custom SF Symbols
+- Reorder folders directly from Home
+- Create multiple decks inside each folder
+- Keep decks without a folder when you do not need extra organization
+- Pin important decks
 - Quickly reopen recently used decks
-- Search folders, decks, terms, and definitions
-- Optional folder-scoped search
+- Resume unfinished study sessions directly from Home
+- Edit, duplicate, pin/unpin, or delete decks from contextual menus
+- Edit, duplicate, or delete folders from contextual menus
 - Move or copy cards between decks
+- Search across folders, deck names, terms, and definitions
+- Optionally restrict search to the current folder
 
-### Create cards
+The v2 interface intentionally removes per-folder accent colors from the visible design. Folders now share the same neutral card treatment and mint icon language so the library reads as one coherent system.
+
+---
+
+### Create cards quickly
+
+Cards can be created one at a time or in large batches without leaving the app.
 
 - Add and edit cards individually
-- Select and edit multiple cards at once
-- Star important cards for focused study
-- Detect potential duplicates while creating or importing cards
-- Import large sets of cards from plain text
-- Configure separators when importing
-- Preview imported cards before saving
-- Paste formatted card lists directly into the importer
+- Create a new deck with several initial cards in one flow
+- Add more card editors while creating a deck
+- Delete draft cards before saving
+- Select multiple existing cards for bulk actions
+- Star or unstar cards
+- Delete selected cards
+- Move selected cards to another deck
+- Copy selected cards to another deck
+- Reorder cards inside a deck
 
-### Study with Flashcards
+#### Duplicate detection
 
-- Study term → definition or definition → term
-- Optional shuffle
+Duplicate detection is available during normal creation as well as bulk import.
+
+Flashcards distinguishes between:
+
+- **Exact duplicate** — same normalized term and definition
+- **Possible duplicate** — same normalized term with a different definition
+
+Exact duplicates use semantic red feedback, while possible duplicates use orange warnings. Before saving, the app can warn you and let you continue deliberately instead of silently creating duplicate content.
+
+This applies when:
+
+- Creating cards inside a new deck
+- Adding a single card to an existing deck
+- Editing an existing card
+- Using Bulk Add / Bulk Import
+
+When editing a card, the card itself is excluded from duplicate comparison.
+
+# SCREEN NECESSAIRE : New Deck or Add Card screen with an Exact duplicate / Possible duplicate warning visible
+
+---
+
+### Bulk Add & Import
+
+Large card sets can be pasted as plain text and parsed directly on-device.
+
+- Paste directly from the clipboard
+- Configure the delimiter between term and definition
+- Configure the delimiter between cards
+- Use custom delimiters
+- Preview parsed cards before importing
+- See invalid records before saving
+- Detect exact and possible duplicates in the preview
+- Skip exact duplicates or import anyway
+- Import into an existing deck
+- Create a new deck directly from the importer
+
+A simple input can look like:
+
+```text
+France:Paris
+Germany:Berlin
+Spain:Madrid
+```
+
+No external parser or online service is used.
+
+---
+
+## Study with Flashcards
+
+Flashcards mode is built around one card at a time, with the surrounding UI kept deliberately quiet.
+
+- Study **term → definition**
+- Study **definition → term**
+- Randomize direction when desired
+- Shuffle cards
 - Study starred cards only
-- Choose a session size
+- Choose the session size
+- Flip cards with an animated 3D transition
 - Swipe right for **Correct**
 - Swipe left for **Review**
-- Flip cards with an animated 3D transition
-- Undo previous judgments
-- Resume unfinished sessions
-- Review mistakes in a separate session
+- Undo the previous judgment
+- Resume unfinished sessions later
+- Review mistakes in a dedicated follow-up session
 - Track mastered cards and deck progress
-- Completion feedback with native haptics and celebrations
+- Save completed sessions to local study history
+- Native haptic feedback
+- Optional completion celebrations
 
-<img width="197" height="426" src="https://github.com/user-attachments/assets/f2838f76-6fc5-4eaf-b1a2-aea545b55d88" />
-<img width="197" height="426" src="https://github.com/user-attachments/assets/5f040034-350c-4cf0-84f7-7f4d2de66e02" />
+Study preferences are remembered locally so repeated sessions do not need to be configured from scratch.
 
+# SCREEN NECESSAIRE : Flashcards study screen with a card flipped to its answer side
 
-### Test yourself
+---
 
-Create mixed tests from the same cards using several question formats:
+## Test yourself
 
-- Multiple choice
-- True / False
-- Written answer
+The same deck can also generate mixed tests instead of swipe-based flashcards.
 
-Tests can use the same direction, shuffle, starred-only, and session-size preferences as Flashcards.
+Supported question formats:
 
-  <img width="197" height="426" src="https://github.com/user-attachments/assets/b4336570-41d8-4a5d-8fd6-ecd5b4fa7aae" />
-  <img width="197" height="426" src="https://github.com/user-attachments/assets/2164632f-44cf-4960-973b-8449872934e7" />
+- **Multiple Choice**
+- **True / False**
+- **Written Answer**
 
+Tests reuse the same library and can respect the same study preferences such as direction, shuffle, starred-only filtering, and session size.
 
-### Study history
+Written answers can be submitted directly from the keyboard, while every test run stays completely on-device.
 
-Completed study sessions are stored locally with:
+# SCREEN NECESSAIRE : Test screen showing either Multiple Choice or Written Answer mode
+
+---
+
+## Study history & progress
+
+Completed study sessions can be stored locally per deck.
+
+History entries include information such as:
 
 - Study mode
-- Number of cards
+- Number of studied items
 - Correct answers
 - Incorrect answers
+- Success rate
 - Completion date
 
-This makes it easy to see recent activity without requiring an account or online service.
+Deck pages also show mastered-card progress, giving a quick overview without introducing accounts, streak systems, or server-side statistics.
+
+Study history can be disabled from Settings, and an individual deck's history can be cleared at any time.
+
+---
+
+## Search
+
+Search is integrated into the native navigation flow rather than permanently occupying space on Home.
+
+Depending on scope, it can match:
+
+- Folder names
+- Deck names
+- Card terms
+- Card definitions
+
+When searching globally, card results show their folder and deck context. When opened from a folder, search can remain limited to that folder or expand globally depending on the Settings preference.
+
+---
+
+## Home customization
+
+The Home screen can be adjusted without changing the core library structure.
+
+The following sections can independently be enabled or disabled:
+
+- **Resume** — unfinished study sessions
+- **Recent** — recently opened decks
+- **Pinned** — explicitly pinned decks
+
+Folders remain the primary library entry point below those optional sections.
+
+---
+
+## Settings
+
+Settings currently include controls for:
+
+- Haptic feedback
+- Celebration animations
+- Study history
+- Resume section on Home
+- Recent section on Home
+- Pinned section on Home
+- Folder-scoped search behavior
+- App language
+- Backup and restore
+
+The visual identity itself is intentionally fixed rather than user-configurable: mint is the app's brand accent, while red and orange remain reserved for semantic warnings and destructive states.
+
+---
+
+## Backup & restore
+
+Your data is not tied to a Flashcards account because there is no Flashcards account.
+
+The full local database can be exported to **JSON** and restored later. Individual decks can also be exported from their deck page.
+
+Backups are designed to preserve the data required to reconstruct the study library independently of any external service.
+
+This makes it possible to:
+
+- Keep your own offline archive
+- Transfer a library manually
+- Restore after reinstalling
+- Export a specific deck separately
 
 ---
 
@@ -115,22 +283,15 @@ Flashcards is designed to work entirely on-device.
 
 - No account
 - No backend
+- No cloud database
 - No analytics
 - No advertising
 - No tracking
-- No external database
 - No runtime network requests
 - No third-party SDKs
+- No package dependencies
 
-Your folders, decks, cards, progress, and study history remain stored locally on your device.
-
----
-
-## Backup & restore
-
-The complete database can be exported as JSON and restored later.
-
-Backups include the data required to recreate your library, making it possible to keep an independent copy of your flashcards without relying on a cloud account.
+Folders, decks, cards, study progress, preferences, active sessions, and history remain local to the device unless you explicitly export them yourself.
 
 ---
 
@@ -138,11 +299,40 @@ Backups include the data required to recreate your library, making it possible t
 
 Flashcards currently supports:
 
-- 🇫🇷 French
-- 🇬🇧 English
-- Automatic language selection based on the device
+- 🇫🇷 **French**
+- 🇬🇧 **English**
+- 🇩🇪 **German**
+- 🇪🇸 **Spanish**
+- **Automatic** language selection based on the device
 
 The language can also be selected manually from Settings.
+
+Duplicate warnings, study UI, settings, import flows, and the rest of the user-facing interface follow the selected app language.
+
+---
+
+## Design
+
+Flashcards follows the current native iOS design language instead of recreating an independent component system.
+
+The v2 visual system is built around:
+
+- A dark interface
+- Mint `#46D7A7` as the main brand/action color
+- Neutral black, white, and system-gray structure
+- Red for destructive actions and exact duplicate warnings
+- Orange for possible duplicate warnings
+- SF Symbols
+- System typography
+- Native navigation and forms
+- Native context menus, sheets, confirmation dialogs, and alerts
+- Liquid Glass controls where appropriate
+- Native haptics
+- Continuous rounded geometry and compact information density
+
+Folders use neutral gray cards with mint icon surfaces. Decks use compact full-width rows with a mint deck glyph, metadata, and a subtle disclosure indicator. The same deck component is reused across Home, folder pages, and search to keep the hierarchy visually predictable.
+
+The app icon is also stored as a layered `AppIcon.icon` bundle, allowing Apple's icon system to apply platform-native depth and material behavior.
 
 ---
 
@@ -154,12 +344,13 @@ Flashcards intentionally keeps its stack small and native.
 | --- | --- |
 | UI | SwiftUI |
 | Persistence | SwiftData |
-| Language | Swift |
+| Language | Swift 6 |
 | Platform | iOS |
 | Minimum version | iOS 27.0 |
+| App icon | Layered `.icon` bundle |
 | Dependencies | None |
 | Backend | None |
-| Network access | None |
+| Runtime network access | None |
 
 All runtime functionality is implemented using Apple APIs.
 
@@ -169,20 +360,25 @@ All runtime functionality is implemented using Apple APIs.
 
 ```text
 Flashcards/
+├── AppIcon.icon/
+├── Assets.xcassets/
 ├── Models/
+├── Services/
 ├── Views/
 │   ├── Import/
 │   ├── Library/
+│   ├── Settings/
 │   ├── Study/
 │   └── Test/
-├── Services/
-├── Components/
-├── Assets.xcassets/
+├── AppPreferences.swift
+├── AppSettings.swift
+├── FlashcardsApp.swift
+├── L10n.swift
 ├── Localizable.xcstrings
-└── FlashcardsApp.swift
-````
+└── Theme.swift
+```
 
-The application is split around its main domains rather than relying on external frameworks or architectural dependencies.
+The project is organized around app domains and native views rather than external frameworks or architectural dependencies.
 
 ---
 
@@ -192,25 +388,29 @@ The application is split around its main domains rather than relying on external
 
 Stable unsigned IPA builds are available from the repository's [Releases](https://github.com/raaaton/Flashcards/releases) page.
 
-Each stable release is versioned individually, for example:
+The current major generation starts at:
 
-`Flashcards-v1.8.1.ipa`
+```text
+Flashcards-v2.0.0.ipa
+```
+
+The IPA must be signed before installation using a compatible iOS sideloading solution.
 
 ### Development builds
 
-The latest build from `main` is always available on top of this README.
+The latest successful build from `main` is published through the **Development Build** link near the top of this README.
 
-Development builds are generated automatically and may contain unfinished or unstable changes.
+Development builds are intended for testing the newest changes and may be less stable than tagged releases.
 
-The IPA must be signed before installation using a compatible iOS sideloading solution.
+---
 
 ## Build from source
 
 ### Requirements
 
-* macOS
-* Xcode 27 or newer
-* iOS 27 SDK
+- macOS
+- Xcode 27 or newer
+- iOS 27 SDK
 
 Clone the repository:
 
@@ -219,7 +419,7 @@ git clone https://github.com/raaaton/Flashcards.git
 cd Flashcards
 ```
 
-Open the Xcode project, select the **Flashcards** target, choose an iPhone or simulator, and build normally.
+Open `Flashcards.xcodeproj`, select the **Flashcards** target, choose an iPhone or simulator, and build normally.
 
 There are no package dependencies to resolve.
 
@@ -227,17 +427,22 @@ There are no package dependencies to resolve.
 
 ## Continuous integration
 
-Every relevant build is verified using GitHub Actions on an Xcode 27 environment.
+GitHub Actions is used as the project's build and release pipeline.
 
-The workflow checks the project before packaging a release, including:
+The workflow performs checks including:
 
-* Source and project configuration audits
-* Release build for `iphoneos`
-* Simulator build
-* Simulator installation and launch
-* Automated test harnesses
-* IPA structure validation
-* Release artifact generation
+- Offline / single-target project audit
+- App icon validation
+- Localization validation
+- Foundation smoke tests
+- Release build for `iphoneos`
+- IPA structure validation
+- Development artifact generation
+- Automatic publication of the latest development IPA
+
+Manual release runs additionally handle release versioning and release publication. Release numbering is driven by configurable `RELEASE_MAJOR` and `RELEASE_MINOR` repository variables, while the patch number is derived automatically from existing tags.
+
+For manual release validation, the workflow can also build, install, and launch the app in an iOS simulator.
 
 Release IPAs use the standard structure:
 
@@ -246,53 +451,33 @@ Payload/
 └── Flashcards.app/
 ```
 
-This repository's CI is also the source of truth for compilation when development is performed outside macOS.
-
----
-
-## Design
-
-Flashcards follows the native iOS design language instead of recreating its own component system.
-
-The interface makes extensive use of:
-
-* SwiftUI navigation
-* Liquid Glass controls
-* SF Symbols
-* Native sheets, menus, alerts, and pickers
-* Contextual folder colors
-* Semantic green/red feedback
-* System typography
-* Native haptics
-
-The app is currently designed around a dark interface.
-
 ---
 
 ## Principles
 
-Flashcards is built around a few intentionally simple ideas:
+**Fast to create.**  
+A new deck should take seconds to start, whether it contains one card or a pasted list of hundreds.
 
-**Fast to use.**
-Creating a deck should take seconds, including when importing hundreds of cards.
+**Focused while studying.**  
+The current card or question stays visually dominant while secondary controls get out of the way.
 
-**Focused while studying.**
-Study screens prioritize the current card or question rather than surrounding controls.
+**Native to iOS.**  
+System components, SF Symbols, navigation patterns, materials, haptics, and interactions are preferred whenever possible.
 
-**Native to iOS.**
-System components and interactions are preferred whenever possible.
+**Local first.**  
+Core functionality must work without a server or internet connection.
 
-**Local first.**
-Core functionality must not depend on a server or internet connection.
+**User-owned data.**  
+The complete study library should remain exportable and usable independently of any service.
 
-**User-owned data.**
-Your study library should remain usable and exportable independently of any service.
+**Consistent rather than endlessly customizable.**  
+The v2 visual system deliberately uses one coherent mint identity across folders, decks, study actions, and controls.
 
 ---
 
 ## Contributing
 
-Issues are welcome, but not Pull Requests.
+Issues are welcome, but Pull Requests are not currently accepted.
 
 ---
 
@@ -303,6 +488,6 @@ See [LICENSE](LICENSE) for details.
 ---
 
 <p align="center">
-  <strong>Flashcards</strong><br>
+  <strong>Flashcards</strong><br />
   Native. Offline. Focused.
 </p>
