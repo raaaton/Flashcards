@@ -463,6 +463,11 @@ struct HomeView: View {
                             }
                             .destructiveActionColor()
                         }
+                        .compositingGroup()
+                        .contentShape(
+                            .dragPreview,
+                            .rect(cornerRadius: 22, style: .continuous)
+                        )
                     }
                     .reorderable()
 
@@ -610,20 +615,8 @@ struct HomeView: View {
         reorderedIDs.insert(contentsOf: sourceIDs, at: destinationIndex)
         guard reorderedIDs != previousOrder else { return }
 
-        // Keep the native reordering animation authoritative; visual slot
-        // changes above provide live feedback while this callback persists the drop.
         folderOrderIDs = reorderedIDs
-        folderOrderRevision += 1
-        let revision = folderOrderRevision
-        let finalOrder = reorderedIDs
-
-        Task { @MainActor in
-            // Keep persistence off the critical part of the native drop
-            // animation so the tile becomes interactive again immediately.
-            try? await Task.sleep(for: .milliseconds(250))
-            guard folderOrderRevision == revision else { return }
-            persistFolderOrder(finalOrder)
-        }
+        persistFolderOrder(reorderedIDs)
     }
 
     private func persistFolderOrder(_ orderedIDs: [UUID]) {
