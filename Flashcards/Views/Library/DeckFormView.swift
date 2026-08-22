@@ -33,20 +33,49 @@ private enum NewDeckCreationStep {
     case aiPreview
 }
 
+private struct DeckCreationBackButton: View {
+    let action: () -> Void
+
+    var body: some View {
+        Button {
+            HapticService.play(.selection)
+            action()
+        } label: {
+            Image(systemName: "chevron.left")
+                .font(.body.weight(.semibold))
+                .foregroundStyle(.white)
+                .frame(width: 38, height: 38)
+                .contentShape(.circle)
+                .glassEffect(.regular.interactive(), in: .circle)
+        }
+        .buttonStyle(.plain)
+        .accessibilityLabel(L10n.text("ai.back"))
+    }
+}
+
 struct DeckFormView: View {
     let deck: Deck?
     let initialFolder: Folder?
+    let onCreated: ((Deck) -> Void)?
 
-    init(deck: Deck? = nil, initialFolder: Folder? = nil) {
+    init(
+        deck: Deck? = nil,
+        initialFolder: Folder? = nil,
+        onCreated: ((Deck) -> Void)? = nil
+    ) {
         self.deck = deck
         self.initialFolder = initialFolder
+        self.onCreated = onCreated
     }
 
     var body: some View {
         if let deck {
             DeckEditorForm(deck: deck)
         } else {
-            NewDeckCreationFlow(initialFolder: initialFolder)
+            NewDeckCreationFlow(
+                initialFolder: initialFolder,
+                onCreated: onCreated
+            )
         }
     }
 }
@@ -56,6 +85,7 @@ private struct NewDeckCreationFlow: View {
     @Environment(\.openURL) private var openURL
 
     let initialFolder: Folder?
+    let onCreated: ((Deck) -> Void)?
 
     @State private var step = NewDeckCreationStep.name
     @State private var name = ""
@@ -84,13 +114,17 @@ private struct NewDeckCreationFlow: View {
             case .manual:
                 DeckEditorForm(
                     initialFolder: initialFolder,
-                    initialName: cleanName
+                    initialName: cleanName,
+                    onBack: returnFromManualEditor,
+                    onCreated: onCreated
                 )
             case .aiPreview:
                 DeckEditorForm(
                     initialFolder: initialFolder,
                     initialName: cleanName,
-                    initialCards: importedCards
+                    initialCards: importedCards,
+                    onBack: returnFromAIPreview,
+                    onCreated: onCreated
                 )
             }
         }
@@ -107,23 +141,9 @@ private struct NewDeckCreationFlow: View {
                 Section("Deck") {
                     TextField("Nom", text: $name)
                         .focused($nameFieldFocused)
+                        .submitLabel(.continue)
+                        .onSubmit(advanceFromName)
                 }
-
-                Section {
-                    Button {
-                        guard !cleanName.isEmpty else { return }
-                        HapticService.play(.selection)
-                        step = .method
-                    } label: {
-                        Text(L10n.text("ai.continue"))
-                            .font(.headline)
-                            .frame(maxWidth: .infinity, minHeight: 28)
-                    }
-                    .buttonStyle(.borderedProminent)
-                    .tint(Theme.accent)
-                    .disabled(cleanName.isEmpty)
-                }
-                .listRowBackground(Color.clear)
             }
             .navigationTitle(L10n.text("deck.new.title"))
             .navigationBarTitleDisplayMode(.inline)
@@ -131,6 +151,15 @@ private struct NewDeckCreationFlow: View {
                 ToolbarItem(placement: .cancellationAction) {
                     Button("Annuler") { dismiss() }
                         .tint(.white)
+                }
+
+                ToolbarItem(placement: .confirmationAction) {
+                    CircularSaveButton(
+                        accent: Theme.accent,
+                        isEnabled: !cleanName.isEmpty
+                    ) {
+                        advanceFromName()
+                    }
                 }
             }
             .task {
@@ -144,13 +173,8 @@ private struct NewDeckCreationFlow: View {
         NavigationStack {
             ScrollView {
                 VStack(alignment: .leading, spacing: 18) {
-                    VStack(alignment: .leading, spacing: 6) {
-                        Text(L10n.text("ai.creation.method.title"))
-                            .font(.title2.bold())
-                        Text(cleanName)
-                            .font(.subheadline)
-                            .foregroundStyle(.secondary)
-                    }
+                    Text(L10n.text("ai.creation.method.title"))
+                        .font(.title2.bold())
 
                     creationChoice(
                         title: L10n.text("ai.create.with_ai"),
@@ -178,15 +202,9 @@ private struct NewDeckCreationFlow: View {
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .topBarLeading) {
-                    Button(L10n.text("ai.back")) {
+                    DeckCreationBackButton {
                         step = .name
                     }
-                    .tint(.white)
-                }
-
-                ToolbarItem(placement: .cancellationAction) {
-                    Button("Annuler") { dismiss() }
-                        .tint(.white)
                 }
             }
         }
@@ -305,34 +323,6 @@ private struct NewDeckCreationFlow: View {
                         .buttonStyle(.borderedProminent)
                         .tint(Theme.accent)
                     }
-
-                    Button {
-                        copyPrompt()
-                    } label: {
-                        Label(
-                            promptWasCopied
-                                ? L10n.text("ai.prompt_copied")
-                                : L10n.text("ai.copy_prompt"),
-                            systemImage: promptWasCopied
-                                ? "checkmark.circle.fill"
-                                : "doc.on.doc"
-                        )
-                        .frame(maxWidth: .infinity, minHeight: 28)
-                    }
-                    .buttonStyle(.bordered)
-                    .tint(promptWasCopied ? Theme.accent : .white)
-
-                    Button {
-                        openSelectedProviderWeb()
-                    } label: {
-                        Label(
-                            L10n.format("ai.open_web", selectedProvider.displayName),
-                            systemImage: "safari"
-                        )
-                        .frame(maxWidth: .infinity, minHeight: 28)
-                    }
-                    .buttonStyle(.bordered)
-                    .tint(.white)
                 }
                 .padding(20)
             }
@@ -340,21 +330,32 @@ private struct NewDeckCreationFlow: View {
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .topBarLeading) {
-                    Button(L10n.text("ai.back")) {
+                    DeckCreationBackButton {
                         step = .method
                     }
-                    .tint(.white)
-                }
-
-                ToolbarItem(placement: .cancellationAction) {
-                    Button("Annuler") { dismiss() }
-                        .tint(.white)
                 }
             }
         }
         .onAppear {
             copyPrompt(playsHaptic: false)
         }
+    }
+
+    private func advanceFromName() {
+        guard !cleanName.isEmpty else { return }
+        HapticService.play(.selection)
+        nameFieldFocused = false
+        step = .method
+    }
+
+    private func returnFromManualEditor(_ updatedName: String) {
+        name = updatedName
+        step = .method
+    }
+
+    private func returnFromAIPreview(_ updatedName: String) {
+        name = updatedName
+        step = .ai
     }
 
     private func creationChoice(
@@ -528,13 +529,6 @@ private struct NewDeckCreationFlow: View {
         }
     }
 
-    private func openSelectedProviderWeb() {
-        copyPrompt(playsHaptic: false)
-        HapticService.play(.selection)
-        hasOpenedProvider = true
-        openURL(selectedProvider.webURL)
-    }
-
     private func pasteAIResult() {
         guard let clipboardText = UIPasteboard.general.string,
               !clipboardText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else {
@@ -583,6 +577,8 @@ private struct DeckEditorForm: View {
     @Query(sort: \Folder.name) private var folders: [Folder]
 
     let deck: Deck?
+    let onBack: ((String) -> Void)?
+    let onCreated: ((Deck) -> Void)?
     private let shouldFocusName: Bool
     @State private var name: String
     @State private var selectedFolderID: UUID?
@@ -595,9 +591,13 @@ private struct DeckEditorForm: View {
         deck: Deck? = nil,
         initialFolder: Folder? = nil,
         initialName: String = "",
-        initialCards: [ParsedCard] = []
+        initialCards: [ParsedCard] = [],
+        onBack: ((String) -> Void)? = nil,
+        onCreated: ((Deck) -> Void)? = nil
     ) {
         self.deck = deck
+        self.onBack = onBack
+        self.onCreated = onCreated
         shouldFocusName = deck == nil
             && initialName.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
         _name = State(initialValue: deck?.name ?? initialName)
@@ -767,9 +767,17 @@ private struct DeckEditorForm: View {
             )
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
-                ToolbarItem(placement: .cancellationAction) {
-                    Button("Annuler") { dismiss() }
-                        .tint(.white)
+                if let onBack {
+                    ToolbarItem(placement: .topBarLeading) {
+                        DeckCreationBackButton {
+                            onBack(cleanName)
+                        }
+                    }
+                } else {
+                    ToolbarItem(placement: .cancellationAction) {
+                        Button("Annuler") { dismiss() }
+                            .tint(.white)
+                    }
                 }
 
                 ToolbarItem(placement: .confirmationAction) {
@@ -876,6 +884,7 @@ private struct DeckEditorForm: View {
 
     private func save(skipExactDuplicates: Bool) {
         let selectedFolder = folders.first { $0.id == selectedFolderID }
+        var createdDeck: Deck?
 
         if let deck {
             deck.name = cleanName
@@ -885,6 +894,7 @@ private struct DeckEditorForm: View {
             guard canSave else { return }
             let newDeck = Deck(name: cleanName, folder: selectedFolder)
             modelContext.insert(newDeck)
+            createdDeck = newDeck
 
             let draftsToSave = cardDrafts.enumerated().compactMap { index, draft -> DeckCardDraft? in
                 guard draft.isComplete else { return nil }
@@ -905,7 +915,16 @@ private struct DeckEditorForm: View {
                 modelContext.insert(card)
             }
         }
-        try? modelContext.save()
+
+        do {
+            try modelContext.save()
+        } catch {
+            return
+        }
+
+        if let createdDeck {
+            onCreated?(createdDeck)
+        }
         dismiss()
     }
 
