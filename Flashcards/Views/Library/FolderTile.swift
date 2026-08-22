@@ -5,17 +5,14 @@ struct FolderTile: View {
     let systemImage: String
     let deckCount: Int
 
-    private var iconColor: Color {
-        AppAccent.mint.color
-    }
-
     var body: some View {
         VStack(alignment: .leading, spacing: 16) {
-            Image(systemName: systemImage)
-                .font(.title2.weight(.semibold))
-                .foregroundStyle(Theme.foreground(on: iconColor))
-                .frame(width: 44, height: 44)
-                .background(iconColor.gradient, in: .circle)
+            NeutralIconBadge(
+                systemName: systemImage,
+                size: 44,
+                cornerRadius: 22,
+                symbolSize: 22
+            )
 
             VStack(alignment: .leading, spacing: 3) {
                 Text(name)

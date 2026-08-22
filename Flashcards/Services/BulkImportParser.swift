@@ -209,3 +209,184 @@ enum BulkImportParser {
         )
     }
 }
+
+enum ExternalAIProvider: String, CaseIterable, Identifiable, Sendable {
+    case chatGPT
+    case claude
+    case gemini
+
+    var id: Self { self }
+
+    var displayName: String {
+        switch self {
+        case .chatGPT: "ChatGPT"
+        case .claude: "Claude"
+        case .gemini: "Gemini"
+        }
+    }
+
+    var systemImage: String {
+        switch self {
+        case .chatGPT: "sparkles"
+        case .claude: "text.bubble.fill"
+        case .gemini: "diamond.fill"
+        }
+    }
+
+    var isRecommended: Bool { self == .chatGPT }
+
+    var launchURL: URL {
+        switch self {
+        case .chatGPT:
+            URL(string: "https://chatgpt.com/")!
+        case .claude:
+            URL(string: "https://claude.ai/")!
+        case .gemini:
+            URL(string: "https://gemini.google.com/")!
+        }
+    }
+
+    // These consumer chat routes intentionally do not rely on undocumented prompt-prefill parameters.
+    func launchURL(for _: String) -> URL {
+        launchURL
+    }
+}
+
+enum ExternalAIFlashcardPromptBuilder {
+    static func makePrompt(deckName: String, appName: String = "Flashcards") -> String {
+        let cleanDeckName = deckName
+            .replacingOccurrences(of: "\n", with: " ")
+            .trimmingCharacters(in: .whitespacesAndNewlines)
+
+        return """
+        You are preparing flashcards for \(appName), an iOS study app. The deck is named "\(cleanDeckName)".
+
+        The user will attach notes, images, slides, PDFs, or other study documents with this message. Use those attachments as the source of truth. Create concise, accurate, useful flashcards for revision. Cover the important ideas without padding the set with redundant or trivial items. Keep each term focused and each definition short enough to review quickly. Preserve the language of the source material unless the user clearly asks otherwise.
+
+        Return machine-readable JSON using exactly this shape (the angle-bracket values below describe the schema; replace them with actual JSON strings):
+        {
+          "flashcards": [
+            {
+              "term": <concise question, concept, or cue>,
+              "definition": <concise answer or explanation>
+            }
+          ]
+        }
+
+        Requirements:
+        - Return at least one flashcard when the source contains useful study material.
+        - Every item must contain a non-empty "term" and "definition" string.
+        - Do not add extra JSON keys.
+        - Keep line breaks and punctuation inside JSON strings properly escaped.
+        - Do not use a colon-delimited plain-text format.
+
+        In your final answer, first write exactly this guidance sentence:
+        Your flashcards are ready for \(appName). Copy the JSON block below, then return to \(appName).
+
+        Then output one fenced ```json block containing only the JSON object. Do not add commentary after the JSON block.
+        """
+    }
+}
+
+enum ExternalAIFlashcardParserError: Error, Equatable, Sendable {
+    case invalidJSON
+    case emptyResult
+    case incompleteRecord(Int)
+}
+
+private struct ExternalAIFlashcardValue: Decodable {
+    let term: String
+    let definition: String
+}
+
+private struct ExternalAIFlashcardEnvelope: Decodable {
+    let flashcards: [ExternalAIFlashcardValue]
+}
+
+enum ExternalAIFlashcardParser {
+    static func parse(_ text: String) throws -> [ParsedCard] {
+        let trimmed = text.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !trimmed.isEmpty else {
+            throw ExternalAIFlashcardParserError.invalidJSON
+        }
+
+        for candidate in jsonCandidates(from: trimmed) {
+            guard let values = decode(candidate) else { continue }
+            return try validate(values)
+        }
+
+        throw ExternalAIFlashcardParserError.invalidJSON
+    }
+
+    private static func decode(_ candidate: String) -> [ExternalAIFlashcardValue]? {
+        guard let data = candidate.data(using: .utf8) else { return nil }
+        let decoder = JSONDecoder()
+
+        if let envelope = try? decoder.decode(ExternalAIFlashcardEnvelope.self, from: data) {
+            return envelope.flashcards
+        }
+
+        return try? decoder.decode([ExternalAIFlashcardValue].self, from: data)
+    }
+
+    private static func validate(_ values: [ExternalAIFlashcardValue]) throws -> [ParsedCard] {
+        guard !values.isEmpty else {
+            throw ExternalAIFlashcardParserError.emptyResult
+        }
+
+        return try values.enumerated().map { index, value in
+            let term = value.term.trimmingCharacters(in: .whitespacesAndNewlines)
+            let definition = value.definition.trimmingCharacters(in: .whitespacesAndNewlines)
+
+            guard !term.isEmpty, !definition.isEmpty else {
+                throw ExternalAIFlashcardParserError.incompleteRecord(index)
+            }
+
+            return ParsedCard(
+                recordIndex: index,
+                term: term,
+                definition: definition
+            )
+        }
+    }
+
+    private static func jsonCandidates(from text: String) -> [String] {
+        var candidates: [String] = []
+
+        if let expression = try? NSRegularExpression(
+            pattern: "```(?:json)?\\s*([\\s\\S]*?)```",
+            options: [.caseInsensitive]
+        ) {
+            let range = NSRange(text.startIndex..<text.endIndex, in: text)
+            for match in expression.matches(in: text, range: range) {
+                guard match.numberOfRanges > 1,
+                      let candidateRange = Range(match.range(at: 1), in: text) else {
+                    continue
+                }
+                appendUnique(String(text[candidateRange]), to: &candidates)
+            }
+        }
+
+        appendUnique(text, to: &candidates)
+
+        if let firstBrace = text.firstIndex(of: "{"),
+           let lastBrace = text.lastIndex(of: "}"),
+           firstBrace <= lastBrace {
+            appendUnique(String(text[firstBrace...lastBrace]), to: &candidates)
+        }
+
+        if let firstBracket = text.firstIndex(of: "["),
+           let lastBracket = text.lastIndex(of: "]"),
+           firstBracket <= lastBracket {
+            appendUnique(String(text[firstBracket...lastBracket]), to: &candidates)
+        }
+
+        return candidates
+    }
+
+    private static func appendUnique(_ candidate: String, to candidates: inout [String]) {
+        let cleanCandidate = candidate.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !cleanCandidate.isEmpty, !candidates.contains(cleanCandidate) else { return }
+        candidates.append(cleanCandidate)
+    }
+}

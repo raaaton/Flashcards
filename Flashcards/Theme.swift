@@ -20,6 +20,8 @@ enum AppAccent: String, CaseIterable, Identifiable, Sendable {
 enum Theme {
     static var accent: Color { AppPreferences.accentColor.color }
     static let cardBackground = Color(uiColor: .secondarySystemBackground)
+    static let iconSurface = Color(uiColor: .secondarySystemFill)
+    static let subtleStroke = Color.white.opacity(0.08)
 
     static func deckAccent(for deck: Deck) -> Color {
         accent
@@ -48,7 +50,7 @@ extension View {
             .tint(Color.white)
     }
 
-    func normalActionColor(_ color: Color = Theme.accent) -> some View {
+    func normalActionColor(_ color: Color = .white) -> some View {
         foregroundStyle(color)
             .tint(color)
     }
@@ -56,6 +58,28 @@ extension View {
     func destructiveActionColor() -> some View {
         foregroundStyle(Color.red)
             .tint(Color.red)
+    }
+}
+
+struct NeutralIconBadge: View {
+    let systemName: String
+    var size: CGFloat = 44
+    var cornerRadius: CGFloat = 14
+    var symbolSize: CGFloat = 18
+
+    var body: some View {
+        Image(systemName: systemName)
+            .font(.system(size: symbolSize, weight: .semibold))
+            .foregroundStyle(.white)
+            .frame(width: size, height: size)
+            .background(
+                Theme.iconSurface,
+                in: .rect(cornerRadius: cornerRadius, style: .continuous)
+            )
+            .overlay {
+                RoundedRectangle(cornerRadius: cornerRadius, style: .continuous)
+                    .stroke(Theme.subtleStroke, lineWidth: 0.5)
+            }
     }
 }
 

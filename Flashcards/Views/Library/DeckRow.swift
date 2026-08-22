@@ -48,20 +48,14 @@ struct DeckTile: View {
         deck.folder?.name
     }
 
-    private var iconColor: Color {
-        Theme.accent
-    }
-
     var body: some View {
         HStack(spacing: 14) {
-            Image(systemName: "rectangle.stack.fill")
-                .font(.system(size: 18, weight: .semibold))
-                .foregroundStyle(Theme.foreground(on: iconColor))
-                .frame(width: 42, height: 42)
-                .background(
-                    iconColor.gradient,
-                    in: .rect(cornerRadius: 13, style: .continuous)
-                )
+            NeutralIconBadge(
+                systemName: "rectangle.stack.fill",
+                size: 42,
+                cornerRadius: 13,
+                symbolSize: 18
+            )
 
             VStack(alignment: .leading, spacing: 4) {
                 Text(deck.name)

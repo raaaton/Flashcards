@@ -11,9 +11,9 @@
 
 **Flashcards** is a native, local-first iOS study app built for fast card creation, focused revision, and full ownership of your data.
 
-It is written entirely with **SwiftUI**, **SwiftData**, and Apple system APIs. There is no account, backend, analytics SDK, advertising layer, or runtime network dependency.
+It is written entirely with **SwiftUI**, **SwiftData**, and Apple system APIs. There is no account, backend, analytics SDK, advertising layer, or in-app runtime network dependency.
 
-Version 2 introduces a redesigned visual system, a new mint identity, a rebuilt Home experience, compact deck rows, improved duplicate detection, configurable Home sections, expanded localization, and a more consistent Apple-native interaction model throughout the app.
+Version 2 introduces a redesigned monochrome-first visual system with a selective mint signature, a rebuilt Home experience, compact deck rows, improved duplicate detection, external-AI-assisted deck creation, configurable Home sections, expanded localization, and a more consistent Apple-native interaction model throughout the app.
 
 <p align="center" style="display:flex; justify-content:center; gap:12px;">
   <img
@@ -54,14 +54,16 @@ Stable releases are available from the repository's [Releases](https://github.co
 
 The v2 generation is a major visual and interaction refresh rather than a simple coat of paint.
 
-- New app-wide **mint identity** based around `#46D7A7`
+- Monochrome-first app-wide identity with mint `#46D7A7` reserved as a selective brand/action signature
 - New layered app icon using Apple's `.icon` format
 - Rebuilt Home hierarchy with **Resume**, **Recent**, **Pinned**, and **Folders**
 - Optional Home sections configurable from Settings
-- Uniform folder design with SF Symbols and mint icon surfaces
+- Uniform folder design with SF Symbols on neutral icon surfaces
 - Compact, full-width deck rows instead of the previous card grid treatment
 - Matching deck presentation between Home, search, and folder pages
 - Expanded deck context menus with pin, edit, duplicate, and delete actions
+- New deck creation choice between **Create with AI — Recommended** and **Create manually**
+- External AI handoff for ChatGPT, Claude, and Gemini without an AI API or backend
 - Improved first-deck onboarding
 - More consistent native sheets, menus, alerts, haptics, and Liquid Glass controls
 - Duplicate detection extended beyond bulk import to normal card creation and editing
@@ -111,16 +113,18 @@ Folders keep subjects or themes separated while decks remain the unit you actual
 - Search across folders, deck names, terms, and definitions
 - Optionally restrict search to the current folder
 
-The v2 interface intentionally removes per-folder accent colors from the visible design. Folders now share the same neutral card treatment and mint icon language so the library reads as one coherent system.
+The v2 interface intentionally removes per-folder accent colors from the visible design. Folders and deck glyphs use neutral surfaces and white symbols so the library remains visually quiet; mint is saved for primary actions, progress, selected states, and small brand details.
 
 ---
 
 ### Create cards quickly
 
-Cards can be created one at a time or in large batches without leaving the app.
+Cards can be created one at a time, generated through an external AI you already use, or pasted in large batches.
 
 - Add and edit cards individually
-- Create a new deck with several initial cards in one flow
+- Start every new deck by choosing its name
+- Choose **Create with AI — Recommended** or **Create manually**
+- Create a new deck with several initial cards in the manual flow
 - Add more card editors while creating a deck
 - Delete draft cards before saving
 - Select multiple existing cards for bulk actions
@@ -129,6 +133,23 @@ Cards can be created one at a time or in large batches without leaving the app.
 - Move selected cards to another deck
 - Copy selected cards to another deck
 - Reorder cards inside a deck
+
+#### Create with AI
+
+Flashcards can prepare a deck using **ChatGPT**, **Claude**, or **Gemini** without embedding an AI model or calling an AI API.
+
+The flow is deliberately user-controlled:
+
+1. Name the deck and choose **Create with AI**.
+2. Pick ChatGPT, Claude, or Gemini.
+3. Flashcards generates a strict prompt and copies it to the clipboard.
+4. Flashcards opens the provider's public web entry point. If the prompt is not already present, paste it into the composer, attach your notes, images, or documents, and send it.
+5. The AI returns a JSON block containing the generated flashcards.
+6. Copy that JSON block and return to Flashcards.
+7. Tap **Paste from ChatGPT / Claude / Gemini** to parse it locally.
+8. Review or edit the cards, see duplicate warnings, then create the deck using the normal local SwiftData path.
+
+The handoff does not depend on undocumented prompt-prefill URL parameters. Clipboard copy is the robust fallback, and the provider itself handles any document upload outside Flashcards. There is no Flashcards account, AI subscription, server-side proxy, model token cost, or AI SDK in the app.
 
 #### Duplicate detection
 
@@ -143,7 +164,7 @@ Exact duplicates use semantic red feedback, while possible duplicates use orange
 
 This applies when:
 
-- Creating cards inside a new deck
+- Creating cards inside a new deck, including cards returned by the external AI flow
 - Adding a single card to an existing deck
 - Editing an existing card
 - Using Bulk Add / Bulk Import
@@ -360,7 +381,7 @@ Settings currently include controls for:
 - App language
 - Backup and restore
 
-The visual identity itself is intentionally fixed rather than user-configurable: mint is the app's brand accent, while red and orange remain reserved for semantic warnings and destructive states.
+The visual identity itself is intentionally fixed rather than user-configurable: the interface is overwhelmingly neutral, mint remains the app's selective brand/action accent, and red/orange remain reserved for semantic warnings and destructive states.
 
 ---
 
@@ -383,7 +404,7 @@ This makes it possible to:
 
 ## Privacy by design
 
-Flashcards is designed to work entirely on-device.
+Flashcards is designed so its own data and parsing workflows remain on-device.
 
 - No account
 - No backend
@@ -391,11 +412,14 @@ Flashcards is designed to work entirely on-device.
 - No analytics
 - No advertising
 - No tracking
-- No runtime network requests
+- No in-app runtime network requests
 - No third-party SDKs
 - No package dependencies
+- No embedded AI model or AI API
 
 Folders, decks, cards, study progress, preferences, active sessions, and history remain local to the device unless you explicitly export them yourself.
+
+The optional **Create with AI** flow is an explicit external handoff: Flashcards copies a generated prompt and opens the ChatGPT, Claude, or Gemini public entry point you selected. Any internet access, document upload, account state, and AI processing happen in that provider's app or website, not inside Flashcards. The JSON response is only parsed after you explicitly copy it back into Flashcards.
 
 ---
 
@@ -411,7 +435,7 @@ Flashcards currently supports:
 
 The language can also be selected manually from Settings.
 
-Duplicate warnings, study UI, settings, import flows, and the rest of the user-facing interface follow the selected app language.
+Duplicate warnings, study UI, settings, import flows, AI handoff copy, and the rest of the user-facing interface follow the selected app language.
 
 ---
 
@@ -422,8 +446,9 @@ Flashcards follows the current native iOS design language instead of recreating 
 The v2 visual system is built around:
 
 - A dark interface
-- Mint `#46D7A7` as the main brand/action color
-- Neutral black, white, and system-gray structure
+- Roughly 90–95% neutral black, white, system-gray, and material structure
+- Mint `#46D7A7` as a selective brand/action signature rather than a repeated surface color
+- Mint reserved primarily for primary CTAs, progress, selected states, success, and small branding details
 - Red for destructive actions and exact duplicate warnings
 - Orange for possible duplicate warnings
 - SF Symbols
@@ -434,7 +459,7 @@ The v2 visual system is built around:
 - Native haptics
 - Continuous rounded geometry and compact information density
 
-Folders use neutral gray cards with mint icon surfaces. Decks use compact full-width rows with a mint deck glyph, metadata, and a subtle disclosure indicator. The same deck component is reused across Home, folder pages, and search to keep the hierarchy visually predictable.
+Folders use neutral gray cards with white symbols on neutral icon surfaces. Decks use compact full-width rows with the same quiet icon treatment, metadata, and a subtle disclosure indicator. Study-mode tiles are neutral rather than large mint blocks, while progress and true primary actions retain the mint signature. The same deck component is reused across Home, folder pages, and search to keep the hierarchy visually predictable.
 
 The app icon is also stored as a layered `AppIcon.icon` bundle, allowing Apple's icon system to apply platform-native depth and material behavior.
 
@@ -454,9 +479,10 @@ Flashcards intentionally keeps its stack small and native.
 | App icon | Layered `.icon` bundle |
 | Dependencies | None |
 | Backend | None |
-| Runtime network access | None |
+| In-app runtime network access | None |
+| AI integration | External user-controlled handoff only |
 
-All runtime functionality is implemented using Apple APIs.
+All in-app runtime functionality is implemented using Apple APIs.
 
 ---
 
@@ -560,7 +586,7 @@ Payload/
 ## Principles
 
 **Fast to create.**  
-A new deck should take seconds to start, whether it contains one card or a pasted list of hundreds.
+A new deck should take seconds to start, whether it is entered manually, generated through an external AI handoff, or imported from a pasted list.
 
 **Focused while studying.**  
 The current card or question stays visually dominant while secondary controls get out of the way.
@@ -569,13 +595,13 @@ The current card or question stays visually dominant while secondary controls ge
 System components, SF Symbols, navigation patterns, materials, haptics, and interactions are preferred whenever possible.
 
 **Local first.**  
-Core functionality must work without a server or internet connection.
+Core functionality must work without a server or internet connection. Optional external-provider handoffs remain explicit and never become a dependency for manual creation, import, study, backup, or restore.
 
 **User-owned data.**  
 The complete study library should remain exportable and usable independently of any service.
 
 **Consistent rather than endlessly customizable.**  
-The v2 visual system deliberately uses one coherent mint identity across folders, decks, study actions, and controls.
+The v2 visual system deliberately uses one coherent monochrome foundation with a restrained mint signature instead of tinting every folder, deck, action, and surface.
 
 ---
 
