@@ -169,7 +169,8 @@ struct DeckSearchView: View {
                                                 name: folder.name,
                                                 systemImage: folder.iconName,
                                                 color: Color(folderHex: folder.colorHex),
-                                                deckCount: folder.decks.count
+                                                deckCount: folder.decks.count,
+                                                showsMintGradient: false
                                             )
                                         }
                                         .buttonStyle(.plain)
