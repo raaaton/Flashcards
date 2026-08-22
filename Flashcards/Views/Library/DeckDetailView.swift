@@ -313,7 +313,7 @@ struct DeckDetailView: View {
                 Text(title)
             }
             .font(.headline)
-            .foregroundStyle(.white)
+            .foregroundStyle(Theme.foreground(on: Theme.deckAccent(for: deck)))
             .frame(maxWidth: .infinity, minHeight: 72)
             .background(
                 Theme.deckAccent(for: deck),

@@ -118,9 +118,9 @@ enum AppPreferences {
     static var accentColor: AppAccent {
         get {
             guard let value = UserDefaults.standard.string(forKey: accentColorKey) else {
-                return .amber
+                return .mint
             }
-            return AppAccent(rawValue: value) ?? .amber
+            return AppAccent(rawValue: value) ?? .mint
         }
         set { UserDefaults.standard.set(newValue.rawValue, forKey: accentColorKey) }
     }

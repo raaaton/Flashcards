@@ -8,18 +8,12 @@ struct FolderFormView: View {
     let folder: Folder?
     @State private var name: String
     @State private var iconName: String
-    @State private var colorHex: String
-    @State private var customColor: Color
     @FocusState private var nameFieldFocused: Bool
 
     init(folder: Folder? = nil) {
         self.folder = folder
         _name = State(initialValue: folder?.name ?? "")
-        let initialIcon = folder?.iconName ?? FolderAppearance.defaultIcon
-        let initialColor = folder?.colorHex ?? FolderAppearance.defaultColorHex
-        _iconName = State(initialValue: initialIcon)
-        _colorHex = State(initialValue: initialColor)
-        _customColor = State(initialValue: Color(folderHex: initialColor))
+        _iconName = State(initialValue: folder?.iconName ?? FolderAppearance.defaultIcon)
     }
 
     private var cleanName: String {
@@ -78,45 +72,6 @@ struct FolderFormView: View {
                     }
                     .padding(.vertical, 4)
                 }
-
-                Section("Couleur") {
-                    HStack(spacing: 12) {
-                        ForEach(FolderAppearance.presetColors, id: \.self) { preset in
-                            Button {
-                                colorHex = preset
-                                customColor = Color(folderHex: preset)
-                            } label: {
-                                Circle()
-                                    .fill(Color(folderHex: preset))
-                                    .frame(width: 28, height: 28)
-                                    .overlay {
-                                        if colorHex.caseInsensitiveCompare(preset) == .orderedSame {
-                                            Image(systemName: "checkmark")
-                                                .font(.caption.bold())
-                                                .foregroundStyle(.white)
-                                        }
-                                    }
-                            }
-                            .buttonStyle(.plain)
-                            .accessibilityLabel("Couleur")
-                            .accessibilityAddTraits(
-                                colorHex.caseInsensitiveCompare(preset) == .orderedSame ? .isSelected : []
-                            )
-                        }
-
-                        ColorPicker(
-                            "",
-                            selection: $customColor,
-                            supportsOpacity: false
-                        )
-                        .labelsHidden()
-                        .frame(width: 28, height: 28)
-                        .accessibilityLabel("Couleur personnalisée")
-                        .onChange(of: customColor) { _, newColor in
-                            colorHex = newColor.folderHexString
-                        }
-                    }
-                }
             }
             .scrollDismissesKeyboard(.interactively)
             .navigationTitle(
@@ -147,10 +102,9 @@ struct FolderFormView: View {
         if let folder {
             folder.name = cleanName
             folder.iconName = iconName
-            folder.colorHex = colorHex
         } else {
             modelContext.insert(
-                Folder(name: cleanName, iconName: iconName, colorHex: colorHex)
+                Folder(name: cleanName, iconName: iconName)
             )
         }
         try? modelContext.save()

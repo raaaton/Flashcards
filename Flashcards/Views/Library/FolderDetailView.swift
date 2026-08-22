@@ -19,10 +19,6 @@ struct FolderDetailView: View {
         GridItem(.adaptive(minimum: 150, maximum: 220), spacing: 14)
     ]
 
-    private var accent: Color {
-        Theme.accent
-    }
-
     private var decks: [Deck] {
         let scoped = allDecks.filter { deck in
             if let folder {
@@ -98,19 +94,17 @@ struct FolderDetailView: View {
             Button {
                 showingNewDeck = true
             } label: {
-                Image(systemName: "rectangle.stack.badge.plus")
+                Image(systemName: "plus")
                     .font(.title.weight(.semibold))
-                    .foregroundStyle(Theme.foreground(on: accent))
+                    .foregroundStyle(Theme.accent)
                     .frame(width: 72, height: 72)
                     .glassEffect(
-                        .regular.tint(accent).interactive(),
+                        .regular.interactive(),
                         in: .circle
                     )
-
-
             }
             .buttonStyle(.plain)
-             .accessibilityLabel("Nouveau deck")
+            .accessibilityLabel("Nouveau deck")
             .accessibilityHint("Créer un nouveau deck dans ce dossier")
         }
         .sheet(isPresented: $showingNewDeck) {

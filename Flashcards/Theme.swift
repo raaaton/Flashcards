@@ -2,33 +2,17 @@ import SwiftUI
 import UIKit
 
 enum AppAccent: String, CaseIterable, Identifiable, Sendable {
-    case amber
     case mint
 
     var id: Self { self }
-
-    var hex: String {
-        switch self {
-        case .amber: "#F2C14E"
-        case .mint: "#46D7A7"
-        }
-    }
+    var hex: String { "#46D7A7" }
 
     var color: Color {
-        switch self {
-        case .amber:
-            Color(
-                red: 242.0 / 255.0,
-                green: 193.0 / 255.0,
-                blue: 78.0 / 255.0
-            )
-        case .mint:
-            Color(
-                red: 70.0 / 255.0,
-                green: 215.0 / 255.0,
-                blue: 167.0 / 255.0
-            )
-        }
+        Color(
+            red: 70.0 / 255.0,
+            green: 215.0 / 255.0,
+            blue: 167.0 / 255.0
+        )
     }
 }
 

@@ -10,23 +10,6 @@ struct SettingsView: View {
 
         NavigationStack {
             Form {
-                Section("Couleur") {
-                    Picker("Couleur", selection: $settings.accentColor) {
-                        ForEach(AppAccent.allCases) { accent in
-                            HStack(spacing: 10) {
-                                Circle()
-                                    .fill(accent.color)
-                                    .frame(width: 14, height: 14)
-
-                                Text(accent.hex)
-                                    .font(.body.monospaced())
-                            }
-                            .tag(accent)
-                        }
-                    }
-                    .pickerStyle(.navigationLink)
-                }
-
                 Section("settings.study.section") {
                     Toggle("settings.haptics", isOn: $settings.hapticsEnabled)
                     Toggle("settings.celebrations", isOn: $settings.celebrationsEnabled)

@@ -64,13 +64,14 @@ struct DeckTile: View {
                 Text(deck.name)
                     .font(.headline)
                     .foregroundStyle(.primary)
-                    .lineLimit(2)
+                    .lineLimit(1)
+                    .truncationMode(.tail)
                 Text(L10n.cards(deck.cards.count))
                     .font(.caption)
                     .foregroundStyle(.secondary)
             }
         }
-        .frame(maxWidth: .infinity, minHeight: 112, alignment: .leading)
+        .frame(maxWidth: .infinity, minHeight: 112, maxHeight: 112, alignment: .leading)
         .padding(16)
         .background(Theme.cardBackground, in: .rect(cornerRadius: 22, style: .continuous))
         .contentShape(.rect(cornerRadius: 22, style: .continuous))

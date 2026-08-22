@@ -61,15 +61,8 @@ struct DeckFormView: View {
         return !validDrafts.isEmpty && !hasIncompleteDraft
     }
 
-    private var accent: Color {
-        folders
-            .first(where: { $0.id == selectedFolderID })
-            .map { Color(folderHex: $0.colorHex) }
-            ?? .gray
-    }
-
     private var controlAccent: Color {
-        selectedFolderID == nil ? Theme.accent : accent
+        Theme.accent
     }
 
     var body: some View {

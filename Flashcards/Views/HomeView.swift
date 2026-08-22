@@ -326,7 +326,7 @@ struct HomeView: View {
                                 HStack(spacing: 14) {
                                     Image(systemName: "play.fill")
                                         .font(.title3.weight(.bold))
-                                        .foregroundStyle(.white)
+                                        .foregroundStyle(Theme.foreground(on: Theme.accent))
                                         .frame(width: 48, height: 48)
                                         .background(
                                             Theme.deckAccent(for: resumableDeck.deck).gradient,
@@ -337,6 +337,8 @@ struct HomeView: View {
                                         Text(resumableDeck.deck.name)
                                             .font(.headline)
                                             .foregroundStyle(.primary)
+                                            .lineLimit(1)
+                                            .truncationMode(.tail)
 
                                         Text(
                                             "\(resumableDeck.snapshot.state.currentIndex) / \(resumableDeck.snapshot.state.items.count)"
@@ -665,7 +667,7 @@ struct HomeView: View {
         } label: {
             Image(systemName: "plus")
                 .font(.title.weight(.semibold))
-                .foregroundStyle(.white)
+                .foregroundStyle(Theme.accent)
                 .frame(width: 72, height: 72)
                 .glassEffect(
                     .regular.interactive(),
