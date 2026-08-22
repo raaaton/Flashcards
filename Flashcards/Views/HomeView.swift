@@ -27,6 +27,8 @@ struct HomeView: View {
     @State private var folderToDelete: Folder?
     @State private var deckToEdit: Deck?
     @State private var deckToDelete: Deck?
+    @State private var createdDeckToOpen: Deck?
+    @State private var showingCreatedDeck = false
     @State private var quickResumeDeck: Deck?
     @State private var quickResumeSnapshot: ActiveStudySessionSnapshot?
     @State private var showingQuickResume = false
@@ -152,6 +154,11 @@ struct HomeView: View {
                     StudyView(deck: quickResumeDeck, snapshot: quickResumeSnapshot)
                 }
             }
+            .navigationDestination(isPresented: $showingCreatedDeck) {
+                if let createdDeckToOpen {
+                    DeckDetailView(deck: createdDeckToOpen)
+                }
+            }
             .toolbar {
                 ToolbarItem(placement: .topBarLeading) {
                     Button {
@@ -178,14 +185,26 @@ struct HomeView: View {
         .sheet(isPresented: $showingNewFolder) {
             FolderFormView()
         }
-        .sheet(isPresented: $showingNewDeck) {
-            DeckFormView()
+        .sheet(
+            isPresented: $showingNewDeck,
+            onDismiss: openCreatedDeckIfNeeded
+        ) {
+            DeckFormView(onCreated: queueCreatedDeck)
         }
-        .sheet(isPresented: $showingFirstDeckCreation) {
-            DeckFormView()
+        .sheet(
+            isPresented: $showingFirstDeckCreation,
+            onDismiss: openCreatedDeckIfNeeded
+        ) {
+            DeckFormView(onCreated: queueCreatedDeck)
         }
-        .sheet(item: $firstDeckFolder) { folder in
-            DeckFormView(initialFolder: folder)
+        .sheet(
+            item: $firstDeckFolder,
+            onDismiss: openCreatedDeckIfNeeded
+        ) { folder in
+            DeckFormView(
+                initialFolder: folder,
+                onCreated: queueCreatedDeck
+            )
         }
         .sheet(isPresented: $showingFirstDeckImport) {
             BackupView(autoOpenImporter: true)
@@ -639,6 +658,19 @@ struct HomeView: View {
         }
 
         try? modelContext.save()
+    }
+
+    private func queueCreatedDeck(_ deck: Deck) {
+        createdDeckToOpen = deck
+    }
+
+    private func openCreatedDeckIfNeeded() {
+        guard createdDeckToOpen != nil else { return }
+
+        Task { @MainActor in
+            await Task.yield()
+            showingCreatedDeck = true
+        }
     }
 
     private func startFirstDeckCreation() {
