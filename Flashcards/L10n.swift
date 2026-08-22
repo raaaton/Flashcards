@@ -75,6 +75,12 @@ enum L10n {
             "de": "Empfohlen",
             "es": "Recomendado"
         ],
+        "ai.not_recommended": [
+            "fr": "Non recommandé",
+            "en": "Not recommended",
+            "de": "Nicht empfohlen",
+            "es": "No recomendado"
+        ],
         "ai.continue": [
             "fr": "Continuer",
             "en": "Continue",
@@ -112,10 +118,10 @@ enum L10n {
             "es": "Antes de abrir %@"
         ],
         "ai.instructions.body": [
-            "fr": "Le prompt a été copié. S’il n’apparaît pas automatiquement dans %@, colle-le, joins tes notes ou documents, puis appuie sur Envoyer.",
-            "en": "The prompt has been copied. If it doesn’t appear automatically in %@, paste it, attach your notes or documents, then press Send.",
-            "de": "Der Prompt wurde kopiert. Falls er nicht automatisch in %@ erscheint, füge ihn ein, hänge deine Notizen oder Dokumente an und tippe dann auf Senden.",
-            "es": "El prompt se ha copiado. Si no aparece automáticamente en %@, pégalo, adjunta tus apuntes o documentos y pulsa Enviar."
+            "fr": "Si le prompt n’apparaît pas déjà dans %@, colle-le. Ajoute ensuite tes notes, images ou documents, puis appuie sur Envoyer.",
+            "en": "If the prompt isn’t already filled in within %@, paste it. Then attach your notes, images, or documents and press Send.",
+            "de": "Falls der Prompt in %@ noch nicht eingefügt ist, füge ihn ein. Hänge dann deine Notizen, Bilder oder Dokumente an und tippe auf Senden.",
+            "es": "Si el prompt aún no aparece en %@, pégalo. Después adjunta tus apuntes, imágenes o documentos y pulsa Enviar."
         ],
         "ai.open": [
             "fr": "Ouvrir %@",
