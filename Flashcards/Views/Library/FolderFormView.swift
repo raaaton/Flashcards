@@ -27,7 +27,7 @@ struct FolderFormView: View {
     }
 
     private var accent: Color {
-        Color(folderHex: colorHex)
+        Theme.accent
     }
 
     var body: some View {
@@ -37,22 +37,16 @@ struct FolderFormView: View {
                     HStack(spacing: 14) {
                         Image(systemName: iconName)
                             .font(.title2.weight(.semibold))
-                            .foregroundStyle(.white)
+                            .foregroundStyle(Theme.foreground(on: accent))
                             .frame(width: 52, height: 52)
-                            .background(Color(folderHex: colorHex).gradient, in: .circle)
+                            .background(accent.gradient, in: .circle)
 
                         TextField("Nom du dossier", text: $name)
-
                             .focused($nameFieldFocused)
-
                             .task {
-
                                 guard folder == nil else { return }
-
                                 try? await Task.sleep(nanoseconds: 120_000_000)
-
                                 nameFieldFocused = true
-
                             }
                             .textInputAutocapitalization(.sentences)
                     }
@@ -66,10 +60,14 @@ struct FolderFormView: View {
                             } label: {
                                 Image(systemName: symbol)
                                     .font(.title3)
-                                    .foregroundStyle(.white)
+                                    .foregroundStyle(
+                                        iconName == symbol
+                                            ? Theme.foreground(on: accent)
+                                            : Color.primary
+                                    )
                                     .frame(maxWidth: .infinity, minHeight: 44)
                                     .background(
-                                        iconName == symbol ? Color(folderHex: colorHex) : .clear,
+                                        iconName == symbol ? accent : .clear,
                                         in: .rect(cornerRadius: 12, style: .continuous)
                                     )
                             }
@@ -105,7 +103,7 @@ struct FolderFormView: View {
                                 colorHex.caseInsensitiveCompare(preset) == .orderedSame ? .isSelected : []
                             )
                         }
-                    
+
                         ColorPicker(
                             "",
                             selection: $customColor,
@@ -117,9 +115,7 @@ struct FolderFormView: View {
                         .onChange(of: customColor) { _, newColor in
                             colorHex = newColor.folderHexString
                         }
-}
-
-                    
+                    }
                 }
             }
             .scrollDismissesKeyboard(.interactively)
