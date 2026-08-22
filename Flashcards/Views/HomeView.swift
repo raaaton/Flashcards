@@ -1,7 +1,6 @@
 import Foundation
 import SwiftData
 import SwiftUI
-import UniformTypeIdentifiers
 
 private struct ResumableDeck: Identifiable {
     let deck: Deck
@@ -10,29 +9,9 @@ private struct ResumableDeck: Identifiable {
     var id: UUID { deck.id }
 }
 
-private struct FolderReorderDropDelegate: DropDelegate {
-    let destinationID: UUID
-    @Binding var draggedID: UUID?
-    let move: (UUID, UUID) -> Void
-    let finish: () -> Void
-
-    func dropEntered(info: DropInfo) {
-        guard let sourceID = draggedID,
-              sourceID != destinationID else {
-            return
-        }
-
-        move(sourceID, destinationID)
-    }
-
-    func dropUpdated(info: DropInfo) -> DropProposal? {
-        DropProposal(operation: .move)
-    }
-
-    func performDrop(info: DropInfo) -> Bool {
-        finish()
-        return true
-    }
+private struct FolderDragSlot {
+    let index: Int
+    let frame: CGRect
 }
 
 struct HomeView: View {
@@ -59,15 +38,16 @@ struct HomeView: View {
     @State private var showingQuickResume = false
     @State private var folderOrderIDs: [UUID] = []
     @State private var draggedFolderID: UUID?
+    @State private var folderFrames: [UUID: CGRect] = [:]
+    @State private var folderDragSlots: [FolderDragSlot] = []
+    @State private var folderDragCenter: CGPoint = .zero
+    @State private var folderDragGrabOffset: CGSize = .zero
     @State private var folderDragPreviewSize: CGSize = .zero
-    @State private var folderReorderVisualSlots: [UUID: Int] = [:]
-    @State private var folderReorderHapticsArmed = false
+    @State private var folderDragTargetIndex: Int?
     @State private var folderReorderHapticPending = false
-    @State private var folderReorderHapticRevision = 0
 
     private static let folderReorderCoordinateSpace = "folder-reorder-grid"
     private let folderGridSpacing: CGFloat = 14
-    private let folderColumnCount = 2
     private let folderColumns = [
         GridItem(.flexible(), spacing: 14),
         GridItem(.flexible(), spacing: 14)
@@ -93,6 +73,20 @@ struct HomeView: View {
         orderedFolders.map(\.id)
     }
 
+    private var normalizedFolderOrderIDs: [UUID] {
+        var ids = folderOrderIDs.isEmpty
+            ? persistedFolderOrderIDs
+            : folderOrderIDs
+        let liveFolderIDs = Set(folders.map(\.id))
+        ids = ids.filter { liveFolderIDs.contains($0) }
+
+        for id in persistedFolderOrderIDs where !ids.contains(id) {
+            ids.append(id)
+        }
+
+        return ids
+    }
+
     private var displayedFolders: [Folder] {
         let foldersByID = Dictionary(
             uniqueKeysWithValues: folders.map { ($0.id, $0) }
@@ -107,6 +101,11 @@ struct HomeView: View {
             contentsOf: orderedFolders.filter { !knownIDs.contains($0.id) }
         )
         return result
+    }
+
+    private var draggedFolder: Folder? {
+        guard let draggedFolderID else { return nil }
+        return folders.first { $0.id == draggedFolderID }
     }
 
     private var recentDecks: [Deck] {
@@ -477,40 +476,9 @@ struct HomeView: View {
                         .onGeometryChange(for: CGRect.self) { proxy in
                             proxy.frame(in: .named(Self.folderReorderCoordinateSpace))
                         } action: { frame in
-                            folderDragPreviewSize = frame.size
-                            updateFolderReorderVisualSlot(for: folder.id, frame: frame)
+                            folderFrames[folder.id] = frame
                         }
-                        .onDrag {
-                            draggedFolderID = folder.id
-                            return NSItemProvider(
-                                object: folder.id.uuidString as NSString
-                            )
-                        } preview: {
-                            FolderTile(
-                                name: folder.name,
-                                systemImage: folder.iconName,
-                                deckCount: folder.decks.count
-                            )
-                            .frame(
-                                width: folderDragPreviewSize.width > 0
-                                    ? folderDragPreviewSize.width
-                                    : 170
-                            )
-                            .scaleEffect(1.03)
-                            .contentShape(
-                                .dragPreview,
-                                .rect(cornerRadius: 22, style: .continuous)
-                            )
-                        }
-                        .onDrop(
-                            of: [UTType.text],
-                            delegate: FolderReorderDropDelegate(
-                                destinationID: folder.id,
-                                draggedID: $draggedFolderID,
-                                move: moveFolderDuringCustomDrag,
-                                finish: finishFolderCustomDrag
-                            )
-                        )
+                        .simultaneousGesture(folderDragGesture(for: folder))
                         .opacity(draggedFolderID == folder.id ? 0 : 1)
                         .contextMenu {
                             Button("Modifier", systemImage: "pencil") { folderToEdit = folder }
@@ -540,6 +508,25 @@ struct HomeView: View {
                         .transition(.scale(scale: 0.92).combined(with: .opacity))
                     }
                 }
+                .overlay(alignment: .topLeading) {
+                    if let draggedFolder,
+                       folderDragPreviewSize.width > 0,
+                       folderDragPreviewSize.height > 0 {
+                        FolderTile(
+                            name: draggedFolder.name,
+                            systemImage: draggedFolder.iconName,
+                            deckCount: draggedFolder.decks.count
+                        )
+                        .frame(
+                            width: folderDragPreviewSize.width,
+                            height: folderDragPreviewSize.height
+                        )
+                        .scaleEffect(1.03)
+                        .position(folderDragCenter)
+                        .allowsHitTesting(false)
+                        .zIndex(100)
+                    }
+                }
                 .coordinateSpace(name: Self.folderReorderCoordinateSpace)
                 .padding(.horizontal)
             }
@@ -547,8 +534,9 @@ struct HomeView: View {
             .padding(.bottom, 108)
         }
         .onChange(of: folders.map(\.id), initial: true) { _, _ in
-            synchronizeFolderOrderFromPersistence()
-            resetFolderReorderHapticState()
+            if draggedFolderID == nil {
+                synchronizeFolderOrderFromPersistence()
+            }
         }
         .animation(.spring(duration: 0.35), value: orphanedDeckCount)
         .animation(.spring(duration: 0.35), value: recentDecks.map(\.id))
@@ -582,84 +570,116 @@ struct HomeView: View {
         folderOrderIDs = persistedIDs
     }
 
-    private func moveFolderDuringCustomDrag(_ sourceID: UUID, _ destinationID: UUID) {
-        guard sourceID != destinationID else { return }
+    private func folderDragGesture(for folder: Folder) -> some Gesture {
+        LongPressGesture(minimumDuration: 0.18, maximumDistance: 14)
+            .sequenced(
+                before: DragGesture(
+                    minimumDistance: 0,
+                    coordinateSpace: .named(Self.folderReorderCoordinateSpace)
+                )
+            )
+            .onChanged { value in
+                guard case .second(true, let dragValue) = value,
+                      let dragValue else {
+                    return
+                }
 
-        var reorderedIDs = folderOrderIDs.isEmpty
-            ? persistedFolderOrderIDs
-            : folderOrderIDs
-        let liveFolderIDs = Set(folders.map(\.id))
-        reorderedIDs = reorderedIDs.filter { liveFolderIDs.contains($0) }
+                updateFolderDrag(for: folder, dragValue: dragValue)
+            }
+            .onEnded { _ in
+                finishFolderDrag(for: folder.id)
+            }
+    }
 
-        for id in persistedFolderOrderIDs where !reorderedIDs.contains(id) {
-            reorderedIDs.append(id)
+    private func updateFolderDrag(
+        for folder: Folder,
+        dragValue: DragGesture.Value
+    ) {
+        let distance = hypot(
+            dragValue.translation.width,
+            dragValue.translation.height
+        )
+
+        guard draggedFolderID != nil || distance >= 4 else { return }
+
+        if draggedFolderID == nil {
+            guard let sourceFrame = folderFrames[folder.id] else { return }
+
+            let orderedIDs = normalizedFolderOrderIDs
+            draggedFolderID = folder.id
+            folderDragPreviewSize = sourceFrame.size
+            folderDragGrabOffset = CGSize(
+                width: dragValue.startLocation.x - sourceFrame.midX,
+                height: dragValue.startLocation.y - sourceFrame.midY
+            )
+            folderDragSlots = orderedIDs.enumerated().compactMap { index, id in
+                guard let frame = folderFrames[id] else { return nil }
+                return FolderDragSlot(index: index, frame: frame)
+            }
+            folderDragTargetIndex = orderedIDs.firstIndex(of: folder.id)
+            folderReorderHapticPending = false
+            HapticService.play(.selection)
         }
 
-        guard let sourceIndex = reorderedIDs.firstIndex(of: sourceID),
-              let destinationIndex = reorderedIDs.firstIndex(of: destinationID) else {
+        guard draggedFolderID == folder.id else { return }
+
+        folderDragCenter = CGPoint(
+            x: dragValue.location.x - folderDragGrabOffset.width,
+            y: dragValue.location.y - folderDragGrabOffset.height
+        )
+
+        moveDraggedFolder(toward: dragValue.location)
+    }
+
+    private func moveDraggedFolder(toward location: CGPoint) {
+        guard let sourceID = draggedFolderID,
+              let targetSlot = folderDragSlots.min(by: { lhs, rhs in
+                  squaredDistance(from: location, to: lhs.frame.center)
+                      < squaredDistance(from: location, to: rhs.frame.center)
+              }) else {
             return
         }
 
-        let destinationOffset = destinationIndex > sourceIndex
-            ? destinationIndex + 1
-            : destinationIndex
+        let targetIndex = targetSlot.index
+        guard targetIndex != folderDragTargetIndex else { return }
+        folderDragTargetIndex = targetIndex
+
+        var reorderedIDs = normalizedFolderOrderIDs
+        guard let sourceIndex = reorderedIDs.firstIndex(of: sourceID),
+              sourceIndex != targetIndex else {
+            return
+        }
+
+        let movingID = reorderedIDs.remove(at: sourceIndex)
+        let insertionIndex = min(max(targetIndex, 0), reorderedIDs.count)
+        reorderedIDs.insert(movingID, at: insertionIndex)
 
         withAnimation(.spring(duration: 0.24)) {
-            reorderedIDs.move(
-                fromOffsets: IndexSet(integer: sourceIndex),
-                toOffset: destinationOffset
-            )
             folderOrderIDs = reorderedIDs
         }
+        playFolderReorderHaptic()
     }
 
-    private func finishFolderCustomDrag() {
-        guard draggedFolderID != nil else { return }
+    private func squaredDistance(from point: CGPoint, to center: CGPoint) -> CGFloat {
+        let dx = point.x - center.x
+        let dy = point.y - center.y
+        return (dx * dx) + (dy * dy)
+    }
 
+    private func finishFolderDrag(for folderID: UUID) {
+        guard draggedFolderID == folderID else { return }
+
+        let finalOrder = normalizedFolderOrderIDs
         draggedFolderID = nil
-        let finalOrder = folderOrderIDs.isEmpty
-            ? persistedFolderOrderIDs
-            : folderOrderIDs
-        persistFolderOrder(finalOrder)
-    }
-
-    private func resetFolderReorderHapticState() {
-        folderReorderHapticRevision += 1
-        let revision = folderReorderHapticRevision
-
-        folderReorderHapticsArmed = false
-        folderReorderHapticPending = false
-        folderReorderVisualSlots.removeAll(keepingCapacity: true)
+        folderDragSlots = []
+        folderDragTargetIndex = nil
+        folderDragGrabOffset = .zero
+        folderDragPreviewSize = .zero
 
         Task { @MainActor in
-            try? await Task.sleep(for: .milliseconds(180))
-            guard folderReorderHapticRevision == revision else { return }
-            folderReorderHapticsArmed = true
+            await Task.yield()
+            persistFolderOrder(finalOrder)
         }
-    }
-
-    private func updateFolderReorderVisualSlot(for folderID: UUID, frame: CGRect) {
-        guard frame.width > 0, frame.height > 0 else { return }
-
-        let horizontalStride = frame.width + folderGridSpacing
-        let verticalStride = frame.height + folderGridSpacing
-        guard horizontalStride > 0, verticalStride > 0 else { return }
-
-        let rawColumn = Int((frame.minX / horizontalStride).rounded())
-        let column = min(max(rawColumn, 0), folderColumnCount - 1)
-        let row = max(Int((frame.minY / verticalStride).rounded()), 0)
-        let slot = (row * folderColumnCount) + column
-        let previousSlot = folderReorderVisualSlots[folderID]
-
-        folderReorderVisualSlots[folderID] = slot
-
-        guard folderReorderHapticsArmed,
-              let previousSlot,
-              previousSlot != slot else {
-            return
-        }
-
-        playFolderReorderHaptic()
     }
 
     private func playFolderReorderHaptic() {
@@ -825,5 +845,11 @@ struct HomeView: View {
         quickResumeDeck = resumable.deck
         quickResumeSnapshot = resumable.snapshot
         showingQuickResume = true
+    }
+}
+
+private extension CGRect {
+    var center: CGPoint {
+        CGPoint(x: midX, y: midY)
     }
 }
