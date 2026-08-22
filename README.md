@@ -41,7 +41,7 @@ Version 2 introduces a redesigned monochrome-first visual system with a selectiv
 ## Development Build
 
 <!-- DEV_IPA_START -->
-[⬇️ **Download latest development IPA**](https://github.com/raaaton/Flashcards/releases/download/dev/Flashcards-v2.1.0.ipa)
+[⬇️ **Download latest development IPA**](https://github.com/raaaton/Flashcards/releases/download/dev/Flashcards-v2.2.0.ipa)
 <!-- DEV_IPA_END -->
 
 > Built automatically from the latest commit on `main`. Development builds may contain unfinished or unstable changes.
