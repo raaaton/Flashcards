@@ -58,7 +58,6 @@ struct HomeView: View {
     @State private var quickResumeSnapshot: ActiveStudySessionSnapshot?
     @State private var showingQuickResume = false
     @State private var folderOrderIDs: [UUID] = []
-    @State private var folderOrderRevision = 0
     @State private var draggedFolderID: UUID?
     @State private var folderDragPreviewSize: CGSize = .zero
     @State private var folderReorderVisualSlots: [UUID: Int] = [:]
@@ -497,6 +496,7 @@ struct HomeView: View {
                                     ? folderDragPreviewSize.width
                                     : 170
                             )
+                            .scaleEffect(1.03)
                             .contentShape(
                                 .dragPreview,
                                 .rect(cornerRadius: 22, style: .continuous)
@@ -511,6 +511,7 @@ struct HomeView: View {
                                 finish: finishFolderCustomDrag
                             )
                         )
+                        .opacity(draggedFolderID == folder.id ? 0 : 1)
                         .contextMenu {
                             Button("Modifier", systemImage: "pencil") { folderToEdit = folder }
                                 .normalActionColor()
@@ -671,44 +672,6 @@ struct HomeView: View {
             try? await Task.sleep(for: .milliseconds(32))
             folderReorderHapticPending = false
         }
-    }
-
-    private func applyFolderReorder<CollectionID: Hashable & Sendable>(
-        _ difference: ReorderDifference<UUID, CollectionID>
-    ) {
-        let sourceIDs = difference.sources
-        guard !sourceIDs.isEmpty else { return }
-
-        var reorderedIDs = folderOrderIDs.isEmpty
-            ? persistedFolderOrderIDs
-            : folderOrderIDs
-        let liveFolderIDs = Set(folders.map(\.id))
-        reorderedIDs = reorderedIDs.filter { liveFolderIDs.contains($0) }
-
-        for id in persistedFolderOrderIDs where !reorderedIDs.contains(id) {
-            reorderedIDs.append(id)
-        }
-
-        let previousOrder = reorderedIDs
-        let sourceSet = Set(sourceIDs)
-        reorderedIDs.removeAll { sourceSet.contains($0) }
-
-        let destinationIndex: Int
-        switch difference.destination.position {
-        case let .before(destinationID):
-            guard let index = reorderedIDs.firstIndex(of: destinationID) else {
-                return
-            }
-            destinationIndex = index
-        case .end:
-            destinationIndex = reorderedIDs.endIndex
-        }
-
-        reorderedIDs.insert(contentsOf: sourceIDs, at: destinationIndex)
-        guard reorderedIDs != previousOrder else { return }
-
-        folderOrderIDs = reorderedIDs
-        persistFolderOrder(reorderedIDs)
     }
 
     private func persistFolderOrder(_ orderedIDs: [UUID]) {
