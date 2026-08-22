@@ -61,6 +61,39 @@ private extension View {
     }
 }
 
+private extension ExternalAIProvider {
+    var logoAssetName: String {
+        switch self {
+        case .gemini: "ProviderGemini"
+        case .claude: "ProviderClaude"
+        case .chatGPT: "ProviderChatGPT"
+        }
+    }
+}
+
+private struct AIProviderLogoBadge: View {
+    let provider: ExternalAIProvider
+
+    var body: some View {
+        Image(provider.logoAssetName)
+            .renderingMode(.template)
+            .resizable()
+            .scaledToFit()
+            .foregroundStyle(.white)
+            .frame(width: 22, height: 22)
+            .frame(width: 42, height: 42)
+            .background(
+                Theme.iconSurface,
+                in: .rect(cornerRadius: 13, style: .continuous)
+            )
+            .overlay {
+                RoundedRectangle(cornerRadius: 13, style: .continuous)
+                    .stroke(Theme.subtleStroke, lineWidth: 0.5)
+            }
+            .accessibilityHidden(true)
+    }
+}
+
 private struct DeckCreationBackButton: View {
     let action: () -> Void
 
@@ -71,12 +104,8 @@ private struct DeckCreationBackButton: View {
         } label: {
             Image(systemName: "chevron.left")
                 .font(.body.weight(.semibold))
-                .foregroundStyle(.white)
-                .frame(width: 38, height: 38)
-                .contentShape(.circle)
-                .glassEffect(.regular.interactive(), in: .circle)
         }
-        .buttonStyle(.plain)
+        .tint(.white)
         .accessibilityLabel(L10n.text("ai.back"))
     }
 }
@@ -117,7 +146,7 @@ private struct NewDeckCreationFlow: View {
 
     @State private var path: [NewDeckCreationStep] = []
     @State private var name = ""
-    @State private var selectedProvider = ExternalAIProvider.chatGPT
+    @State private var selectedProvider = ExternalAIProvider.gemini
     @State private var importedCards: [ParsedCard] = []
     @State private var hasOpenedProvider = false
     @State private var promptWasCopied = false
@@ -141,6 +170,7 @@ private struct NewDeckCreationFlow: View {
         }
         .alert(alertTitle, isPresented: $showingAlert) {
             Button("OK", role: .cancel) {}
+                .normalActionColor()
         } message: {
             Text(alertMessage)
         }
@@ -352,6 +382,7 @@ private struct NewDeckCreationFlow: View {
                             systemImage: "arrow.up.right.square"
                         )
                         .font(.headline)
+                        .foregroundStyle(Theme.foreground(on: Theme.accent))
                         .frame(maxWidth: .infinity, minHeight: 36)
                     }
                     .buttonStyle(.borderedProminent)
@@ -464,12 +495,7 @@ private struct NewDeckCreationFlow: View {
             copyPrompt(playsHaptic: false)
         } label: {
             HStack(alignment: .top, spacing: 14) {
-                NeutralIconBadge(
-                    systemName: provider.systemImage,
-                    size: 42,
-                    cornerRadius: 13,
-                    symbolSize: 17
-                )
+                AIProviderLogoBadge(provider: provider)
 
                 VStack(alignment: .leading, spacing: 5) {
                     HStack(spacing: 8) {
@@ -477,10 +503,10 @@ private struct NewDeckCreationFlow: View {
                             .font(.headline)
                             .foregroundStyle(.primary)
 
-                        if provider.isRecommended {
-                            Text(L10n.text("ai.recommended"))
-                                .font(.caption2.weight(.bold))
-                                .foregroundStyle(Theme.accent)
+                        if provider == .chatGPT {
+                            Text(L10n.text("ai.not_recommended"))
+                                .font(.caption2.weight(.semibold))
+                                .foregroundStyle(.secondary)
                         }
                     }
 
@@ -869,13 +895,16 @@ private struct DeckEditorForm: View {
                 Button(L10n.text("Ignorer les doublons exacts")) {
                     save(skipExactDuplicates: true)
                 }
+                .normalActionColor()
             }
 
             Button(L10n.text("duplicate.action.create_anyway")) {
                 save(skipExactDuplicates: false)
             }
+            .normalActionColor()
 
             Button("Annuler", role: .cancel) {}
+                .normalActionColor()
         } message: {
             Text(duplicateAlertMessage)
         }

@@ -221,8 +221,7 @@ struct CardEditorSurface: View {
                 title: "Terme",
                 placeholder: "Saisissez le terme",
                 text: $term,
-                minHeight: 42,
-                lineLimits: 1...2
+                minimumLineCount: 1
             )
 
             Divider()
@@ -232,8 +231,7 @@ struct CardEditorSurface: View {
                 title: "Définition",
                 placeholder: "Saisissez la définition",
                 text: $definition,
-                minHeight: 88,
-                lineLimits: 2...8
+                minimumLineCount: 2
             )
         }
         .background(
@@ -248,8 +246,7 @@ struct CardEditorSurface: View {
         title: LocalizedStringKey,
         placeholder: LocalizedStringKey,
         text: Binding<String>,
-        minHeight: CGFloat,
-        lineLimits: ClosedRange<Int>
+        minimumLineCount: Int
     ) -> some View {
         VStack(alignment: .leading, spacing: 8) {
             Text(title)
@@ -262,12 +259,8 @@ struct CardEditorSurface: View {
                 axis: .vertical
             )
             .font(.body)
-            .lineLimit(lineLimits)
+            .lineLimit(minimumLineCount...)
             .textInputAutocapitalization(.sentences)
-            .frame(
-                minHeight: minHeight,
-                alignment: .topLeading
-            )
         }
         .padding(18)
     }

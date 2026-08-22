@@ -211,9 +211,9 @@ enum BulkImportParser {
 }
 
 enum ExternalAIProvider: String, CaseIterable, Identifiable, Sendable {
-    case chatGPT
-    case claude
     case gemini
+    case claude
+    case chatGPT
 
     var id: Self { self }
 
@@ -224,16 +224,6 @@ enum ExternalAIProvider: String, CaseIterable, Identifiable, Sendable {
         case .gemini: "Gemini"
         }
     }
-
-    var systemImage: String {
-        switch self {
-        case .chatGPT: "sparkles"
-        case .claude: "text.bubble.fill"
-        case .gemini: "diamond.fill"
-        }
-    }
-
-    var isRecommended: Bool { self == .chatGPT }
 
     var webURL: URL {
         switch self {

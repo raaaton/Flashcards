@@ -240,13 +240,16 @@ struct BulkImportView: View {
                     Button("Ignorer les doublons exacts") {
                         importCards(skipExactDuplicates: true)
                     }
+                    .normalActionColor()
                 }
 
                 Button("Importer quand même") {
                     importCards(skipExactDuplicates: false)
                 }
+                .normalActionColor()
 
                 Button("Annuler", role: .cancel) {}
+                    .normalActionColor()
             } message: {
                 if duplicateAnalysis.exactCount > 0 && duplicateAnalysis.possibleCount > 0 {
                     Text(
@@ -274,6 +277,7 @@ struct BulkImportView: View {
             }
             .alert(alertTitle, isPresented: $showingAlert) {
                 Button("OK", role: .cancel) {}
+                    .normalActionColor()
             } message: {
                 Text(alertMessage)
             }

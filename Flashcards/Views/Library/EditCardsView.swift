@@ -130,6 +130,7 @@ struct EditCardsView: View {
             Button("Annuler", role: .cancel) {
                 if !isSelecting { selectedCardIDs.removeAll() }
             }
+            .normalActionColor()
             Button("Supprimer", role: .destructive) {
                 LibraryActions.deleteCards(selectedCards, from: deck, in: modelContext)
                 endSelection()

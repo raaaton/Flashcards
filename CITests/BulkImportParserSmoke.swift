@@ -126,6 +126,10 @@ enum BulkImportParserSmoke {
             preconditionFailure("Unexpected error type for prepared prompt")
         }
 
+        precondition(
+            ExternalAIProvider.allCases == [.gemini, .claude, .chatGPT]
+        )
+
         let handoffPrompt = "Line 1\nLine 2 & 50% = yes? emoji 🤖 / colon:"
         let chatGPTCandidates = ExternalAIProvider.chatGPT.nativeLaunchCandidates(
             for: handoffPrompt
