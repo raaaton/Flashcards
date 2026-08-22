@@ -291,7 +291,89 @@ private struct NewDeckCreationFlow: View {
                         providerRow(provider)
                     }
                 }
+            }
+            .padding(.horizontal, 20)
+            .padding(.top, 20)
+            .padding(.bottom, 12)
+        }
+        .safeAreaInset(edge: .bottom, spacing: 0) {
+            aiBottomPanel
+        }
+        .navigationTitle(L10n.text("ai.create.with_ai"))
+        .navigationBarTitleDisplayMode(.inline)
+        .navigationBarBackButtonHidden(true)
+        .toolbar {
+            ToolbarItem(placement: .topBarLeading) {
+                DeckCreationBackButton {
+                    navigateBack()
+                }
+            }
+        }
+        .onAppear {
+            copyPrompt(playsHaptic: false)
+        }
+    }
 
+    @ViewBuilder
+    private var aiBottomPanel: some View {
+        VStack(spacing: 12) {
+            if hasOpenedProvider {
+                VStack(alignment: .leading, spacing: 12) {
+                    Text(
+                        L10n.format(
+                            "ai.return.title",
+                            selectedProvider.displayName
+                        )
+                    )
+                    .font(.headline)
+
+                    Text(
+                        L10n.format(
+                            "ai.return.body",
+                            selectedProvider.displayName
+                        )
+                    )
+                    .font(.subheadline)
+                    .foregroundStyle(.secondary)
+
+                    Button {
+                        pasteAIResult()
+                    } label: {
+                        Label(
+                            L10n.format(
+                                "ai.paste",
+                                selectedProvider.displayName
+                            ),
+                            systemImage: "doc.on.clipboard.fill"
+                        )
+                        .font(.headline)
+                        .foregroundStyle(Theme.foreground(on: Theme.accent))
+                        .frame(maxWidth: .infinity, minHeight: 32)
+                    }
+                    .buttonStyle(.borderedProminent)
+                    .tint(Theme.accent)
+
+                    Button {
+                        openSelectedProvider()
+                    } label: {
+                        Label(
+                            L10n.format(
+                                "ai.open_again",
+                                selectedProvider.displayName
+                            ),
+                            systemImage: "arrow.up.right.square"
+                        )
+                        .frame(maxWidth: .infinity, minHeight: 28)
+                    }
+                    .buttonStyle(.bordered)
+                    .tint(.white)
+                }
+                .padding(16)
+                .background(
+                    Theme.cardBackground,
+                    in: .rect(cornerRadius: 18, style: .continuous)
+                )
+            } else {
                 VStack(alignment: .leading, spacing: 10) {
                     Label(
                         L10n.format("ai.instructions.title", selectedProvider.displayName),
@@ -315,96 +397,28 @@ private struct NewDeckCreationFlow: View {
                     in: .rect(cornerRadius: 18, style: .continuous)
                 )
 
-                if hasOpenedProvider {
-                    VStack(alignment: .leading, spacing: 12) {
-                        Text(
-                            L10n.format(
-                                "ai.return.title",
-                                selectedProvider.displayName
-                            )
-                        )
-                        .font(.headline)
-
-                        Text(
-                            L10n.format(
-                                "ai.return.body",
-                                selectedProvider.displayName
-                            )
-                        )
-                        .font(.subheadline)
-                        .foregroundStyle(.secondary)
-
-                        Button {
-                            pasteAIResult()
-                        } label: {
-                            Label(
-                                L10n.format(
-                                    "ai.paste",
-                                    selectedProvider.displayName
-                                ),
-                                systemImage: "doc.on.clipboard.fill"
-                            )
-                            .font(.headline)
-                            .foregroundStyle(Theme.foreground(on: Theme.accent))
-                            .frame(maxWidth: .infinity, minHeight: 32)
-                        }
-                        .buttonStyle(.borderedProminent)
-                        .tint(Theme.accent)
-
-                        Button {
-                            openSelectedProvider()
-                        } label: {
-                            Label(
-                                L10n.format(
-                                    "ai.open_again",
-                                    selectedProvider.displayName
-                                ),
-                                systemImage: "arrow.up.right.square"
-                            )
-                            .frame(maxWidth: .infinity, minHeight: 28)
-                        }
-                        .buttonStyle(.bordered)
-                        .tint(.white)
-                    }
-                    .padding(16)
-                    .background(
-                        Theme.cardBackground,
-                        in: .rect(cornerRadius: 18, style: .continuous)
+                Button {
+                    openSelectedProvider()
+                } label: {
+                    Label(
+                        L10n.format(
+                            "ai.open",
+                            selectedProvider.displayName
+                        ),
+                        systemImage: "arrow.up.right.square"
                     )
-                } else {
-                    Button {
-                        openSelectedProvider()
-                    } label: {
-                        Label(
-                            L10n.format(
-                                "ai.open",
-                                selectedProvider.displayName
-                            ),
-                            systemImage: "arrow.up.right.square"
-                        )
-                        .font(.headline)
-                        .foregroundStyle(Theme.foreground(on: Theme.accent))
-                        .frame(maxWidth: .infinity, minHeight: 36)
-                    }
-                    .buttonStyle(.borderedProminent)
-                    .tint(Theme.accent)
+                    .font(.headline)
+                    .foregroundStyle(Theme.foreground(on: Theme.accent))
+                    .frame(maxWidth: .infinity, minHeight: 36)
                 }
-            }
-            .padding(20)
-        }
-        .navigationTitle(L10n.text("ai.create.with_ai"))
-        .navigationBarTitleDisplayMode(.inline)
-        .navigationBarBackButtonHidden(true)
-        .toolbar {
-            ToolbarItem(placement: .topBarLeading) {
-                DeckCreationBackButton {
-                    navigateBack()
-                }
+                .buttonStyle(.borderedProminent)
+                .tint(Theme.accent)
             }
         }
-        .onAppear {
-            copyPrompt(playsHaptic: false)
-        }
+        .padding(.horizontal, 20)
+        .padding(.top, 12)
+        .padding(.bottom, 8)
+        .background(Color.black)
     }
 
     private func advanceFromName() {

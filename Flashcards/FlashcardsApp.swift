@@ -1,9 +1,14 @@
 import SwiftData
 import SwiftUI
+import UIKit
 
 @main
 struct FlashcardsApp: App {
     @State private var settings = AppSettings()
+
+    init() {
+        UIView.appearance(whenContainedInInstancesOf: [UIAlertController.self]).tintColor = .white
+    }
 
     private let modelContainer: ModelContainer = {
         let schema = Schema([
