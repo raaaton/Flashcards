@@ -57,12 +57,22 @@ struct BulkImportInput: Hashable, Sendable {
     var cardDelimiter: String
 }
 
-struct ParsedCard: Identifiable, Equatable, Sendable {
+struct ParsedCard: Identifiable, Equatable, Hashable, Sendable {
     let recordIndex: Int
     let term: String
     let definition: String
 
     var id: Int { recordIndex }
+}
+
+struct ExternalAIImportSession: Identifiable, Hashable, Sendable {
+    let id: UUID
+    let cards: [ParsedCard]
+
+    init(id: UUID = UUID(), cards: [ParsedCard]) {
+        self.id = id
+        self.cards = cards
+    }
 }
 
 struct InvalidRecord: Identifiable, Equatable, Sendable {
