@@ -39,6 +39,7 @@ struct HomeView: View {
     @State private var folderReorderHapticsArmed = false
     @State private var folderReorderHapticPending = false
     @State private var folderReorderHapticRevision = 0
+    @State private var folderReorderIsActive = false
 
     private static let folderReorderCoordinateSpace = "folder-reorder-grid"
     private let folderGridSpacing: CGFloat = 14
@@ -511,6 +512,9 @@ struct HomeView: View {
                 .reorderContainer(for: Folder.self, itemID: \.id) { difference in
                     applyFolderReorder(difference)
                 }
+                .onDragSessionUpdated { session in
+                    updateFolderReorderDragSession(session)
+                }
                 .padding(.horizontal)
             }
             .padding(.top, 8)
@@ -556,6 +560,7 @@ struct HomeView: View {
         folderReorderHapticRevision += 1
         let revision = folderReorderHapticRevision
 
+        folderReorderIsActive = false
         folderReorderHapticsArmed = false
         folderReorderHapticPending = false
         folderReorderVisualSlots.removeAll(keepingCapacity: true)
@@ -564,6 +569,16 @@ struct HomeView: View {
             try? await Task.sleep(for: .milliseconds(180))
             guard folderReorderHapticRevision == revision else { return }
             folderReorderHapticsArmed = true
+        }
+    }
+
+    private func updateFolderReorderDragSession(_ session: DragSession) {
+        switch session.phase {
+        case .initial, .active:
+            folderReorderIsActive = true
+        case .ending, .ended, .dataTransferCompleted:
+            folderReorderIsActive = false
+            folderReorderHapticPending = false
         }
     }
 
@@ -582,7 +597,8 @@ struct HomeView: View {
 
         folderReorderVisualSlots[folderID] = slot
 
-        guard folderReorderHapticsArmed,
+        guard folderReorderIsActive,
+              folderReorderHapticsArmed,
               let previousSlot,
               previousSlot != slot else {
             return
