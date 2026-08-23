@@ -292,7 +292,7 @@ enum ExternalAIProvider: String, CaseIterable, Identifiable, Sendable {
 }
 
 enum ExternalAIFlashcardPromptBuilder {
-    static func makePrompt(deckName: String, appName: String = "Flashcards") -> String {
+    static func makePrompt(deckName: String, appName: String = "Kavi") -> String {
         let cleanDeckName = deckName
             .replacingOccurrences(of: "\n", with: " ")
             .trimmingCharacters(in: .whitespacesAndNewlines)

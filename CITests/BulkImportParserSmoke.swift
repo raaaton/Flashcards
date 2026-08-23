@@ -59,7 +59,7 @@ enum BulkImportParserSmoke {
         precondition(internalOnly.exactRecordIndexes == [1])
 
         let aiResponse = """
-        Your flashcards are ready for Flashcards. Copy the JSON block below, then return to Flashcards.
+        Your flashcards are ready for Kavi. Copy the JSON block below, then return to Kavi.
 
         ```json
         {
@@ -122,6 +122,7 @@ enum BulkImportParserSmoke {
 
         let prompt = ExternalAIFlashcardPromptBuilder.makePrompt(deckName: "History: 1848")
         precondition(prompt.contains("History: 1848"))
+        precondition(prompt.contains("Kavi"))
         precondition(prompt.contains("\"flashcards\""))
         precondition(prompt.contains("Copy the JSON block below"))
 

@@ -137,7 +137,7 @@ struct BackupView: View {
                 name = deck.name
             } else {
                 envelope = BackupService.databaseEnvelope(folders: folders, decks: decks)
-                name = "Flashcards-backup"
+                name = "Kavi-backup"
             }
             exportURL = try BackupService.temporaryJSONFile(for: envelope, suggestedName: name)
         } catch {

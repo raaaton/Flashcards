@@ -7,9 +7,9 @@
   <img alt="issues" src="https://img.shields.io/github/issues/raaaton/Flashcards" />
 </p>
 
-# Flashcards
+# Kavi
 
-**Flashcards** is a native, local-first iOS study app built for fast card creation, focused revision, and full ownership of your data.
+**Kavi** is a native, local-first iOS study app built for fast card creation, focused revision, and full ownership of your data.
 
 It is written entirely with **SwiftUI**, **SwiftData**, and Apple system APIs. There is no account, backend, analytics SDK, advertising layer, or in-app runtime network dependency.
 
@@ -41,7 +41,7 @@ Version 2 introduces a redesigned monochrome-first visual system with a selectiv
 ## Development Build
 
 <!-- DEV_IPA_START -->
-[⬇️ **Download latest development IPA**](https://github.com/raaaton/Flashcards/releases/download/dev/Flashcards-v2.2.0.ipa)
+[⬇️ **Download latest development IPA**](https://github.com/raaaton/Flashcards/releases/download/dev/Kavi-v2.2.0.ipa)
 <!-- DEV_IPA_END -->
 
 > Built automatically from the latest commit on `main`. Development builds may contain unfinished or unstable changes.
@@ -90,7 +90,7 @@ The v2 generation is a major visual and interaction refresh rather than a simple
 
 ### Organize your library
 
-Flashcards uses a simple hierarchy:
+Kavi uses a simple hierarchy:
 
 ```text
 Folder
@@ -136,26 +136,26 @@ Cards can be created one at a time, generated through an external AI you already
 
 #### Create with AI
 
-Flashcards can prepare a deck using **ChatGPT**, **Claude**, or **Gemini** without embedding an AI model or calling an AI API.
+Kavi can prepare a deck using **ChatGPT**, **Claude**, or **Gemini** without embedding an AI model or calling an AI API.
 
 The flow is deliberately user-controlled:
 
 1. Name the deck and choose **Create with AI**.
 2. Pick ChatGPT, Claude, or Gemini.
-3. Flashcards generates a strict prompt and copies it to the clipboard.
-4. Flashcards opens the provider's public web entry point. If the prompt is not already present, paste it into the composer, attach your notes, images, or documents, and send it.
+3. Kavi generates a strict prompt and copies it to the clipboard.
+4. Kavi opens the provider's native app. If the prompt is not already present, paste it into the composer, attach your notes, images, or documents, and send it.
 5. The AI returns a JSON block containing the generated flashcards.
-6. Copy that JSON block and return to Flashcards.
+6. Copy that JSON block and return to Kavi.
 7. Tap **Paste from ChatGPT / Claude / Gemini** to parse it locally.
 8. Review or edit the cards, see duplicate warnings, then create the deck using the normal local SwiftData path.
 
-The handoff does not depend on undocumented prompt-prefill URL parameters. Clipboard copy is the robust fallback, and the provider itself handles any document upload outside Flashcards. There is no Flashcards account, AI subscription, server-side proxy, model token cost, or AI SDK in the app.
+Clipboard copy remains the robust fallback, and the provider itself handles any document upload outside Kavi. There is no Kavi account, AI subscription, server-side proxy, model token cost, or AI SDK in the app.
 
 #### Duplicate detection
 
 Duplicate detection is available during normal creation as well as bulk import.
 
-Flashcards distinguishes between:
+Kavi distinguishes between:
 
 - **Exact duplicate** — same normalized term and definition
 - **Possible duplicate** — same normalized term with a different definition
@@ -387,7 +387,7 @@ The visual identity itself is intentionally fixed rather than user-configurable:
 
 ## Backup & restore
 
-Your data is not tied to a Flashcards account because there is no Flashcards account.
+Your data is not tied to a Kavi account because there is no Kavi account.
 
 The full local database can be exported to **JSON** and restored later. Individual decks can also be exported from their deck page.
 
@@ -404,7 +404,7 @@ This makes it possible to:
 
 ## Privacy by design
 
-Flashcards is designed so its own data and parsing workflows remain on-device.
+Kavi is designed so its own data and parsing workflows remain on-device.
 
 - No account
 - No backend
@@ -419,13 +419,13 @@ Flashcards is designed so its own data and parsing workflows remain on-device.
 
 Folders, decks, cards, study progress, preferences, active sessions, and history remain local to the device unless you explicitly export them yourself.
 
-The optional **Create with AI** flow is an explicit external handoff: Flashcards copies a generated prompt and opens the ChatGPT, Claude, or Gemini public entry point you selected. Any internet access, document upload, account state, and AI processing happen in that provider's app or website, not inside Flashcards. The JSON response is only parsed after you explicitly copy it back into Flashcards.
+The optional **Create with AI** flow is an explicit external handoff: Kavi copies a generated prompt and opens the ChatGPT, Claude, or Gemini app you selected. Any internet access, document upload, account state, and AI processing happen in that provider's app or website, not inside Kavi. The JSON response is only parsed after you explicitly copy it back into Kavi.
 
 ---
 
 ## Localization
 
-Flashcards currently supports:
+Kavi currently supports:
 
 - 🇫🇷 **French**
 - 🇬🇧 **English**
@@ -441,7 +441,7 @@ Duplicate warnings, study UI, settings, import flows, AI handoff copy, and the r
 
 ## Design
 
-Flashcards follows the current native iOS design language instead of recreating an independent component system.
+Kavi follows the current native iOS design language instead of recreating an independent component system.
 
 The v2 visual system is built around:
 
@@ -467,7 +467,7 @@ The app icon is also stored as a layered `AppIcon.icon` bundle, allowing Apple's
 
 ## Technology
 
-Flashcards intentionally keeps its stack small and native.
+Kavi intentionally keeps its stack small and native.
 
 | | |
 | --- | --- |
@@ -521,7 +521,7 @@ Stable unsigned IPA builds are available from the repository's [Releases](https:
 The current major generation starts at:
 
 ```text
-Flashcards-v2.0.0.ipa
+Kavi-v2.0.0.ipa
 ```
 
 The IPA must be signed before installation using a compatible iOS sideloading solution.
@@ -549,7 +549,7 @@ git clone https://github.com/raaaton/Flashcards.git
 cd Flashcards
 ```
 
-Open `Flashcards.xcodeproj`, select the **Flashcards** target, choose an iPhone or simulator, and build normally.
+Open `Flashcards.xcodeproj`, select the app target, choose an iPhone or simulator, and build normally.
 
 There are no package dependencies to resolve.
 
@@ -578,7 +578,7 @@ Release IPAs use the standard structure:
 
 ```text
 Payload/
-└── Flashcards.app/
+└── Kavi.app/
 ```
 
 ---
@@ -618,6 +618,6 @@ See [LICENSE](LICENSE) for details.
 ---
 
 <p align="center">
-  <strong>Flashcards</strong><br />
+  <strong>Kavi</strong><br />
   Native. Offline. Focused.
 </p>
