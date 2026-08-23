@@ -1,4 +1,4 @@
-name: Build Flashcards IPA
+name: Build Kavi IPA
 
 on:
     push:
@@ -129,7 +129,7 @@ jobs:
                   replacement = (
                       "<!-- DEV_IPA_START -->\n"
                       "[⬇️ **Download latest development IPA**]"
-                      f"(https://github.com/raaaton/Flashcards/releases/download/dev/Flashcards-v{version}.ipa)\n"
+                      f"(https://github.com/raaaton/Flashcards/releases/download/dev/Kavi-v{version}.ipa)\n"
                       "<!-- DEV_IPA_END -->"
                   )
 
@@ -146,7 +146,7 @@ jobs:
                       )
 
                   path.write_text(text)
-                  print(f"README development IPA -> Flashcards-v{version}.ipa")
+                  print(f"README development IPA -> Kavi-v{version}.ipa")
                   PY
 
             - name: Read project version
@@ -310,6 +310,8 @@ jobs:
                   test "$(grep -c 'IPHONEOS_DEPLOYMENT_TARGET = 27.0;' Flashcards.xcodeproj/project.pbxproj)" -eq 2
                   test "$(grep -F -c "CURRENT_PROJECT_VERSION = ${{ steps.project_version.outputs.build }};" Flashcards.xcodeproj/project.pbxproj)" -eq 2
                   test "$(grep -F -c "MARKETING_VERSION = ${{ steps.project_version.outputs.version }};" Flashcards.xcodeproj/project.pbxproj)" -eq 2
+                  test "$(grep -c 'INFOPLIST_KEY_CFBundleDisplayName = Kavi;' Flashcards.xcodeproj/project.pbxproj)" -eq 2
+                  test "$(grep -c 'PRODUCT_NAME = Kavi;' Flashcards.xcodeproj/project.pbxproj)" -eq 2
                   test "$(grep -c 'PRODUCT_BUNDLE_IDENTIFIER = com.raton.flashcards;' Flashcards.xcodeproj/project.pbxproj)" -eq 2
                   test "$(grep -c 'SWIFT_VERSION = 6.0;' Flashcards.xcodeproj/project.pbxproj)" -eq 2
                   test -z "$(find Flashcards -name '*.entitlements' -print -quit)"
@@ -385,7 +387,7 @@ jobs:
                     build
                   xcrun simctl boot 'iPhone 17 Pro'
                   xcrun simctl bootstatus booted -b
-                  SIM_APP="$RUNNER_TEMP/SimulatorData/Build/Products/Debug-iphonesimulator/Flashcards.app"
+                  SIM_APP="$RUNNER_TEMP/SimulatorData/Build/Products/Debug-iphonesimulator/Kavi.app"
                   test -d "$SIM_APP"
                   xcrun simctl install booted "$SIM_APP"
                   xcrun simctl launch booted com.raton.flashcards
@@ -408,7 +410,7 @@ jobs:
                   test "$APP_VERSION" = "${{ steps.project_version.outputs.version }}"
                   test "$APP_BUILD" = "${{ steps.project_version.outputs.build }}"
 
-                  IPA_NAME="Flashcards-v${APP_VERSION}.ipa"
+                  IPA_NAME="Kavi-v${APP_VERSION}.ipa"
 
                   rm -rf Payload "$IPA_NAME"
                   mkdir Payload
@@ -427,9 +429,9 @@ jobs:
                   set -euo pipefail
 
                   if [ "$GITHUB_EVENT_NAME" = "workflow_dispatch" ]; then
-                    echo "name=Flashcards-${{ steps.release_version.outputs.tag }}" >> "$GITHUB_OUTPUT"
+                    echo "name=Kavi-${{ steps.release_version.outputs.tag }}" >> "$GITHUB_OUTPUT"
                   else
-                    echo "name=Flashcards-dev-${GITHUB_RUN_NUMBER}" >> "$GITHUB_OUTPUT"
+                    echo "name=Kavi-dev-${GITHUB_RUN_NUMBER}" >> "$GITHUB_OUTPUT"
                   fi
 
             - name: Upload IPA artifact
@@ -512,7 +514,7 @@ jobs:
               run: |
                   set -euo pipefail
 
-                  EXPECTED_IPA="Flashcards-${TAG}.ipa"
+                  EXPECTED_IPA="Kavi-${TAG}.ipa"
 
                   test "$IPA_NAME" = "$EXPECTED_IPA"
                   test -s "$IPA_NAME"
