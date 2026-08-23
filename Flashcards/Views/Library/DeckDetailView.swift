@@ -69,7 +69,6 @@ struct DeckDetailView: View {
         }
         .background {
             Color.clear
-                .tint(.white)
                 .alert("Supprimer ce deck ?", isPresented: $confirmingDeletion) {
                     Button("Supprimer", role: .destructive) {
                         modelContext.delete(deck)
@@ -77,9 +76,11 @@ struct DeckDetailView: View {
                         dismiss()
                     }
                     Button("Annuler", role: .cancel) {}
+                        .normalActionColor()
                 } message: {
                     Text("Toutes ses cartes seront supprimées définitivement.")
                 }
+                .tint(.white)
         }
     }
 
@@ -249,7 +250,6 @@ struct DeckDetailView: View {
         }
         .background {
             Color.clear
-                .tint(.white)
                 .alert(
                     "Effacer l’historique ?",
                     isPresented: $confirmingHistoryReset
@@ -258,9 +258,11 @@ struct DeckDetailView: View {
                         clearStudyHistory()
                     }
                     Button("Annuler", role: .cancel) {}
+                        .normalActionColor()
                 } message: {
                     Text("Toutes les sessions d’étude enregistrées pour ce deck seront supprimées.")
                 }
+                .tint(.white)
         }
     }
 
