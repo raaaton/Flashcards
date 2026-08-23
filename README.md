@@ -13,24 +13,21 @@
 
 It is written entirely with **SwiftUI**, **SwiftData**, and Apple system APIs. There is no account, backend, analytics SDK, advertising layer, or in-app runtime network dependency.
 
-Version 2 introduces a redesigned monochrome-first visual system with a selective mint signature, a rebuilt Home experience, compact deck rows, improved duplicate detection, external-AI-assisted deck creation, configurable Home sections, expanded localization, and a more consistent Apple-native interaction model throughout the app.
+Kavi 3.0.0 is the current major generation, combining the monochrome-first visual system, rebuilt Home experience, compact deck rows, improved duplicate detection, external-AI-assisted deck creation, configurable Home sections, expanded localization, and a consistent Apple-native interaction model throughout the app.
 
-<p align="center" style="display:flex; justify-content:center; gap:12px;">
+<p align="center">
   <img
-    width="197"
-    height="426"
-    alt="Home v2 showing Resume, Recent and the redesigned Folder tiles"
+    width="31%"
+    alt="Home showing Resume, Recent and the redesigned Folder tiles"
     src="https://github.com/user-attachments/assets/50673124-6e5a-4d25-88d1-8178e9321f48"
   />
   <img
-    width="197"
-    height="426"
+    width="31%"
     alt="Deck study hub showing progress, Flashcards and Test modes, and the deck’s card list"
     src="https://github.com/user-attachments/assets/3faaf9ef-5889-48b9-b589-7a5df680a362"
   />
   <img
-    width="197"
-    height="426"
+    width="31%"
     alt="Flashcards study screen with a card semi-flipped to its &quot;I knew it&quot; edge"
     src="https://github.com/user-attachments/assets/8001a25d-6276-427c-9ffd-edb6967bfb4b"
   />
@@ -50,9 +47,9 @@ Stable releases are available from the repository's [Releases](https://github.co
 
 ---
 
-## Version 2
+## Version 3
 
-The v2 generation is a major visual and interaction refresh rather than a simple coat of paint.
+The current major generation is a major visual and interaction refresh rather than a simple coat of paint.
 
 - Monochrome-first app-wide identity with mint `#46D7A7` reserved as a selective brand/action signature
 - New layered app icon using Apple's `.icon` format
@@ -69,16 +66,14 @@ The v2 generation is a major visual and interaction refresh rather than a simple
 - Duplicate detection extended beyond bulk import to normal card creation and editing
 - French, English, German, and Spanish localization
 
-<p style="display:flex">
+<p align="center">
   <img
-    width="197"
-    height="426"
-    alt="Home v2 showing Resume, Recent and the redesigned Folder tiles"
+    width="48%"
+    alt="Home showing Resume, Recent and the redesigned Folder tiles"
     src="https://github.com/user-attachments/assets/50673124-6e5a-4d25-88d1-8178e9321f48"
   />
   <img
-    width="197"
-    height="426"
+    width="48%"
     alt="A folder page showing the new compact full-width Deck rows"
     src="https://github.com/user-attachments/assets/5ca1e592-4faf-4bf0-9f8b-7b1e617ee182"
   />
@@ -113,7 +108,7 @@ Folders keep subjects or themes separated while decks remain the unit you actual
 - Search across folders, deck names, terms, and definitions
 - Optionally restrict search to the current folder
 
-The v2 interface intentionally removes per-folder accent colors from the visible design. Folders and deck glyphs use neutral surfaces and white symbols so the library remains visually quiet; mint is saved for primary actions, progress, selected states, and small brand details.
+The current interface intentionally removes per-folder accent colors from the visible design. Folders and deck glyphs use neutral surfaces and white symbols so the library remains visually quiet; mint is saved for primary actions, progress, selected states, and small brand details.
 
 ---
 
@@ -171,16 +166,14 @@ This applies when:
 
 When editing a card, the card itself is excluded from duplicate comparison.
 
-<p style="display:flex">
+<p align="center">
   <img
-    width="197"
-    height="426"
+    width="48%"
     alt="New Deck screen with an Exact duplicate warning visible"
     src="https://github.com/user-attachments/assets/52f1f070-a2b3-4cc2-be08-9177993df44a"
   />
   <img
-    width="197"
-    height="426"
+    width="48%"
     alt="New Deck screen with an Exact duplicate popup warning visible"
     src="https://github.com/user-attachments/assets/fa3531a6-dc5e-4779-846d-df9c759b0770"
   />
@@ -223,12 +216,13 @@ From here, you can see your current deck progress, launch either **Flashcards** 
 
 The goal is to keep everything related to a deck immediately accessible without adding extra navigation or setup screens.
 
-<img
-  width="197"
-  height="426"
-  alt="Deck study hub showing progress, Flashcards and Test modes, and the deck’s card list"
-  src="https://github.com/user-attachments/assets/3faaf9ef-5889-48b9-b589-7a5df680a362"
-/>
+<p align="center">
+  <img
+    width="40%"
+    alt="Deck study hub showing progress, Flashcards and Test modes, and the deck’s card list"
+    src="https://github.com/user-attachments/assets/3faaf9ef-5889-48b9-b589-7a5df680a362"
+  />
+</p>
 
 ### With Flashcards
 
@@ -253,22 +247,19 @@ Flashcards mode is built around one card at a time, with the surrounding UI kept
 
 Study preferences are remembered locally so repeated sessions do not need to be configured from scratch.
 
-<p style="display:flex">
+<p align="center">
   <img
-    width="197"
-    height="426"
+    width="31%"
     alt="Flashcards study hub"
     src="https://github.com/user-attachments/assets/3e08646b-ee61-4d00-9218-14ab47e353a5"
   />
   <img
-    width="197"
-    height="426"
+    width="31%"
     alt="Flashcards study screen with a card flipped to its answer side"
     src="https://github.com/user-attachments/assets/c82d9364-5548-4e2c-a66e-3cea78f6e2c3"
   />
   <img
-    width="197"
-    height="426"
+    width="31%"
     alt="Flashcards study screen with a card semi-flipped to its &quot;I knew it&quot; edge"
     src="https://github.com/user-attachments/assets/8001a25d-6276-427c-9ffd-edb6967bfb4b"
   />
@@ -290,28 +281,24 @@ Tests reuse the same library and can respect the same study preferences such as 
 
 Written answers can be submitted directly from the keyboard, while every test run stays completely on-device.
 
-<p style="display:flex">
+<p align="center">
   <img
-    width="197"
-    height="426"
+    width="23%"
     alt="Test study hub"
     src="https://github.com/user-attachments/assets/cc8c000d-f808-437a-9cf6-8e807ee9c3e4"
   />
   <img
-    width="197"
-    height="426"
+    width="23%"
     alt="Test study screen with a Multiple Choice question answered correctly"
     src="https://github.com/user-attachments/assets/8f379e52-f330-4122-9c35-b859149c3110"
   />
   <img
-    width="197"
-    height="426"
+    width="23%"
     alt="Test study screen with a True or False question answered correctly"
     src="https://github.com/user-attachments/assets/eb8893e8-9795-4151-bdde-4e040180251c"
   />
   <img
-    width="197"
-    height="426"
+    width="23%"
     alt="Test study screen with a Type question answered incorrectly"
     src="https://github.com/user-attachments/assets/32207636-14fc-4453-ab06-321d822c069b"
   />
@@ -443,7 +430,7 @@ Duplicate warnings, study UI, settings, import flows, AI handoff copy, and the r
 
 Kavi follows the current native iOS design language instead of recreating an independent component system.
 
-The v2 visual system is built around:
+The current visual system is built around:
 
 - A dark interface
 - Roughly 90–95% neutral black, white, system-gray, and material structure
@@ -521,7 +508,7 @@ Stable unsigned IPA builds are available from the repository's [Releases](https:
 The current major generation starts at:
 
 ```text
-Kavi-v2.0.0.ipa
+Kavi-v3.0.0.ipa
 ```
 
 The IPA must be signed before installation using a compatible iOS sideloading solution.
@@ -601,7 +588,7 @@ Core functionality must work without a server or internet connection. Optional e
 The complete study library should remain exportable and usable independently of any service.
 
 **Consistent rather than endlessly customizable.**  
-The v2 visual system deliberately uses one coherent monochrome foundation with a restrained mint signature instead of tinting every folder, deck, action, and surface.
+The current visual system deliberately uses one coherent monochrome foundation with a restrained mint signature instead of tinting every folder, deck, action, and surface.
 
 ---
 
