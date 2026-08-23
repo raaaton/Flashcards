@@ -3,7 +3,7 @@ import SwiftUI
 import UIKit
 
 @main
-struct FlashcardsApp: App {
+struct KaviApp: App {
     @State private var settings = AppSettings()
 
     init() {
