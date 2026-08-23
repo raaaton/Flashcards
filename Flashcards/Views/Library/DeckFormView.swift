@@ -25,11 +25,13 @@ private struct DeckCardDraft: Identifiable {
     var isComplete: Bool { !cleanTerm.isEmpty && !cleanDefinition.isEmpty }
 }
 
+private typealias AIPreviewSession = ExternalAIImportSession
+
 private enum NewDeckCreationStep: Hashable {
     case method
     case ai
     case manual
-    case aiPreview
+    case aiPreview(AIPreviewSession)
 }
 
 private struct DeckCreationStepFade: ViewModifier {
@@ -147,9 +149,9 @@ private struct NewDeckCreationFlow: View {
     @State private var path: [NewDeckCreationStep] = []
     @State private var name = ""
     @State private var selectedProvider = ExternalAIProvider.gemini
-    @State private var importedCards: [ParsedCard] = []
     @State private var hasOpenedProvider = false
     @State private var promptWasCopied = false
+    @State private var hasCompletedCreation = false
     @State private var alertTitle = ""
     @State private var alertMessage = ""
     @State private var showingAlert = false
@@ -188,18 +190,21 @@ private struct NewDeckCreationFlow: View {
                 initialFolder: initialFolder,
                 initialName: cleanName,
                 onBack: returnFromManualEditor,
-                onCreated: onCreated,
-                embedsInNavigationStack: false
+                onCreated: completeCreatedDeck,
+                embedsInNavigationStack: false,
+                dismissesOnSave: false
             )
-        case .aiPreview:
+        case let .aiPreview(session):
             DeckEditorForm(
                 initialFolder: initialFolder,
                 initialName: cleanName,
-                initialCards: importedCards,
+                initialCards: session.cards,
                 onBack: returnFromAIPreview,
-                onCreated: onCreated,
-                embedsInNavigationStack: false
+                onCreated: completeCreatedDeck,
+                embedsInNavigationStack: false,
+                dismissesOnSave: false
             )
+            .id(session.id)
         }
     }
 
@@ -310,6 +315,7 @@ private struct NewDeckCreationFlow: View {
             }
         }
         .onAppear {
+            guard !promptWasCopied else { return }
             copyPrompt(playsHaptic: false)
         }
     }
@@ -418,7 +424,6 @@ private struct NewDeckCreationFlow: View {
         .padding(.horizontal, 20)
         .padding(.top, 12)
         .padding(.bottom, 8)
-        .background(Color.black)
     }
 
     private func advanceFromName() {
@@ -445,6 +450,13 @@ private struct NewDeckCreationFlow: View {
     private func returnFromAIPreview(_ updatedName: String) {
         name = updatedName
         navigateBack()
+    }
+
+    private func completeCreatedDeck(_ deck: Deck) {
+        guard !hasCompletedCreation else { return }
+        hasCompletedCreation = true
+        onCreated?(deck)
+        dismiss()
     }
 
     private func creationChoice(
@@ -503,6 +515,7 @@ private struct NewDeckCreationFlow: View {
 
     private func providerRow(_ provider: ExternalAIProvider) -> some View {
         Button {
+            guard selectedProvider != provider else { return }
             HapticService.play(.selection)
             selectedProvider = provider
             hasOpenedProvider = false
@@ -624,9 +637,9 @@ private struct NewDeckCreationFlow: View {
         }
 
         do {
-            importedCards = try ExternalAIFlashcardParser.parse(clipboardText)
+            let cards = try ExternalAIFlashcardParser.parse(clipboardText)
             HapticService.play(.selection)
-            navigateForward(to: .aiPreview)
+            navigateForward(to: .aiPreview(AIPreviewSession(cards: cards)))
         } catch let error as ExternalAIFlashcardParserError {
             switch error {
             case .emptyResult:
@@ -664,12 +677,14 @@ private struct DeckEditorForm: View {
     let onBack: ((String) -> Void)?
     let onCreated: ((Deck) -> Void)?
     let embedsInNavigationStack: Bool
+    let dismissesOnSave: Bool
     private let shouldFocusName: Bool
     @State private var name: String
     @State private var selectedFolderID: UUID?
     @State private var cardDrafts: [DeckCardDraft]
     @State private var showingBulkAdd = false
     @State private var showingDuplicateChoice = false
+    @State private var isSaving = false
     @FocusState private var nameFieldFocused: Bool
 
     init(
@@ -679,12 +694,14 @@ private struct DeckEditorForm: View {
         initialCards: [ParsedCard] = [],
         onBack: ((String) -> Void)? = nil,
         onCreated: ((Deck) -> Void)? = nil,
-        embedsInNavigationStack: Bool = true
+        embedsInNavigationStack: Bool = true,
+        dismissesOnSave: Bool = true
     ) {
         self.deck = deck
         self.onBack = onBack
         self.onCreated = onCreated
         self.embedsInNavigationStack = embedsInNavigationStack
+        self.dismissesOnSave = dismissesOnSave
         shouldFocusName = deck == nil
             && initialName.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
         _name = State(initialValue: deck?.name ?? initialName)
@@ -713,6 +730,7 @@ private struct DeckEditorForm: View {
     }
 
     private var canSave: Bool {
+        guard !isSaving else { return false }
         guard !cleanName.isEmpty else { return false }
         guard deck == nil else { return true }
         return !validDrafts.isEmpty && !hasIncompleteDraft
@@ -984,6 +1002,9 @@ private struct DeckEditorForm: View {
     }
 
     private func save(skipExactDuplicates: Bool) {
+        guard canSave else { return }
+        isSaving = true
+
         let selectedFolder = folders.first { $0.id == selectedFolderID }
         var createdDeck: Deck?
 
@@ -992,7 +1013,6 @@ private struct DeckEditorForm: View {
             deck.folder = selectedFolder
             deck.updatedAt = .now
         } else {
-            guard canSave else { return }
             let newDeck = Deck(name: cleanName, folder: selectedFolder)
             modelContext.insert(newDeck)
             createdDeck = newDeck
@@ -1020,13 +1040,16 @@ private struct DeckEditorForm: View {
         do {
             try modelContext.save()
         } catch {
+            isSaving = false
             return
         }
 
         if let createdDeck {
             onCreated?(createdDeck)
         }
-        dismiss()
+        if dismissesOnSave {
+            dismiss()
+        }
     }
 
     private func removeDraft(_ id: UUID) {
