@@ -13,12 +13,12 @@
 
 It is written entirely with **SwiftUI**, **SwiftData**, and Apple system APIs. There is no account, backend, analytics SDK, advertising layer, or in-app runtime network dependency.
 
-Version 3 introduces a redesigned monochrome-first visual system with a selective mint signature, a rebuilt Home experience, compact deck rows, improved duplicate detection, external-AI-assisted deck creation, configurable Home sections, expanded localization, and a more consistent Apple-native interaction model throughout the app.
+Kavi 3.0.0 is the current major generation, combining the monochrome-first visual system, rebuilt Home experience, compact deck rows, improved duplicate detection, external-AI-assisted deck creation, configurable Home sections, expanded localization, and a consistent Apple-native interaction model throughout the app.
 
 <p align="center">
   <img
     width="31%"
-    alt="Home v3 showing Resume, Recent and the redesigned Folder tiles"
+    alt="Home showing Resume, Recent and the redesigned Folder tiles"
     src="https://github.com/user-attachments/assets/50673124-6e5a-4d25-88d1-8178e9321f48"
   />
   <img
@@ -49,7 +49,7 @@ Stable releases are available from the repository's [Releases](https://github.co
 
 ## Version 3
 
-The v3 generation is a major visual and interaction refresh rather than a simple coat of paint.
+The current major generation is a major visual and interaction refresh rather than a simple coat of paint.
 
 - Monochrome-first app-wide identity with mint `#46D7A7` reserved as a selective brand/action signature
 - New layered app icon using Apple's `.icon` format
@@ -69,7 +69,7 @@ The v3 generation is a major visual and interaction refresh rather than a simple
 <p align="center">
   <img
     width="48%"
-    alt="Home v3 showing Resume, Recent and the redesigned Folder tiles"
+    alt="Home showing Resume, Recent and the redesigned Folder tiles"
     src="https://github.com/user-attachments/assets/50673124-6e5a-4d25-88d1-8178e9321f48"
   />
   <img
@@ -108,7 +108,7 @@ Folders keep subjects or themes separated while decks remain the unit you actual
 - Search across folders, deck names, terms, and definitions
 - Optionally restrict search to the current folder
 
-The v3 interface intentionally removes per-folder accent colors from the visible design. Folders and deck glyphs use neutral surfaces and white symbols so the library remains visually quiet; mint is saved for primary actions, progress, selected states, and small brand details.
+The current interface intentionally removes per-folder accent colors from the visible design. Folders and deck glyphs use neutral surfaces and white symbols so the library remains visually quiet; mint is saved for primary actions, progress, selected states, and small brand details.
 
 ---
 
@@ -430,7 +430,7 @@ Duplicate warnings, study UI, settings, import flows, AI handoff copy, and the r
 
 Kavi follows the current native iOS design language instead of recreating an independent component system.
 
-The v3 visual system is built around:
+The current visual system is built around:
 
 - A dark interface
 - Roughly 90–95% neutral black, white, system-gray, and material structure
@@ -588,7 +588,7 @@ Core functionality must work without a server or internet connection. Optional e
 The complete study library should remain exportable and usable independently of any service.
 
 **Consistent rather than endlessly customizable.**  
-The v3 visual system deliberately uses one coherent monochrome foundation with a restrained mint signature instead of tinting every folder, deck, action, and surface.
+The current visual system deliberately uses one coherent monochrome foundation with a restrained mint signature instead of tinting every folder, deck, action, and surface.
 
 ---
 
