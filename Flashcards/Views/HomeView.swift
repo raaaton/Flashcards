@@ -230,24 +230,27 @@ struct HomeView: View {
         }
         .background {
             Color.clear
-                .tint(.white)
                 .alert("Supprimer ce deck ?", isPresented: deckDeleteBinding) {
                     Button("Supprimer", role: .destructive) { deletePendingDeck() }
                     Button("Annuler", role: .cancel) { deckToDelete = nil }
+                        .normalActionColor()
                 } message: {
                     Text("Toutes ses cartes seront supprimées définitivement.")
                 }
+                .tint(.white)
         }
         .background {
             Color.clear
-                .tint(.white)
                 .alert("Supprimer ce dossier ?", isPresented: folderDeleteBinding) {
                     Button("Tout supprimer", role: .destructive) { deleteFolderWithDecks() }
                     Button("Conserver les decks") { deleteFolderKeepingDecks() }
+                        .normalActionColor()
                     Button("Annuler", role: .cancel) { folderToDelete = nil }
+                        .normalActionColor()
                 } message: {
                     Text("Vous pouvez déplacer les decks vers « Sans dossier » ou supprimer définitivement tout le contenu.")
                 }
+                .tint(.white)
         }
     }
 

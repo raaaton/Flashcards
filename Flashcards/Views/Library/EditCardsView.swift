@@ -125,7 +125,6 @@ struct EditCardsView: View {
         }
         .background {
             Color.clear
-                .tint(.white)
                 .alert(
                     L10n.text("edit_cards.delete.title"),
                     isPresented: $showingDeleteConfirmation
@@ -133,6 +132,7 @@ struct EditCardsView: View {
                     Button("Annuler", role: .cancel) {
                         if !isSelecting { selectedCardIDs.removeAll() }
                     }
+                    .normalActionColor()
                     Button("Supprimer", role: .destructive) {
                         LibraryActions.deleteCards(selectedCards, from: deck, in: modelContext)
                         endSelection()
@@ -145,6 +145,7 @@ struct EditCardsView: View {
                         )
                     )
                 }
+                .tint(.white)
         }
     }
 
