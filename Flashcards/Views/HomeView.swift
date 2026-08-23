@@ -512,8 +512,8 @@ struct HomeView: View {
                 .reorderContainer(for: Folder.self, itemID: \.id) { difference in
                     applyFolderReorder(difference)
                 }
-                .onDragSessionUpdated { session in
-                    updateFolderReorderDragSession(session)
+                .onDropSessionUpdated { session in
+                    updateFolderReorderDropSession(session)
                 }
                 .padding(.horizontal)
             }
@@ -572,11 +572,11 @@ struct HomeView: View {
         }
     }
 
-    private func updateFolderReorderDragSession(_ session: DragSession) {
+    private func updateFolderReorderDropSession(_ session: DropSession) {
         switch session.phase {
-        case .initial, .active:
+        case .entering, .active:
             folderReorderIsActive = true
-        case .ending, .ended, .dataTransferCompleted:
+        case .exiting, .ended(_), .dataTransferCompleted:
             folderReorderIsActive = false
             folderReorderHapticPending = false
         }
