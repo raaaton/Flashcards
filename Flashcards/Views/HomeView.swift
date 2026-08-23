@@ -798,7 +798,7 @@ struct HomeView: View {
         guard let deck = deckToDelete else { return }
         modelContext.delete(deck)
         try? modelContext.save()
-        folderToDelete = nil
+        deckToDelete = nil
     }
 
     @ViewBuilder
