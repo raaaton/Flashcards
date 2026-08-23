@@ -25,23 +25,7 @@ private struct DeckCardDraft: Identifiable {
     var isComplete: Bool { !cleanTerm.isEmpty && !cleanDefinition.isEmpty }
 }
 
-private struct AIPreviewSession: Hashable {
-    let id: UUID
-    let cards: [ParsedCard]
-
-    init(cards: [ParsedCard]) {
-        id = UUID()
-        self.cards = cards
-    }
-
-    static func == (lhs: AIPreviewSession, rhs: AIPreviewSession) -> Bool {
-        lhs.id == rhs.id
-    }
-
-    func hash(into hasher: inout Hasher) {
-        hasher.combine(id)
-    }
-}
+private typealias AIPreviewSession = ExternalAIImportSession
 
 private enum NewDeckCreationStep: Hashable {
     case method
