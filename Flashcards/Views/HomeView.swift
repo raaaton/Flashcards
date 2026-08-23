@@ -576,7 +576,7 @@ struct HomeView: View {
         switch session.phase {
         case .entering, .active:
             folderReorderIsActive = true
-        case .exiting, .ended(_), .dataTransferCompleted:
+        default:
             folderReorderIsActive = false
             folderReorderHapticPending = false
         }
