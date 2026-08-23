@@ -100,10 +100,10 @@ enum L10n {
             "es": "Elige tu IA"
         ],
         "ai.provider.subtitle": [
-            "fr": "Flashcards prépare le prompt. Tes documents restent entre toi et le service que tu choisis.",
-            "en": "Flashcards prepares the prompt. Your documents stay between you and the service you choose.",
-            "de": "Flashcards bereitet den Prompt vor. Deine Dokumente bleiben zwischen dir und dem gewählten Dienst.",
-            "es": "Flashcards prepara el prompt. Tus documentos quedan entre tú y el servicio que elijas."
+            "fr": "Kavi prépare le prompt. Tes documents restent entre toi et le service que tu choisis.",
+            "en": "Kavi prepares the prompt. Your documents stay between you and the service you choose.",
+            "de": "Kavi bereitet den Prompt vor. Deine Dokumente bleiben zwischen dir und dem gewählten Dienst.",
+            "es": "Kavi prepara el prompt. Tus documentos quedan entre tú y el servicio que elijas."
         ],
         "ai.chatgpt.free_note": [
             "fr": "L’offre gratuite peut limiter le nombre de documents que tu peux envoyer sur une journée.",
