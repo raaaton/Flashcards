@@ -150,7 +150,7 @@ struct HomeView: View {
                     folderGrid
                 }
             }
-            .navigationTitle("Flashcards")
+            .navigationTitle("Kavi")
             .navigationDestination(isPresented: $showingQuickResume) {
                 if let quickResumeDeck, let quickResumeSnapshot {
                     StudyView(deck: quickResumeDeck, snapshot: quickResumeSnapshot)
