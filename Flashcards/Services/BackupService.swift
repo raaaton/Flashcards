@@ -55,7 +55,7 @@ enum BackupService {
             .components(separatedBy: CharacterSet.alphanumerics.inverted)
             .filter { !$0.isEmpty }
             .joined(separator: "-")
-        let fileName = (safeName.isEmpty ? "Flashcards" : safeName) + ".json"
+        let fileName = (safeName.isEmpty ? "Kavi" : safeName) + ".json"
         let url = FileManager.default.temporaryDirectory.appendingPathComponent(fileName)
         try BackupCodec.encode(envelope).write(to: url, options: .atomic)
         return url
