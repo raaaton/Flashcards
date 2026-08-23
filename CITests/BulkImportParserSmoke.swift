@@ -82,6 +82,14 @@ enum BulkImportParserSmoke {
         precondition(aiCards[0].definition.contains("colon remains"))
         precondition(aiCards[1].recordIndex == 1)
 
+        let firstImportSession = ExternalAIImportSession(cards: aiCards)
+        let repeatedAICards = try! ExternalAIFlashcardParser.parse(aiResponse)
+        let secondImportSession = ExternalAIImportSession(cards: repeatedAICards)
+        precondition(repeatedAICards == aiCards)
+        precondition(firstImportSession.cards == aiCards)
+        precondition(secondImportSession.cards == aiCards)
+        precondition(firstImportSession.id != secondImportSession.id)
+
         let bareArray = """
         [
           {"term":"  Alpha  ","definition":"  First answer  "},
