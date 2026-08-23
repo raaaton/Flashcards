@@ -522,7 +522,10 @@ private struct NewDeckCreationFlow: View {
             promptWasCopied = false
             copyPrompt(playsHaptic: false)
         } label: {
-            HStack(alignment: .top, spacing: 14) {
+            HStack(
+                alignment: provider == .chatGPT ? .top : .center,
+                spacing: 14
+            ) {
                 AIProviderLogoBadge(provider: provider)
 
                 VStack(alignment: .leading, spacing: 5) {
