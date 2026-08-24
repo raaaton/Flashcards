@@ -378,7 +378,9 @@ jobs:
                   test "$APP_VERSION" = "${{ steps.project_version.outputs.version }}"
                   test "$APP_BUILD" = "${{ steps.project_version.outputs.build }}"
 
-                  IPA_NAME="Kavi-dev-${APP_VERSION}.ipa"
+                  RELEASE_TAG="v${APP_VERSION}-build.${GITHUB_RUN_NUMBER}"
+                  RELEASE_TITLE="Kavi ${APP_VERSION} · Build ${GITHUB_RUN_NUMBER}"
+                  IPA_NAME="Kavi-${APP_VERSION}-build.${GITHUB_RUN_NUMBER}.ipa"
 
                   rm -rf Payload "$IPA_NAME"
                   mkdir Payload
@@ -389,60 +391,58 @@ jobs:
                   /usr/bin/unzip -t "$IPA_NAME"
 
                   echo "IPA_NAME=$IPA_NAME" >> "$GITHUB_ENV"
+                  echo "RELEASE_TAG=$RELEASE_TAG" >> "$GITHUB_ENV"
+                  echo "RELEASE_TITLE=$RELEASE_TITLE" >> "$GITHUB_ENV"
                   echo "Created $IPA_NAME"
 
-            - name: Publish latest development IPA privately
+            - name: Publish private GitHub release
               env:
                   GH_TOKEN: ${{ secrets.KAVI_BUILDS_TOKEN }}
                   BUILDS_REPOSITORY: raaaton/Kavi-builds
               run: |
                   set -euo pipefail
 
-                  DEV_TAG="dev"
+                  if [ -z "$GH_TOKEN" ]; then
+                    echo "::error::Missing Actions secret KAVI_BUILDS_TOKEN in raaaton/Kavi."
+                    exit 1
+                  fi
 
-                  test -n "$GH_TOKEN"
                   test -s "$IPA_NAME"
 
-                  if gh release view "$DEV_TAG" \
+                  if gh release view "$RELEASE_TAG" \
                     --repo "$BUILDS_REPOSITORY" >/dev/null 2>&1; then
 
-                    gh release delete "$DEV_TAG" \
+                    gh release delete "$RELEASE_TAG" \
                       --repo "$BUILDS_REPOSITORY" \
                       --cleanup-tag \
                       --yes
                   fi
 
-                  gh release create "$DEV_TAG" \
+                  gh release create "$RELEASE_TAG" \
                     "$IPA_NAME" \
                     --repo "$BUILDS_REPOSITORY" \
                     --target main \
-                    --title "Latest development build" \
-                    --notes "Latest private development build of Kavi. This build may be unstable." \
-                    --prerelease \
-                    --latest=false
-
-                  gh release edit "$DEV_TAG" \
-                    --repo "$BUILDS_REPOSITORY" \
-                    --draft=false \
-                    --prerelease
+                    --title "$RELEASE_TITLE" \
+                    --notes "Built automatically from https://github.com/raaaton/Kavi/commit/${GITHUB_SHA}." \
+                    --latest
 
                   test "$(
-                    gh release view "$DEV_TAG" \
+                    gh release view "$RELEASE_TAG" \
                       --repo "$BUILDS_REPOSITORY" \
-                      --json isDraft \
-                      --jq '.isDraft'
-                  )" = "false"
+                      --json tagName \
+                      --jq '.tagName'
+                  )" = "$RELEASE_TAG"
                   test "$(
-                    gh release view "$DEV_TAG" \
+                    gh release view "$RELEASE_TAG" \
+                      --repo "$BUILDS_REPOSITORY" \
+                      --json isDraft,isPrerelease \
+                      --jq '[.isDraft, .isPrerelease] | all(. == false)'
+                  )" = "true"
+                  test "$(
+                    gh release view "$RELEASE_TAG" \
                       --repo "$BUILDS_REPOSITORY" \
                       --json assets \
-                      --jq '.assets | length'
-                  )" = "1"
-                  test "$(
-                    gh release view "$DEV_TAG" \
-                      --repo "$BUILDS_REPOSITORY" \
-                      --json assets \
-                      --jq '.assets[0].name'
+                      --jq '.assets | if length == 1 then .[0].name else "" end'
                   )" = "$IPA_NAME"
 
             - name: Commit release version

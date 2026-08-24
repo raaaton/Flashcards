@@ -824,8 +824,10 @@ Normal pushes:
 - use the current project version
 - run audits/tests/build
 - package unsigned IPA
-- publish/replace the `dev` prerelease only in the private `raaaton/Kavi-builds` repository
-- name its sole asset `Kavi-dev-MAJOR.MINOR.PATCH.ipa`
+- publish one normal release per push only in the private `raaaton/Kavi-builds` repository
+- tag it `vMAJOR.MINOR.PATCH-build.RUN_NUMBER`
+- name its sole asset `Kavi-MAJOR.MINOR.PATCH-build.RUN_NUMBER.ipa`
+- keep earlier private releases as downloadable build history
 - authenticate cross-repository publication through the `KAVI_BUILDS_TOKEN` Actions secret
 - do not upload the IPA as a public Actions artifact or public release asset
 
@@ -847,7 +849,7 @@ Rules:
 - marketing version = `MAJOR.MINOR.PATCH`
 - build version = `MINOR.PATCH`
 
-Manual release also updates the project version and commits release metadata with `[skip ci]`. It publishes the IPA only to the private `dev` release and creates the official public GitHub release/tag without a binary asset.
+Manual release also updates the project version and commits release metadata with `[skip ci]`. It publishes the IPA only as a normal versioned release in the private builds repository and creates the official public GitHub release/tag without a binary asset.
 
 ### Agents must not manually bump
 
@@ -861,8 +863,8 @@ Unless the task is specifically about release/version workflow behavior, do not 
 
 - The public repository must not expose downloadable IPA files through releases or Actions artifacts.
 - The public README must not contain a development IPA download link.
-- Prebuilt IPA distribution belongs only in the private `raaaton/Kavi-builds` `dev` release.
-- Each private publication deletes/replaces the previous `dev` release so it contains exactly one current versioned IPA.
+- Prebuilt IPA distribution belongs only in normal releases of the private `raaaton/Kavi-builds` repository.
+- Every push to `main` produces a distinct private release and retains earlier releases as build history.
 - Never hard-code a cross-repository token; use the `KAVI_BUILDS_TOKEN` Actions secret.
 
 Public release tags and metadata may remain for version history, but they must not carry IPA assets.

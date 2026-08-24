@@ -905,7 +905,8 @@ The workflow:
 7. builds the Release app for generic iPhone with signing disabled
 8. packages an unsigned IPA
 9. authenticates to the private `raaaton/Kavi-builds` repository with `KAVI_BUILDS_TOKEN`
-10. replaces its `dev` prerelease with the sole asset `Kavi-dev-MAJOR.MINOR.PATCH.ipa`
+10. creates a normal private GitHub release tagged `vMAJOR.MINOR.PATCH-build.RUN_NUMBER`
+11. attaches the versioned asset `Kavi-MAJOR.MINOR.PATCH-build.RUN_NUMBER.ipa`
 
 The public repository receives no IPA release asset and no Actions artifact.
 
@@ -916,7 +917,7 @@ Manual dispatch additionally:
 1. computes the next release version
 2. updates project marketing/build versions in the checked-out workspace
 3. runs a simulator build/launch smoke test on an iPhone 17 Pro simulator
-4. packages and publishes the development IPA only to the private builds repository
+4. packages and publishes a normal versioned release only to the private builds repository
 5. commits release metadata back to `main` with `[skip ci]` when changed
 6. creates the official public GitHub Release/tag without a binary asset
 

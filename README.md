@@ -526,10 +526,10 @@ The workflow performs checks including:
 - Foundation smoke tests
 - Release build for `iphoneos`
 - IPA structure validation
-- Private development IPA packaging
-- Replacement of the private `dev` build with the latest versioned IPA
+- Private IPA packaging
+- A normal, versioned private GitHub release for every push to `main`
 
-No IPA is uploaded as a public Actions artifact or public release asset. Manual release runs additionally handle release versioning and publish public release metadata without attaching the IPA. Release numbering is driven by configurable `RELEASE_MAJOR` and `RELEASE_MINOR` repository variables, while the patch number is derived automatically from existing tags.
+Each private release uses a unique build tag such as `v3.0.0-build.213` and an asset such as `Kavi-3.0.0-build.213.ipa`. No IPA is uploaded as a public Actions artifact or public release asset. Manual release runs additionally handle release versioning and publish public release metadata without attaching the IPA. Release numbering is driven by configurable `RELEASE_MAJOR` and `RELEASE_MINOR` repository variables, while the patch number is derived automatically from existing tags.
 
 For manual release validation, the workflow can also build, install, and launch the app in an iOS simulator.
 
