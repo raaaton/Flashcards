@@ -98,26 +98,34 @@ struct BackupView: View {
                 loadImport(result)
             }
         }
-        .alert("Fusionner cette sauvegarde ?", isPresented: pendingBinding) {
-            Button("Importer") { importPendingEnvelope() }
-                .normalActionColor()
-            Button("Annuler", role: .cancel) { pendingEnvelope = nil }
-                .normalActionColor()
-        } message: {
-            if let pendingEnvelope {
-                Text(L10n.format(
-                    "backup.merge.preview",
-                    Int64(pendingEnvelope.folders.count),
-                    Int64(pendingEnvelope.decks.count),
-                    Int64(pendingEnvelope.decks.reduce(0) { $0 + $1.cards.count })
-                ))
-            }
+        .background {
+            Color.clear
+                .alert("Fusionner cette sauvegarde ?", isPresented: pendingBinding) {
+                    Button("Importer") { importPendingEnvelope() }
+                        .normalActionColor()
+                    Button("Annuler", role: .cancel) { pendingEnvelope = nil }
+                        .normalActionColor()
+                } message: {
+                    if let pendingEnvelope {
+                        Text(L10n.format(
+                            "backup.merge.preview",
+                            Int64(pendingEnvelope.folders.count),
+                            Int64(pendingEnvelope.decks.count),
+                            Int64(pendingEnvelope.decks.reduce(0) { $0 + $1.cards.count })
+                        ))
+                    }
+                }
+                .tint(.white)
         }
-        .alert(statusTitle, isPresented: $showingStatus) {
-            Button("OK", role: .cancel) {}
-                .normalActionColor()
-        } message: {
-            Text(statusMessage)
+        .background {
+            Color.clear
+                .alert(statusTitle, isPresented: $showingStatus) {
+                    Button("OK", role: .cancel) {}
+                        .normalActionColor()
+                } message: {
+                    Text(statusMessage)
+                }
+                .tint(.white)
         }
     }
 

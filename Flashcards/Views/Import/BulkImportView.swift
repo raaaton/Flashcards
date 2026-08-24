@@ -232,54 +232,62 @@ struct BulkImportView: View {
                     selectedFolderID = folders.first?.id
                 }
             }
-            .alert(
-                "Doublons détectés",
-                isPresented: $showingDuplicateChoice
-            ) {
-                if duplicateAnalysis.exactCount > 0 {
-                    Button("Ignorer les doublons exacts") {
-                        importCards(skipExactDuplicates: true)
+            .background {
+                Color.clear
+                    .alert(
+                        "Doublons détectés",
+                        isPresented: $showingDuplicateChoice
+                    ) {
+                        if duplicateAnalysis.exactCount > 0 {
+                            Button("Ignorer les doublons exacts") {
+                                importCards(skipExactDuplicates: true)
+                            }
+                            .normalActionColor()
+                        }
+
+                        Button("Importer quand même") {
+                            importCards(skipExactDuplicates: false)
+                        }
+                        .normalActionColor()
+
+                        Button("Annuler", role: .cancel) {}
+                            .normalActionColor()
+                    } message: {
+                        if duplicateAnalysis.exactCount > 0 && duplicateAnalysis.possibleCount > 0 {
+                            Text(
+                                L10n.format(
+                                    "import.duplicates.both",
+                                    Int64(duplicateAnalysis.exactCount),
+                                    Int64(duplicateAnalysis.possibleCount)
+                                )
+                            )
+                        } else if duplicateAnalysis.possibleCount > 0 {
+                            Text(
+                                L10n.format(
+                                    "import.duplicates.possible",
+                                    Int64(duplicateAnalysis.possibleCount)
+                                )
+                            )
+                        } else {
+                            Text(
+                                L10n.format(
+                                    "import.duplicates.exact",
+                                    Int64(duplicateAnalysis.exactCount)
+                                )
+                            )
+                        }
                     }
-                    .normalActionColor()
-                }
-
-                Button("Importer quand même") {
-                    importCards(skipExactDuplicates: false)
-                }
-                .normalActionColor()
-
-                Button("Annuler", role: .cancel) {}
-                    .normalActionColor()
-            } message: {
-                if duplicateAnalysis.exactCount > 0 && duplicateAnalysis.possibleCount > 0 {
-                    Text(
-                        L10n.format(
-                            "import.duplicates.both",
-                            Int64(duplicateAnalysis.exactCount),
-                            Int64(duplicateAnalysis.possibleCount)
-                        )
-                    )
-                } else if duplicateAnalysis.possibleCount > 0 {
-                    Text(
-                        L10n.format(
-                            "import.duplicates.possible",
-                            Int64(duplicateAnalysis.possibleCount)
-                        )
-                    )
-                } else {
-                    Text(
-                        L10n.format(
-                            "import.duplicates.exact",
-                            Int64(duplicateAnalysis.exactCount)
-                        )
-                    )
-                }
+                    .tint(.white)
             }
-            .alert(alertTitle, isPresented: $showingAlert) {
-                Button("OK", role: .cancel) {}
-                    .normalActionColor()
-            } message: {
-                Text(alertMessage)
+            .background {
+                Color.clear
+                    .alert(alertTitle, isPresented: $showingAlert) {
+                        Button("OK", role: .cancel) {}
+                            .normalActionColor()
+                    } message: {
+                        Text(alertMessage)
+                    }
+                    .tint(.white)
             }
         }
     }

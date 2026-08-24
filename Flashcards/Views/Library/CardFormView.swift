@@ -97,22 +97,26 @@ struct CardFormView: View {
                     }
                 }
             }
-            .alert(L10n.text("Doublons détectés"), isPresented: $showingDuplicateChoice) {
-                Button(
-                    L10n.text(
-                        card == nil
-                            ? "duplicate.action.add_anyway"
-                            : "duplicate.action.save_anyway"
-                    )
-                ) {
-                    persistCard()
-                }
-                .normalActionColor()
+            .background {
+                Color.clear
+                    .alert(L10n.text("Doublons détectés"), isPresented: $showingDuplicateChoice) {
+                        Button(
+                            L10n.text(
+                                card == nil
+                                    ? "duplicate.action.add_anyway"
+                                    : "duplicate.action.save_anyway"
+                            )
+                        ) {
+                            persistCard()
+                        }
+                        .normalActionColor()
 
-                Button("Annuler", role: .cancel) {}
-                    .normalActionColor()
-            } message: {
-                Text(duplicateAlertMessage)
+                        Button("Annuler", role: .cancel) {}
+                            .normalActionColor()
+                    } message: {
+                        Text(duplicateAlertMessage)
+                    }
+                    .tint(.white)
             }
         }
     }

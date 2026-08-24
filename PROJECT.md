@@ -89,6 +89,7 @@ The current v2 visual system is intentionally fixed rather than theme-selectable
 - repeated library icon surfaces are neutral with white symbols
 - large study-mode tiles are neutral rather than solid mint
 - red is reserved for destructive actions and exact-duplicate warnings
+- native alert actions are white, except destructive actions which remain system red
 - orange is used for possible-duplicate warnings
 - folder cards are neutral system-gray surfaces
 - deck accents still resolve to the global mint accent when a semantic accent is requested

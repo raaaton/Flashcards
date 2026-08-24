@@ -170,11 +170,15 @@ private struct NewDeckCreationFlow: View {
                         .deckCreationStepFade()
                 }
         }
-        .alert(alertTitle, isPresented: $showingAlert) {
-            Button("OK", role: .cancel) {}
-                .normalActionColor()
-        } message: {
-            Text(alertMessage)
+        .background {
+            Color.clear
+                .alert(alertTitle, isPresented: $showingAlert) {
+                    Button("OK", role: .cancel) {}
+                        .normalActionColor()
+                } message: {
+                    Text(alertMessage)
+                }
+                .tint(.white)
         }
     }
 
@@ -926,23 +930,27 @@ private struct DeckEditorForm: View {
                 }
             }
         }
-        .alert(L10n.text("Doublons détectés"), isPresented: $showingDuplicateChoice) {
-            if duplicateAnalysis.exactCount > 0 {
-                Button(L10n.text("Ignorer les doublons exacts")) {
-                    save(skipExactDuplicates: true)
+        .background {
+            Color.clear
+                .alert(L10n.text("Doublons détectés"), isPresented: $showingDuplicateChoice) {
+                    if duplicateAnalysis.exactCount > 0 {
+                        Button(L10n.text("Ignorer les doublons exacts")) {
+                            save(skipExactDuplicates: true)
+                        }
+                        .normalActionColor()
+                    }
+
+                    Button(L10n.text("duplicate.action.create_anyway")) {
+                        save(skipExactDuplicates: false)
+                    }
+                    .normalActionColor()
+
+                    Button("Annuler", role: .cancel) {}
+                        .normalActionColor()
+                } message: {
+                    Text(duplicateAlertMessage)
                 }
-                .normalActionColor()
-            }
-
-            Button(L10n.text("duplicate.action.create_anyway")) {
-                save(skipExactDuplicates: false)
-            }
-            .normalActionColor()
-
-            Button("Annuler", role: .cancel) {}
-                .normalActionColor()
-        } message: {
-            Text(duplicateAlertMessage)
+                .tint(.white)
         }
     }
 

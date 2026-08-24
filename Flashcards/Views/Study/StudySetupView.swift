@@ -163,24 +163,31 @@ struct StudySetupView: View {
                 StudyView(deck: deck, snapshot: launchedSession)
             }
         }
-        .alert("Réinitialiser la progression ?", isPresented: $confirmingReset) {
-            Button("Réinitialiser", role: .destructive) { resetProgress() }
-            Button("Annuler", role: .cancel) {}
-                .tint(.gray)
-                .foregroundStyle(.secondary)
-        } message: {
-            Text("Toutes les cartes de ce deck redeviendront non maîtrisées.")
+        .background {
+            Color.clear
+                .alert("Réinitialiser la progression ?", isPresented: $confirmingReset) {
+                    Button("Réinitialiser", role: .destructive) { resetProgress() }
+                    Button("Annuler", role: .cancel) {}
+                        .normalActionColor()
+                } message: {
+                    Text("Toutes les cartes de ce deck redeviendront non maîtrisées.")
+                }
+                .tint(.white)
         }
-        .alert("study.new_series.title", isPresented: $confirmingNewSeries) {
-            Button("Continuer", role: .destructive) {
-                LibraryActions.resetStudyProgress(for: deck, in: modelContext)
-                startNewSession()
-            }
-            .destructiveActionColor()
-            Button("Annuler", role: .cancel) {}
-                .tint(.gray)
-        } message: {
-            Text("study.new_series.message")
+        .background {
+            Color.clear
+                .alert("study.new_series.title", isPresented: $confirmingNewSeries) {
+                    Button("Continuer", role: .destructive) {
+                        LibraryActions.resetStudyProgress(for: deck, in: modelContext)
+                        startNewSession()
+                    }
+                    .destructiveActionColor()
+                    Button("Annuler", role: .cancel) {}
+                        .normalActionColor()
+                } message: {
+                    Text("study.new_series.message")
+                }
+                .tint(.white)
         }
         .onAppear {
             if let resumableSession {

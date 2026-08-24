@@ -51,13 +51,16 @@ struct StudyView: View {
                     .accessibilityHint("La progression déjà enregistrée sera conservée")
             }
         }
-        .alert("Réinitialiser la progression ?", isPresented: $confirmingReset) {
-            Button("Réinitialiser", role: .destructive) { resetProgress() }
-            Button("Annuler", role: .cancel) {}
-                .tint(.gray)
-                .foregroundStyle(.secondary)
-        } message: {
-            Text("Toutes les cartes de ce deck redeviendront non maîtrisées.")
+        .background {
+            Color.clear
+                .alert("Réinitialiser la progression ?", isPresented: $confirmingReset) {
+                    Button("Réinitialiser", role: .destructive) { resetProgress() }
+                    Button("Annuler", role: .cancel) {}
+                        .normalActionColor()
+                } message: {
+                    Text("Toutes les cartes de ce deck redeviendront non maîtrisées.")
+                }
+                .tint(.white)
         }
         .overlay {
             if showCelebration {
