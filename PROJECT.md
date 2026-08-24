@@ -45,7 +45,7 @@ The app should feel like an Apple-native utility rather than a cross-platform pr
 | App target count | 1 |
 | Bundle identifier | `com.raton.flashcards` |
 | CI / build runner | GitHub Actions on `xcode-27` |
-| Release artifact | Unsigned `.ipa` |
+| Release artifact | Unsigned `.ipa`, distributed only through the private builds repository |
 
 `Flashcards.xcodeproj` contains one native application target.
 
@@ -904,8 +904,10 @@ The workflow:
 6. runs Foundation smoke tests
 7. builds the Release app for generic iPhone with signing disabled
 8. packages an unsigned IPA
-9. uploads a workflow artifact
-10. replaces the `dev` prerelease with the latest development IPA
+9. authenticates to the private `raaaton/Kavi-builds` repository with `KAVI_BUILDS_TOKEN`
+10. replaces its `dev` prerelease with the sole asset `Kavi-dev-MAJOR.MINOR.PATCH.ipa`
+
+The public repository receives no IPA release asset and no Actions artifact.
 
 ### Manual `workflow_dispatch`
 
@@ -913,11 +915,10 @@ Manual dispatch additionally:
 
 1. computes the next release version
 2. updates project marketing/build versions in the checked-out workspace
-3. updates the README development IPA link
-4. runs a simulator build/launch smoke test on an iPhone 17 Pro simulator
-5. packages and publishes the development IPA
-6. commits release metadata back to `main` with `[skip ci]` when changed
-7. creates the official GitHub Release/tag
+3. runs a simulator build/launch smoke test on an iPhone 17 Pro simulator
+4. packages and publishes the development IPA only to the private builds repository
+5. commits release metadata back to `main` with `[skip ci]` when changed
+6. creates the official public GitHub Release/tag without a binary asset
 
 ### Version computation
 

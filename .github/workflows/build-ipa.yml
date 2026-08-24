@@ -117,38 +117,6 @@ jobs:
                   print(f"CURRENT_PROJECT_VERSION = {build}")
                   PY
 
-                  python3 <<'PY'
-                  import os
-                  import re
-                  from pathlib import Path
-
-                  version = os.environ["MARKETING_VERSION"]
-                  path = Path("README.md")
-                  text = path.read_text()
-
-                  replacement = (
-                      "<!-- DEV_IPA_START -->\n"
-                      "[⬇️ **Download latest development IPA**]"
-                      f"(https://github.com/raaaton/Flashcards/releases/download/dev/Kavi-v{version}.ipa)\n"
-                      "<!-- DEV_IPA_END -->"
-                  )
-
-                  text, count = re.subn(
-                      r"<!-- DEV_IPA_START -->.*?<!-- DEV_IPA_END -->",
-                      replacement,
-                      text,
-                      flags=re.DOTALL,
-                  )
-
-                  if count != 1:
-                      raise SystemExit(
-                          f"Expected one DEV_IPA block in README, found {count}"
-                      )
-
-                  path.write_text(text)
-                  print(f"README development IPA -> Kavi-v{version}.ipa")
-                  PY
-
             - name: Read project version
               id: project_version
               run: |
@@ -410,7 +378,7 @@ jobs:
                   test "$APP_VERSION" = "${{ steps.project_version.outputs.version }}"
                   test "$APP_BUILD" = "${{ steps.project_version.outputs.build }}"
 
-                  IPA_NAME="Kavi-v${APP_VERSION}.ipa"
+                  IPA_NAME="Kavi-dev-${APP_VERSION}.ipa"
 
                   rm -rf Payload "$IPA_NAME"
                   mkdir Payload
@@ -423,64 +391,59 @@ jobs:
                   echo "IPA_NAME=$IPA_NAME" >> "$GITHUB_ENV"
                   echo "Created $IPA_NAME"
 
-            - name: Set artifact name
-              id: artifact_name
-              run: |
-                  set -euo pipefail
-
-                  if [ "$GITHUB_EVENT_NAME" = "workflow_dispatch" ]; then
-                    echo "name=Kavi-${{ steps.release_version.outputs.tag }}" >> "$GITHUB_OUTPUT"
-                  else
-                    echo "name=Kavi-dev-${GITHUB_RUN_NUMBER}" >> "$GITHUB_OUTPUT"
-                  fi
-
-            - name: Upload IPA artifact
-              uses: actions/upload-artifact@v4
-              with:
-                  name: ${{ steps.artifact_name.outputs.name }}
-                  path: ${{ env.IPA_NAME }}
-                  if-no-files-found: error
-                  retention-days: 14
-
-            - name: Publish latest development IPA
+            - name: Publish latest development IPA privately
               env:
-                  GH_TOKEN: ${{ github.token }}
+                  GH_TOKEN: ${{ secrets.KAVI_BUILDS_TOKEN }}
+                  BUILDS_REPOSITORY: raaaton/Kavi-builds
               run: |
                   set -euo pipefail
 
                   DEV_TAG="dev"
 
+                  test -n "$GH_TOKEN"
                   test -s "$IPA_NAME"
 
                   if gh release view "$DEV_TAG" \
-                    --repo "$GITHUB_REPOSITORY" >/dev/null 2>&1; then
+                    --repo "$BUILDS_REPOSITORY" >/dev/null 2>&1; then
 
                     gh release delete "$DEV_TAG" \
-                      --repo "$GITHUB_REPOSITORY" \
+                      --repo "$BUILDS_REPOSITORY" \
                       --cleanup-tag \
                       --yes
                   fi
 
                   gh release create "$DEV_TAG" \
                     "$IPA_NAME" \
-                    --repo "$GITHUB_REPOSITORY" \
-                    --target "$GITHUB_SHA" \
+                    --repo "$BUILDS_REPOSITORY" \
+                    --target main \
                     --title "Latest development build" \
-                    --notes "Latest automated development build from main. This build may be unstable." \
+                    --notes "Latest private development build of Kavi. This build may be unstable." \
                     --prerelease \
                     --latest=false
 
                   gh release edit "$DEV_TAG" \
-                    --repo "$GITHUB_REPOSITORY" \
+                    --repo "$BUILDS_REPOSITORY" \
                     --draft=false \
                     --prerelease
 
                   test "$(
                     gh release view "$DEV_TAG" \
-                      --repo "$GITHUB_REPOSITORY" \
+                      --repo "$BUILDS_REPOSITORY" \
                       --json isDraft \
                       --jq '.isDraft'
                   )" = "false"
+                  test "$(
+                    gh release view "$DEV_TAG" \
+                      --repo "$BUILDS_REPOSITORY" \
+                      --json assets \
+                      --jq '.assets | length'
+                  )" = "1"
+                  test "$(
+                    gh release view "$DEV_TAG" \
+                      --repo "$BUILDS_REPOSITORY" \
+                      --json assets \
+                      --jq '.assets[0].name'
+                  )" = "$IPA_NAME"
 
             - name: Commit release version
               if: github.event_name == 'workflow_dispatch'
@@ -493,7 +456,7 @@ jobs:
                   git config user.name "github-actions[bot]"
                   git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
 
-                  git add Flashcards.xcodeproj/project.pbxproj README.md
+                  git add Flashcards.xcodeproj/project.pbxproj
                   
                   if ! git diff --cached --quiet; then
                     git commit -m "chore: release ${TAG} [skip ci]"
@@ -505,7 +468,7 @@ jobs:
                   echo "sha=$RELEASE_SHA" >> "$GITHUB_OUTPUT"
                   echo "Release commit: $RELEASE_SHA"
 
-            - name: Publish official GitHub Release
+            - name: Publish official GitHub release metadata
               if: github.event_name == 'workflow_dispatch'
               env:
                   GH_TOKEN: ${{ github.token }}
@@ -514,14 +477,16 @@ jobs:
               run: |
                   set -euo pipefail
 
-                  EXPECTED_IPA="Kavi-${TAG}.ipa"
-
-                  test "$IPA_NAME" = "$EXPECTED_IPA"
-                  test -s "$IPA_NAME"
-
-                  gh release create "$TAG" "$IPA_NAME" \
+                  gh release create "$TAG" \
                     --repo "$GITHUB_REPOSITORY" \
                     --target "$RELEASE_SHA" \
                     --title "$TAG" \
                     --generate-notes \
                     --latest
+
+                  test "$(
+                    gh release view "$TAG" \
+                      --repo "$GITHUB_REPOSITORY" \
+                      --json assets \
+                      --jq '.assets | length'
+                  )" = "0"

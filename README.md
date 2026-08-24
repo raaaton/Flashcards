@@ -1,10 +1,10 @@
 ![header](https://github.com/user-attachments/assets/03162523-f774-46c7-8748-eeb635d48c92)
 
 <p align="center">
-  <img alt="release" src="https://img.shields.io/github/v/release/raaaton/Flashcards" />
-  <img alt="stars" src="https://img.shields.io/github/stars/raaaton/Flashcards" />
-  <img alt="forks" src="https://img.shields.io/github/forks/raaaton/Flashcards" />
-  <img alt="issues" src="https://img.shields.io/github/issues/raaaton/Flashcards" />
+  <img alt="release" src="https://img.shields.io/github/v/release/raaaton/Kavi" />
+  <img alt="stars" src="https://img.shields.io/github/stars/raaaton/Kavi" />
+  <img alt="forks" src="https://img.shields.io/github/forks/raaaton/Kavi" />
+  <img alt="issues" src="https://img.shields.io/github/issues/raaaton/Kavi" />
 </p>
 
 # Kavi
@@ -35,15 +35,9 @@ Kavi 3.0.0 is the current major generation, combining the monochrome-first visua
 
 ---
 
-## Development Build
+## Distribution
 
-<!-- DEV_IPA_START -->
-[⬇️ **Download latest development IPA**](https://github.com/raaaton/Flashcards/releases/download/dev/Kavi-v3.0.0.ipa)
-<!-- DEV_IPA_END -->
-
-> Built automatically from the latest commit on `main`. Development builds may contain unfinished or unstable changes.
-
-Stable releases are available from the repository's [Releases](https://github.com/raaaton/Flashcards/releases) page.
+Prebuilt IPA files are not distributed from this public repository. The source remains available for local builds and review.
 
 ---
 
@@ -499,28 +493,6 @@ The project is organized around app domains and native views rather than externa
 
 ---
 
-## Installation
-
-### Stable releases
-
-Stable unsigned IPA builds are available from the repository's [Releases](https://github.com/raaaton/Flashcards/releases) page.
-
-The current major generation starts at:
-
-```text
-Kavi-v3.0.0.ipa
-```
-
-The IPA must be signed before installation using a compatible iOS sideloading solution.
-
-### Development builds
-
-The latest successful build from `main` is published through the **Development Build** link near the top of this README.
-
-Development builds are intended for testing the newest changes and may be less stable than tagged releases.
-
----
-
 ## Build from source
 
 ### Requirements
@@ -532,8 +504,8 @@ Development builds are intended for testing the newest changes and may be less s
 Clone the repository:
 
 ```bash
-git clone https://github.com/raaaton/Flashcards.git
-cd Flashcards
+git clone https://github.com/raaaton/Kavi.git
+cd Kavi
 ```
 
 Open `Flashcards.xcodeproj`, select the app target, choose an iPhone or simulator, and build normally.
@@ -554,10 +526,10 @@ The workflow performs checks including:
 - Foundation smoke tests
 - Release build for `iphoneos`
 - IPA structure validation
-- Development artifact generation
-- Automatic publication of the latest development IPA
+- Private development IPA packaging
+- Replacement of the private `dev` build with the latest versioned IPA
 
-Manual release runs additionally handle release versioning and release publication. Release numbering is driven by configurable `RELEASE_MAJOR` and `RELEASE_MINOR` repository variables, while the patch number is derived automatically from existing tags.
+No IPA is uploaded as a public Actions artifact or public release asset. Manual release runs additionally handle release versioning and publish public release metadata without attaching the IPA. Release numbering is driven by configurable `RELEASE_MAJOR` and `RELEASE_MINOR` repository variables, while the patch number is derived automatically from existing tags.
 
 For manual release validation, the workflow can also build, install, and launch the app in an iOS simulator.
 

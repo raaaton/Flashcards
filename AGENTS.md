@@ -824,7 +824,10 @@ Normal pushes:
 - use the current project version
 - run audits/tests/build
 - package unsigned IPA
-- publish/replace the `dev` prerelease
+- publish/replace the `dev` prerelease only in the private `raaaton/Kavi-builds` repository
+- name its sole asset `Kavi-dev-MAJOR.MINOR.PATCH.ipa`
+- authenticate cross-repository publication through the `KAVI_BUILDS_TOKEN` Actions secret
+- do not upload the IPA as a public Actions artifact or public release asset
 
 Do not manually bump release metadata for ordinary feature/fix work.
 
@@ -844,7 +847,7 @@ Rules:
 - marketing version = `MAJOR.MINOR.PATCH`
 - build version = `MINOR.PATCH`
 
-Manual release also updates project version + README development IPA link and commits release metadata with `[skip ci]` before publishing the official GitHub release.
+Manual release also updates the project version and commits release metadata with `[skip ci]`. It publishes the IPA only to the private `dev` release and creates the official public GitHub release/tag without a binary asset.
 
 ### Agents must not manually bump
 
@@ -853,21 +856,16 @@ Unless the task is specifically about release/version workflow behavior, do not 
 - `MARKETING_VERSION`
 - `CURRENT_PROJECT_VERSION`
 - release tags
-- README `DEV_IPA_START/END` contents
 
-## 26. README development IPA block
+## 26. Public distribution rules
 
-The workflow rewrites exactly one block:
+- The public repository must not expose downloadable IPA files through releases or Actions artifacts.
+- The public README must not contain a development IPA download link.
+- Prebuilt IPA distribution belongs only in the private `raaaton/Kavi-builds` `dev` release.
+- Each private publication deletes/replaces the previous `dev` release so it contains exactly one current versioned IPA.
+- Never hard-code a cross-repository token; use the `KAVI_BUILDS_TOKEN` Actions secret.
 
-```text
-<!-- DEV_IPA_START -->
-...
-<!-- DEV_IPA_END -->
-```
-
-Do not remove, duplicate, or rename these markers.
-
-Documentation edits can change surrounding text/images, but preserve one valid block.
+Public release tags and metadata may remain for version history, but they must not carry IPA assets.
 
 ## 27. Git behavior
 
