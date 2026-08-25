@@ -526,24 +526,12 @@ private struct NewDeckCreationFlow: View {
             promptWasCopied = false
             copyPrompt(playsHaptic: false)
         } label: {
-            HStack(
-                alignment: provider == .chatGPT ? .top : .center,
-                spacing: 14
-            ) {
+            HStack(spacing: 14) {
                 AIProviderLogoBadge(provider: provider)
 
-                VStack(alignment: .leading, spacing: 5) {
-                    Text(provider.displayName)
-                        .font(.headline)
-                        .foregroundStyle(.primary)
-
-                    if provider == .chatGPT {
-                        Text(L10n.text("ai.chatgpt.free_note"))
-                            .font(.caption)
-                            .foregroundStyle(.secondary)
-                            .multilineTextAlignment(.leading)
-                    }
-                }
+                Text(provider.displayName)
+                    .font(.headline)
+                    .foregroundStyle(.primary)
 
                 Spacer(minLength: 8)
 

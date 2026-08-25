@@ -99,12 +99,6 @@ enum L10n {
             "de": "Kavi bereitet den Prompt vor. Deine Dokumente bleiben zwischen dir und dem gewählten Dienst.",
             "es": "Kavi prepara el prompt. Tus documentos quedan entre tú y el servicio que elijas."
         ],
-        "ai.chatgpt.free_note": [
-            "fr": "L’offre gratuite peut limiter le nombre de documents que tu peux envoyer sur une journée.",
-            "en": "The free plan may limit the number of document uploads available per day.",
-            "de": "Im kostenlosen Tarif kann die Anzahl der Dokument-Uploads pro Tag begrenzt sein.",
-            "es": "El plan gratuito puede limitar la cantidad de documentos que puedes subir al día."
-        ],
         "ai.instructions.title": [
             "fr": "Avant d’ouvrir %@",
             "en": "Before you open %@",
