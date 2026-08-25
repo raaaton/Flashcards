@@ -221,9 +221,9 @@ enum BulkImportParser {
 }
 
 enum ExternalAIProvider: String, CaseIterable, Identifiable, Sendable {
-    case gemini
     case claude
     case chatGPT
+    case gemini
 
     var id: Self { self }
 
@@ -320,7 +320,7 @@ enum ExternalAIFlashcardPromptBuilder {
         - Do not use a colon-delimited plain-text format.
 
         In your final answer, first write exactly this guidance sentence:
-        Your flashcards are ready for \(appName). Copy the JSON block below, then return to \(appName).
+        Your flashcards are ready for \(appName). Wait until the generation is fully complete, then copy the JSON block below and return to \(appName).
 
         Then output one fenced ```json block containing only the JSON object. Do not add commentary after the JSON block.
         """

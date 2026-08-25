@@ -59,7 +59,7 @@ enum BulkImportParserSmoke {
         precondition(internalOnly.exactRecordIndexes == [1])
 
         let aiResponse = """
-        Your flashcards are ready for Kavi. Copy the JSON block below, then return to Kavi.
+        Your flashcards are ready for Kavi. Wait until the generation is fully complete, then copy the JSON block below and return to Kavi.
 
         ```json
         {
@@ -124,7 +124,11 @@ enum BulkImportParserSmoke {
         precondition(prompt.contains("History: 1848"))
         precondition(prompt.contains("Kavi"))
         precondition(prompt.contains("\"flashcards\""))
-        precondition(prompt.contains("Copy the JSON block below"))
+        precondition(
+            prompt.contains(
+                "Wait until the generation is fully complete, then copy the JSON block below"
+            )
+        )
 
         do {
             _ = try ExternalAIFlashcardParser.parse(prompt)
@@ -136,7 +140,7 @@ enum BulkImportParserSmoke {
         }
 
         precondition(
-            ExternalAIProvider.allCases == [.gemini, .claude, .chatGPT]
+            ExternalAIProvider.allCases == [.claude, .chatGPT, .gemini]
         )
 
         let handoffPrompt = "Line 1\nLine 2 & 50% = yes? emoji 🤖 / colon:"

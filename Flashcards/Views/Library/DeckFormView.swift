@@ -533,17 +533,9 @@ private struct NewDeckCreationFlow: View {
                 AIProviderLogoBadge(provider: provider)
 
                 VStack(alignment: .leading, spacing: 5) {
-                    HStack(spacing: 8) {
-                        Text(provider.displayName)
-                            .font(.headline)
-                            .foregroundStyle(.primary)
-
-                        if provider == .chatGPT {
-                            Text(L10n.text("ai.not_recommended"))
-                                .font(.caption2.weight(.semibold))
-                                .foregroundStyle(.secondary)
-                        }
-                    }
+                    Text(provider.displayName)
+                        .font(.headline)
+                        .foregroundStyle(.primary)
 
                     if provider == .chatGPT {
                         Text(L10n.text("ai.chatgpt.free_note"))

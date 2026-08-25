@@ -75,12 +75,6 @@ enum L10n {
             "de": "Empfohlen",
             "es": "Recomendado"
         ],
-        "ai.not_recommended": [
-            "fr": "Non recommandé",
-            "en": "Not recommended",
-            "de": "Nicht empfohlen",
-            "es": "No recomendado"
-        ],
         "ai.continue": [
             "fr": "Continuer",
             "en": "Continue",

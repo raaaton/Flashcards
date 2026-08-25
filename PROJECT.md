@@ -509,8 +509,7 @@ Key rules:
 
 Provider behavior:
 
-- ChatGPT is presented first/recommended
-- Claude and Gemini are also available
+- providers are presented in this order: Claude, ChatGPT, Gemini
 - the generated prompt is copied to `UIPasteboard` before every provider launch
 - provider launch uses stable public HTTPS entry points
 - the feature does not depend on undocumented prompt-prefill parameters
@@ -520,7 +519,7 @@ Provider behavior:
 Return/import behavior:
 
 - the AI prompt requests a strict JSON object with a `flashcards` array
-- the response tells the user to copy the JSON block and return to Flashcards
+- the response tells the user to wait for generation to finish before copying the JSON block and returning to Kavi
 - the parser accepts the expected object, fenced JSON embedded in explanatory text, and a bare top-level array as a defensive fallback
 - terms/definitions are trimmed and every imported entry must have both fields
 - valid output becomes `[ParsedCard]`
