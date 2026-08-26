@@ -672,6 +672,7 @@ Study supports:
 
 - card flip animation
 - swipe/answer judgments
+- editing the current deck card in place without leaving or restarting the session
 - undo
 - progress
 - haptics

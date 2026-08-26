@@ -21,6 +21,7 @@ struct StudyView: View {
     @State private var didCelebrate = false
     @State private var showCelebration = false
     @State private var confirmingReset = false
+    @State private var cardToEdit: Card?
 
     init(deck: Deck, snapshot: ActiveStudySessionSnapshot) {
         self.deck = deck
@@ -49,6 +50,28 @@ struct StudyView: View {
                     .tint(.white)
                     .accessibilityLabel("Retour")
                     .accessibilityHint("La progression déjà enregistrée sera conservée")
+            }
+
+            if !session.isComplete {
+                ToolbarItem(placement: .topBarTrailing) {
+                    Button {
+                        guard !isCommitting, let card = currentDeckCard else { return }
+                        HapticService.play(.selection)
+                        cardToEdit = card
+                    } label: {
+                        Image(systemName: "square.and.pencil")
+                            .neutralIconColor()
+                    }
+                    .buttonStyle(.plain)
+                    .tint(.white)
+                    .disabled(isCommitting || currentDeckCard == nil)
+                    .accessibilityLabel(L10n.text("card.edit.title"))
+                }
+            }
+        }
+        .sheet(item: $cardToEdit) { card in
+            CardFormView(deck: deck, card: card) {
+                refreshCurrentCard(from: card)
             }
         }
         .background {
@@ -472,6 +495,11 @@ struct StudyView: View {
         deck.cards.count { !$0.mastered }
     }
 
+    private var currentDeckCard: Card? {
+        guard let cardID = session.currentItem?.id else { return nil }
+        return deck.cards.first { $0.id == cardID }
+    }
+
     private var summaryMessage: String {
         if remainingDeckCards == 0 {
             return L10n.text("study.all_mastered")
@@ -601,6 +629,20 @@ struct StudyView: View {
             state: session
         )
         deck.activeStudySessionData = try? StudySessionPersistence.encode(snapshot)
+    }
+
+    private func refreshCurrentCard(from card: Card) {
+        guard session.currentItem?.id == card.id,
+              session.updateCard(
+                  id: card.id,
+                  term: card.term,
+                  definition: card.definition
+              ) else { return }
+
+        if deck.activeStudySessionData != nil {
+            persistActiveSession()
+            try? modelContext.save()
+        }
     }
 
     private func undoLastJudgment() {

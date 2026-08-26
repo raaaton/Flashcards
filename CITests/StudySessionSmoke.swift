@@ -18,6 +18,20 @@ enum StudySessionSmoke {
         precondition(session.masteredInSession == 0)
         precondition(session.visibleItems.map(\.id) == Array(sessionIDs.prefix(2)))
 
+        let currentID = session.currentItem!.id
+        precondition(
+            session.updateCard(
+                id: currentID,
+                term: "Updated term",
+                definition: "Updated definition"
+            )
+        )
+        precondition(session.currentItem?.front == "Updated term")
+        precondition(session.currentItem?.back == "Updated definition")
+        precondition(session.currentIndex == 0)
+        precondition(session.cardsSeen == 0)
+        precondition(!session.updateCard(id: UUID(), term: "Missing", definition: "Missing"))
+
         let reviewedID = session.currentItem?.id
         session.answer(.review)
         precondition(!session.isComplete)
@@ -47,6 +61,8 @@ enum StudySessionSmoke {
         precondition(restored.state.remainingCards == 2)
         precondition(restored.state.currentItem?.id == session.currentItem?.id)
         precondition(restored.state.items.map(\.id) == session.items.map(\.id))
+        precondition(restored.state.items.first?.card.term == "Updated term")
+        precondition(restored.state.items.first?.card.definition == "Updated definition")
         precondition(restored.state.correctAnswers == 1)
         precondition(restored.state.reviewAnswers == 1)
         precondition(restored.state.canUndo)

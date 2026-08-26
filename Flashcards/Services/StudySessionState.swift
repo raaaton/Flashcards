@@ -135,6 +135,17 @@ struct StudySessionState: Equatable, Codable, Sendable {
         !isComplete && !(judgments ?? []).isEmpty
     }
 
+    @discardableResult
+    mutating func updateCard(id: UUID, term: String, definition: String) -> Bool {
+        guard let index = items.firstIndex(where: { $0.id == id }) else { return false }
+        let item = items[index]
+        items[index] = StudySessionItem(
+            card: StudyCardSnapshot(id: id, term: term, definition: definition),
+            isReversed: item.isReversed
+        )
+        return true
+    }
+
     var reviewedCardIDs: [UUID] {
         (judgments ?? []).compactMap { judgment in
             judgment.outcome == .review ? judgment.cardID : nil

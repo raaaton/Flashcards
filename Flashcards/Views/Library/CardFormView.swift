@@ -7,13 +7,15 @@ struct CardFormView: View {
 
     let deck: Deck
     let card: Card?
+    let onSaved: (() -> Void)?
     @State private var term: String
     @State private var definition: String
     @State private var showingDuplicateChoice = false
 
-    init(deck: Deck, card: Card? = nil) {
+    init(deck: Deck, card: Card? = nil, onSaved: (() -> Void)? = nil) {
         self.deck = deck
         self.card = card
+        self.onSaved = onSaved
         _term = State(initialValue: card?.term ?? "")
         _definition = State(initialValue: card?.definition ?? "")
     }
@@ -178,6 +180,7 @@ struct CardFormView: View {
         }
         deck.updatedAt = .now
         try? modelContext.save()
+        onSaved?()
         dismiss()
     }
 }
