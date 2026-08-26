@@ -275,7 +275,7 @@ jobs:
                     exit 1
                   fi
                   test "$(grep -c 'isa = PBXNativeTarget;' Flashcards.xcodeproj/project.pbxproj)" -eq 1
-                  test "$(grep -c 'IPHONEOS_DEPLOYMENT_TARGET = 27.0;' Flashcards.xcodeproj/project.pbxproj)" -eq 2
+                  test "$(grep -c 'IPHONEOS_DEPLOYMENT_TARGET = 26.0;' Flashcards.xcodeproj/project.pbxproj)" -eq 2
                   test "$(grep -F -c "CURRENT_PROJECT_VERSION = ${{ steps.project_version.outputs.build }};" Flashcards.xcodeproj/project.pbxproj)" -eq 2
                   test "$(grep -F -c "MARKETING_VERSION = ${{ steps.project_version.outputs.version }};" Flashcards.xcodeproj/project.pbxproj)" -eq 2
                   test "$(grep -c 'INFOPLIST_KEY_CFBundleDisplayName = Kavi;' Flashcards.xcodeproj/project.pbxproj)" -eq 2

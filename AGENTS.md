@@ -14,7 +14,7 @@ Preserve these unless the user explicitly asks to change them:
 2. Swift 6.0.
 3. SwiftUI UI.
 4. SwiftData persistence.
-5. Minimum deployment target iOS 27.0.
+5. Minimum deployment target iOS 26.0.
 6. One native app target.
 7. Bundle identifier `com.raton.flashcards`.
 8. No third-party dependencies.
@@ -741,7 +741,7 @@ CI expects:
 - no package product dependencies
 - no system capabilities in the project
 - one `PBXNativeTarget`
-- iOS 27.0 deployment target in both configurations
+- iOS 26.0 deployment target in both configurations
 - Swift 6.0 in both configurations
 - bundle ID `com.raton.flashcards`
 - no `.entitlements`

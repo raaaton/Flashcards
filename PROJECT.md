@@ -31,7 +31,7 @@ The app should feel like an Apple-native utility rather than a cross-platform pr
 | Area | Current choice |
 | --- | --- |
 | Platform | iOS |
-| Minimum deployment target | iOS 27.0 |
+| Minimum deployment target | iOS 26.0 |
 | Language | Swift 6.0 |
 | UI | SwiftUI |
 | Persistence | SwiftData |
@@ -946,7 +946,7 @@ The workflow contains deliberate text/structure audits to enforce architecture a
 
 - no runtime networking / CloudKit / analytics patterns
 - exactly one native target
-- iOS 27.0 deployment target
+- iOS 26.0 deployment target
 - Swift 6.0
 - no Swift packages
 - no entitlements

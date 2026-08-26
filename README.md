@@ -456,7 +456,7 @@ Kavi intentionally keeps its stack small and native.
 | Persistence | SwiftData |
 | Language | Swift 6 |
 | Platform | iOS |
-| Minimum version | iOS 27.0 |
+| Minimum version | iOS 26.0 |
 | App icon | Layered `.icon` bundle |
 | Dependencies | None |
 | Backend | None |
