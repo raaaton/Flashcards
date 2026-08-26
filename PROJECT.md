@@ -418,8 +418,10 @@ Folder drag/reordering has been a regression-sensitive area on iOS 27 and should
 
 ### Current implementation
 
-Current `HomeView` uses the classic SwiftUI drag/drop path rather than depending on the newer `reorderable` / `reorderContainer` API for the active UI:
+Current `HomeView` selects its reorder implementation by OS availability:
 
+- iOS 27 uses `reorderable`, `reorderContainer`, and `onDragSessionUpdated`
+- iOS 26 uses the classic SwiftUI drag/drop fallback
 - `draggedFolderID` identifies the active folder
 - `onDrag` provides an `NSItemProvider`
 - the drag preview explicitly rebuilds a `FolderTile`

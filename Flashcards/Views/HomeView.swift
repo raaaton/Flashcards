@@ -1,11 +1,38 @@
+import Foundation
 import SwiftData
 import SwiftUI
+import UniformTypeIdentifiers
 
 private struct ResumableDeck: Identifiable {
     let deck: Deck
     let snapshot: ActiveStudySessionSnapshot
 
     var id: UUID { deck.id }
+}
+
+private struct FolderReorderDropDelegate: DropDelegate {
+    let destinationID: UUID
+    @Binding var draggedID: UUID?
+    let move: (UUID, UUID) -> Void
+    let finish: () -> Void
+
+    func dropEntered(info: DropInfo) {
+        guard let sourceID = draggedID,
+              sourceID != destinationID else {
+            return
+        }
+
+        move(sourceID, destinationID)
+    }
+
+    func dropUpdated(info: DropInfo) -> DropProposal? {
+        DropProposal(operation: .move)
+    }
+
+    func performDrop(info: DropInfo) -> Bool {
+        finish()
+        return true
+    }
 }
 
 struct HomeView: View {
@@ -35,6 +62,8 @@ struct HomeView: View {
     @State private var showingQuickResume = false
     @State private var folderOrderIDs: [UUID] = []
     @State private var folderOrderRevision = 0
+    @State private var draggedFolderID: UUID?
+    @State private var folderDragPreviewSize: CGSize = .zero
     @State private var folderReorderVisualSlots: [UUID: Int] = [:]
     @State private var folderReorderHapticsArmed = false
     @State private var folderReorderHapticPending = false
@@ -462,60 +491,11 @@ struct HomeView: View {
                     folderEmptyState
                 }
 
-                LazyVGrid(columns: folderColumns, spacing: folderGridSpacing) {
-                    ForEach(displayedFolders, id: \.id) { folder in
-                        NavigationLink {
-                            FolderDetailView(folder: folder)
-                        } label: {
-                            FolderTile(
-                                name: folder.name,
-                                systemImage: folder.iconName,
-                                deckCount: folder.decks.count
-                            )
-                        }
-                        .buttonStyle(.plain)
-                        .onGeometryChange(for: CGRect.self) { proxy in
-                            proxy.frame(in: .named(Self.folderReorderCoordinateSpace))
-                        } action: { frame in
-                            updateFolderReorderVisualSlot(for: folder.id, frame: frame)
-                        }
-                        .contextMenu {
-                            Button("Modifier", systemImage: "pencil") { folderToEdit = folder }
-                                .normalActionColor()
-                            Button("Dupliquer", systemImage: "plus.square.on.square") {
-                                LibraryActions.duplicateFolder(folder, in: modelContext)
-                            }
-                            .normalActionColor()
-                            Button(role: .destructive) { folderToDelete = folder } label: {
-                                Label("Supprimer", systemImage: "trash")
-                            }
-                            .destructiveActionColor()
-                        }
-                    }
-                    .reorderable()
-
-                    if orphanedDeckCount > 0 {
-                        NavigationLink {
-                            FolderDetailView(folder: nil)
-                        } label: {
-                            FolderTile(
-                                name: L10n.text("folder.unfiled"),
-                                systemImage: "tray.fill",
-                                deckCount: orphanedDeckCount
-                            )
-                        }
-                        .buttonStyle(.plain)
-                        .transition(.scale(scale: 0.92).combined(with: .opacity))
-                    }
+                if #available(iOS 27.0, *) {
+                    nativeFolderGrid
+                } else {
+                    classicFolderGrid
                 }
-                .coordinateSpace(name: Self.folderReorderCoordinateSpace)
-                .reorderContainer(for: Folder.self, itemID: \.id) { difference in
-                    applyFolderReorder(difference)
-                }
-                .onDragSessionUpdated { session in
-                    updateFolderReorderDragSession(session)
-                }
-                .padding(.horizontal)
             }
             .padding(.top, 8)
             .padding(.bottom, 108)
@@ -530,6 +510,139 @@ struct HomeView: View {
         .concentricFloatingAction {
             addMenu
         }
+    }
+
+    @available(iOS 27.0, *)
+    private var nativeFolderGrid: some View {
+        LazyVGrid(columns: folderColumns, spacing: folderGridSpacing) {
+            ForEach(displayedFolders, id: \.id) { folder in
+                NavigationLink {
+                    FolderDetailView(folder: folder)
+                } label: {
+                    FolderTile(
+                        name: folder.name,
+                        systemImage: folder.iconName,
+                        deckCount: folder.decks.count
+                    )
+                }
+                .buttonStyle(.plain)
+                .onGeometryChange(for: CGRect.self) { proxy in
+                    proxy.frame(in: .named(Self.folderReorderCoordinateSpace))
+                } action: { frame in
+                    updateFolderReorderVisualSlot(for: folder.id, frame: frame)
+                }
+                .contextMenu { folderContextMenu(for: folder) }
+            }
+            .reorderable()
+
+            unfiledFolderTile
+        }
+        .coordinateSpace(name: Self.folderReorderCoordinateSpace)
+        .reorderContainer(for: Folder.self, itemID: \.id) { difference in
+            applyFolderReorder(difference)
+        }
+        .onDragSessionUpdated { session in
+            updateFolderReorderDragSession(session)
+        }
+        .padding(.horizontal)
+    }
+
+    private var classicFolderGrid: some View {
+        LazyVGrid(columns: folderColumns, spacing: folderGridSpacing) {
+            ForEach(displayedFolders, id: \.id) { folder in
+                ZStack {
+                    FolderTile(
+                        name: folder.name,
+                        systemImage: folder.iconName,
+                        deckCount: folder.decks.count
+                    )
+                    .allowsHitTesting(false)
+                    .accessibilityHidden(true)
+
+                    NavigationLink {
+                        FolderDetailView(folder: folder)
+                    } label: {
+                        FolderTile(
+                            name: folder.name,
+                            systemImage: folder.iconName,
+                            deckCount: folder.decks.count
+                        )
+                    }
+                    .buttonStyle(.plain)
+                    .onGeometryChange(for: CGRect.self) { proxy in
+                        proxy.frame(in: .named(Self.folderReorderCoordinateSpace))
+                    } action: { frame in
+                        folderDragPreviewSize = frame.size
+                        updateFolderReorderVisualSlot(for: folder.id, frame: frame)
+                    }
+                    .onDrag {
+                        draggedFolderID = folder.id
+                        folderReorderIsActive = true
+                        return NSItemProvider(object: folder.id.uuidString as NSString)
+                    } preview: {
+                        FolderTile(
+                            name: folder.name,
+                            systemImage: folder.iconName,
+                            deckCount: folder.decks.count
+                        )
+                        .frame(
+                            width: folderDragPreviewSize.width > 0
+                                ? folderDragPreviewSize.width
+                                : 170
+                        )
+                        .contentShape(
+                            .dragPreview,
+                            .rect(cornerRadius: 22, style: .continuous)
+                        )
+                    }
+                    .onDrop(
+                        of: [UTType.text],
+                        delegate: FolderReorderDropDelegate(
+                            destinationID: folder.id,
+                            draggedID: $draggedFolderID,
+                            move: moveFolderDuringCustomDrag,
+                            finish: finishFolderCustomDrag
+                        )
+                    )
+                    .contextMenu { folderContextMenu(for: folder) }
+                }
+            }
+
+            unfiledFolderTile
+        }
+        .coordinateSpace(name: Self.folderReorderCoordinateSpace)
+        .padding(.horizontal)
+    }
+
+    @ViewBuilder
+    private var unfiledFolderTile: some View {
+        if orphanedDeckCount > 0 {
+            NavigationLink {
+                FolderDetailView(folder: nil)
+            } label: {
+                FolderTile(
+                    name: L10n.text("folder.unfiled"),
+                    systemImage: "tray.fill",
+                    deckCount: orphanedDeckCount
+                )
+            }
+            .buttonStyle(.plain)
+            .transition(.scale(scale: 0.92).combined(with: .opacity))
+        }
+    }
+
+    @ViewBuilder
+    private func folderContextMenu(for folder: Folder) -> some View {
+        Button("Modifier", systemImage: "pencil") { folderToEdit = folder }
+            .normalActionColor()
+        Button("Dupliquer", systemImage: "plus.square.on.square") {
+            LibraryActions.duplicateFolder(folder, in: modelContext)
+        }
+        .normalActionColor()
+        Button(role: .destructive) { folderToDelete = folder } label: {
+            Label("Supprimer", systemImage: "trash")
+        }
+        .destructiveActionColor()
     }
 
     private var folderEmptyState: some View {
@@ -556,10 +669,54 @@ struct HomeView: View {
         folderOrderIDs = persistedIDs
     }
 
+    private func moveFolderDuringCustomDrag(_ sourceID: UUID, _ destinationID: UUID) {
+        guard sourceID != destinationID else { return }
+
+        var reorderedIDs = folderOrderIDs.isEmpty
+            ? persistedFolderOrderIDs
+            : folderOrderIDs
+        let liveFolderIDs = Set(folders.map(\.id))
+        reorderedIDs = reorderedIDs.filter { liveFolderIDs.contains($0) }
+
+        for id in persistedFolderOrderIDs where !reorderedIDs.contains(id) {
+            reorderedIDs.append(id)
+        }
+
+        guard let sourceIndex = reorderedIDs.firstIndex(of: sourceID),
+              let destinationIndex = reorderedIDs.firstIndex(of: destinationID) else {
+            return
+        }
+
+        let destinationOffset = destinationIndex > sourceIndex
+            ? destinationIndex + 1
+            : destinationIndex
+
+        withAnimation(.spring(duration: 0.24)) {
+            reorderedIDs.move(
+                fromOffsets: IndexSet(integer: sourceIndex),
+                toOffset: destinationOffset
+            )
+            folderOrderIDs = reorderedIDs
+        }
+    }
+
+    private func finishFolderCustomDrag() {
+        guard draggedFolderID != nil else { return }
+
+        draggedFolderID = nil
+        folderReorderIsActive = false
+        folderReorderHapticPending = false
+        let finalOrder = folderOrderIDs.isEmpty
+            ? persistedFolderOrderIDs
+            : folderOrderIDs
+        persistFolderOrder(finalOrder)
+    }
+
     private func resetFolderReorderHapticState() {
         folderReorderHapticRevision += 1
         let revision = folderReorderHapticRevision
 
+        draggedFolderID = nil
         folderReorderIsActive = false
         folderReorderHapticsArmed = false
         folderReorderHapticPending = false
@@ -572,6 +729,7 @@ struct HomeView: View {
         }
     }
 
+    @available(iOS 27.0, *)
     private func updateFolderReorderDragSession(_ session: DragSession) {
         switch session.phase {
         case .initial, .active:
@@ -622,6 +780,7 @@ struct HomeView: View {
         }
     }
 
+    @available(iOS 27.0, *)
     private func applyFolderReorder<CollectionID: Hashable & Sendable>(
         _ difference: ReorderDifference<UUID, CollectionID>
     ) {

@@ -213,10 +213,11 @@ This is currently one of the most regression-sensitive parts of the app.
 
 ### Current strategy
 
-`HomeView` currently uses classic SwiftUI drag/drop rather than relying on the newer `reorderable` / `reorderContainer` interaction as the active UI path.
+`HomeView` uses the native `reorderable` / `reorderContainer` interaction on iOS 27 and a classic SwiftUI drag/drop fallback on iOS 26.
 
 Current moving pieces include:
 
+- availability-gated `reorderable`, `reorderContainer`, and `onDragSessionUpdated` on iOS 27
 - `draggedFolderID`
 - explicit `onDrag`
 - explicit `FolderTile` drag preview
@@ -260,7 +261,7 @@ Therefore:
 
 - do not assume every drag regression is caused by the latest commit
 - do not repeatedly stack `contentShape`, `compositingGroup`, or opacity hacks without verifying which layer actually owns the preview
-- do not reintroduce `.reorderable()` / `.reorderContainer()` casually
+- do not make the iOS 27 reorder APIs unconditional while iOS 26 remains supported
 - do not hide the source tile unless there is a guaranteed independently rendered floating representation
 - validate the actual IPA/device interaction when possible
 - CI compilation cannot prove drag-preview correctness
