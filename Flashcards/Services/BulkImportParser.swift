@@ -300,14 +300,38 @@ enum ExternalAIFlashcardPromptBuilder {
         return """
         You are preparing flashcards for \(appName), an iOS study app. The deck is named "\(cleanDeckName)".
 
-        The user will attach notes, images, slides, PDFs, or other study documents with this message. Use those attachments as the source of truth. Create concise, accurate, useful flashcards for revision. Cover the important ideas without padding the set with redundant or trivial items. Keep each term focused and each definition short enough to review quickly. Preserve the language of the source material unless the user clearly asks otherwise.
+        The user will attach notes, images, slides, PDFs, or other study documents with this message. Use those attachments as the source of truth. Preserve the language of the source material unless the user clearly asks otherwise.
+
+        First, inspect the entire source for explicit term-definition pairs and explicit date-event pairs.
+
+        Explicit-pair rules:
+        - If the source explicitly defines a term or concept, create a flashcard for EVERY distinct explicit definition found.
+          - "term" must be the term or concept being defined.
+          - "definition" must faithfully contain the definition given by the source.
+        - If the source explicitly associates a date or year with an event, create a flashcard for EVERY distinct explicit date-event pair found.
+          - "term" must be the date or year as presented in the source.
+          - "definition" must be the event associated with that date.
+        - This applies to definitions and dates found anywhere in the source, including glossaries, vocabulary lists, timelines, tables, callouts, slides, and normal prose.
+        - Do not omit an explicit definition or date-event pair because it seems minor, obvious, or less important.
+        - Only remove exact duplicate pairs when the same information is repeated unchanged.
+        - If multiple cards have the same term but different definitions, keep all of them. Do not merge or discard them as duplicates.
+        - Do not invent definitions or date-event relationships that are not clearly supported by the source.
+        - Every explicit term-definition pair MUST be represented as a direct term → definition card: use the term itself as "term" and its corresponding definition as "definition". Never rewrite these cards as questions.
+        - Every explicit date-event pair MUST be represented as a direct date → event card: use the date or year itself as "term" and its associated event as "definition". Never rewrite these cards as questions.
+
+        Then handle the rest of the material:
+        - If the source contains useful study material beyond those explicit definitions and dates, also create concise flashcards covering its important ideas, relationships, processes, facts, and concepts.
+        - Keep these additional cards focused and useful for revision without padding the set with redundant or trivial items.
+        - Avoid creating an additional reworded card when an explicit term-definition or date-event card already covers the same information.
+
+        If the source contains no explicit definitions and no explicit date-event pairs, simply create concise, accurate, useful flashcards covering the important ideas as usual.
 
         Return machine-readable JSON using exactly this shape (the angle-bracket values below describe the schema; replace them with actual JSON strings):
         {
           "flashcards": [
             {
-              "term": <concise question, concept, or cue>,
-              "definition": <concise answer or explanation>
+              "term": <concise question, concept, term, or date>,
+              "definition": <concise answer, definition, explanation, or event>
             }
           ]
         }
@@ -318,6 +342,7 @@ enum ExternalAIFlashcardPromptBuilder {
         - Do not add extra JSON keys.
         - Keep line breaks and punctuation inside JSON strings properly escaped.
         - Do not use a colon-delimited plain-text format.
+        - Before finishing, verify that every explicit term-definition pair and every explicit date-event pair from the source has been included.
 
         In your final answer, first write exactly this guidance sentence:
         Your flashcards are ready for \(appName). Wait until the generation is fully complete, then copy the JSON block below and return to \(appName).
