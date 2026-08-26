@@ -824,7 +824,8 @@ Normal pushes:
 
 - use the current project version
 - run audits/tests/build
-- package unsigned IPA
+- build without an Apple identity, then apply and verify an identity-free ad hoc signature before packaging
+- package an unprovisioned IPA whose app bundle contains `_CodeSignature/CodeResources` and a Mach-O `LC_CODE_SIGNATURE` for reliable downstream re-signing
 - publish one normal release per push only in the private `raaaton/Kavi-builds` repository
 - tag it `vMAJOR.MINOR.PATCH-build.RUN_NUMBER`
 - name its sole asset `Kavi-MAJOR.MINOR.PATCH-build.RUN_NUMBER.ipa`

@@ -45,7 +45,7 @@ The app should feel like an Apple-native utility rather than a cross-platform pr
 | App target count | 1 |
 | Bundle identifier | `com.raton.flashcards` |
 | CI / build runner | GitHub Actions on `xcode-27` |
-| Release artifact | Unsigned `.ipa`, distributed only through the private builds repository |
+| Release artifact | Ad hoc-signed, unprovisioned `.ipa`, distributed only through the private builds repository |
 
 `Flashcards.xcodeproj` contains one native application target.
 
@@ -905,12 +905,15 @@ The workflow:
 5. runs offline/single-target audits
 6. runs Foundation smoke tests
 7. builds the Release app for generic iPhone with signing disabled
-8. packages an unsigned IPA
-9. authenticates to the private `raaaton/Kavi-builds` repository with `KAVI_BUILDS_TOKEN`
-10. creates a normal private GitHub release tagged `vMAJOR.MINOR.PATCH-build.RUN_NUMBER`
-11. attaches the versioned asset `Kavi-MAJOR.MINOR.PATCH-build.RUN_NUMBER.ipa`
+8. applies and verifies an identity-free ad hoc signature so the bundle has a standard Mach-O signature slot and sealed resources before a sideloading tool re-signs it
+9. packages the IPA and revalidates its bundle, executable, `Info.plist`, signature envelope, and archive layout after extraction
+10. authenticates to the private `raaaton/Kavi-builds` repository with `KAVI_BUILDS_TOKEN`
+11. creates a normal private GitHub release tagged `vMAJOR.MINOR.PATCH-build.RUN_NUMBER`
+12. attaches the versioned asset `Kavi-MAJOR.MINOR.PATCH-build.RUN_NUMBER.ipa`
 
 The public repository receives no IPA release asset and no Actions artifact.
+
+The ad hoc signature contains no Apple identity or provisioning profile and is not the final device authorization. SideStore or another sideloading tool must replace it with the user's development signature and profile before installation.
 
 ### Manual `workflow_dispatch`
 

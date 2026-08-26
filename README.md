@@ -525,6 +525,7 @@ The workflow performs checks including:
 - Localization validation
 - Foundation smoke tests
 - Release build for `iphoneos`
+- Identity-free ad hoc signing for downstream sideload re-signing
 - IPA structure validation
 - Private IPA packaging
 - A normal, versioned private GitHub release for every push to `main`

@@ -339,6 +339,40 @@ jobs:
                     CODE_SIGNING_REQUIRED=NO \
                     build
 
+            - name: Prepare sideloadable app bundle
+              run: |
+                  set -euxo pipefail
+
+                  APP_PATH="$(find "$RUNNER_TEMP/DerivedData/Build/Products/Release-iphoneos" \
+                    -maxdepth 1 -type d -name '*.app' -print -quit)"
+
+                  test -n "$APP_PATH"
+                  test -d "$APP_PATH"
+
+                  INFO_PLIST="$APP_PATH/Info.plist"
+                  EXECUTABLE_NAME="$(plutil -extract CFBundleExecutable raw "$INFO_PLIST")"
+                  EXECUTABLE_PATH="$APP_PATH/$EXECUTABLE_NAME"
+
+                  test "$(plutil -extract CFBundlePackageType raw "$INFO_PLIST")" = "APPL"
+                  test "$(plutil -extract CFBundleIdentifier raw "$INFO_PLIST")" = "com.raton.flashcards"
+                  test "$(plutil -extract MinimumOSVersion raw "$INFO_PLIST")" = "26.0"
+                  test "$(plutil -extract CFBundleSupportedPlatforms.0 raw "$INFO_PLIST")" = "iPhoneOS"
+                  test -x "$EXECUTABLE_PATH"
+                  test -z "$(find "$APP_PATH" -maxdepth 1 \( -name 'PlugIns' -o -name 'Watch' \) -print -quit)"
+                  test ! -e "$APP_PATH/embedded.mobileprovision"
+
+                  /usr/bin/codesign \
+                    --force \
+                    --sign - \
+                    --timestamp=none \
+                    "$APP_PATH"
+
+                  /usr/bin/codesign --verify --deep --strict --verbose=2 "$APP_PATH"
+                  /usr/bin/codesign --display --verbose=4 "$APP_PATH"
+                  /usr/bin/codesign --display --verbose=4 "$APP_PATH" 2>&1 | grep -q 'Signature=adhoc'
+                  test -s "$APP_PATH/_CodeSignature/CodeResources"
+                  /usr/bin/otool -l "$EXECUTABLE_PATH" | grep -q 'LC_CODE_SIGNATURE'
+
             - name: Simulator launch smoke test
               if: github.event_name == 'workflow_dispatch'
               run: |
@@ -389,6 +423,27 @@ jobs:
 
                   test -s "$IPA_NAME"
                   /usr/bin/unzip -t "$IPA_NAME"
+
+                  PACKAGED_IPA="$RUNNER_TEMP/PackagedIPA"
+                  rm -rf "$PACKAGED_IPA"
+                  mkdir "$PACKAGED_IPA"
+                  /usr/bin/unzip -q "$IPA_NAME" -d "$PACKAGED_IPA"
+
+                  PACKAGED_APP="$PACKAGED_IPA/Payload/$(basename "$APP_PATH")"
+                  PACKAGED_INFO="$PACKAGED_APP/Info.plist"
+                  PACKAGED_EXECUTABLE_NAME="$(plutil -extract CFBundleExecutable raw "$PACKAGED_INFO")"
+                  PACKAGED_EXECUTABLE="$PACKAGED_APP/$PACKAGED_EXECUTABLE_NAME"
+
+                  test "$(find "$PACKAGED_IPA/Payload" -maxdepth 1 -type d -name '*.app' | wc -l | tr -d ' ')" = "1"
+                  test "$(plutil -extract CFBundlePackageType raw "$PACKAGED_INFO")" = "APPL"
+                  test "$(plutil -extract CFBundleIdentifier raw "$PACKAGED_INFO")" = "com.raton.flashcards"
+                  test "$(plutil -extract MinimumOSVersion raw "$PACKAGED_INFO")" = "26.0"
+                  test -x "$PACKAGED_EXECUTABLE"
+                  test ! -e "$PACKAGED_APP/embedded.mobileprovision"
+                  /usr/bin/codesign --verify --deep --strict --verbose=2 "$PACKAGED_APP"
+                  /usr/bin/codesign --display --verbose=4 "$PACKAGED_APP" 2>&1 | grep -q 'Signature=adhoc'
+                  test -s "$PACKAGED_APP/_CodeSignature/CodeResources"
+                  /usr/bin/otool -l "$PACKAGED_EXECUTABLE" | grep -q 'LC_CODE_SIGNATURE'
 
                   echo "IPA_NAME=$IPA_NAME" >> "$GITHUB_ENV"
                   echo "RELEASE_TAG=$RELEASE_TAG" >> "$GITHUB_ENV"
