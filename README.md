@@ -19,17 +19,17 @@ Kavi 3.0.0 is the current major generation, combining the monochrome-first visua
   <img
     width="31%"
     alt="Home showing Resume, Recent and the redesigned Folder tiles"
-    src="https://github.com/user-attachments/assets/50673124-6e5a-4d25-88d1-8178e9321f48"
+    src="https://github.com/user-attachments/assets/112e598b-878e-4513-933e-8be03c065dca"
   />
   <img
     width="31%"
     alt="Deck study hub showing progress, Flashcards and Test modes, and the deck’s card list"
-    src="https://github.com/user-attachments/assets/3faaf9ef-5889-48b9-b589-7a5df680a362"
+    src="https://github.com/user-attachments/assets/32fe9797-3c75-4d96-b0e3-71edef84078e"
   />
   <img
     width="31%"
     alt="Flashcards study screen with a card semi-flipped to its &quot;I knew it&quot; edge"
-    src="https://github.com/user-attachments/assets/8001a25d-6276-427c-9ffd-edb6967bfb4b"
+    src="https://github.com/user-attachments/assets/1e7339ac-afb6-4523-9707-c854f1f60143"
   />
 </p>
 
@@ -64,12 +64,12 @@ The current major generation is a major visual and interaction refresh rather th
   <img
     width="48%"
     alt="Home showing Resume, Recent and the redesigned Folder tiles"
-    src="https://github.com/user-attachments/assets/50673124-6e5a-4d25-88d1-8178e9321f48"
+    src="https://github.com/user-attachments/assets/112e598b-878e-4513-933e-8be03c065dca"
   />
   <img
     width="48%"
     alt="A folder page showing the new compact full-width Deck rows"
-    src="https://github.com/user-attachments/assets/5ca1e592-4faf-4bf0-9f8b-7b1e617ee182"
+    src="https://github.com/user-attachments/assets/afbe79f6-0cd8-4edb-8d9b-ceae0b5d1a76"
   />
 </p>
 
@@ -164,12 +164,12 @@ When editing a card, the card itself is excluded from duplicate comparison.
   <img
     width="48%"
     alt="New Deck screen with an Exact duplicate warning visible"
-    src="https://github.com/user-attachments/assets/52f1f070-a2b3-4cc2-be08-9177993df44a"
+    src="https://github.com/user-attachments/assets/3d77721f-b990-438c-844a-e77761390335"
   />
   <img
     width="48%"
     alt="New Deck screen with an Exact duplicate popup warning visible"
-    src="https://github.com/user-attachments/assets/fa3531a6-dc5e-4779-846d-df9c759b0770"
+    src="https://github.com/user-attachments/assets/4af08ef7-e16d-4939-a382-2cb2a853ba16"
   />
 </p>
 
@@ -214,7 +214,7 @@ The goal is to keep everything related to a deck immediately accessible without 
   <img
     width="40%"
     alt="Deck study hub showing progress, Flashcards and Test modes, and the deck’s card list"
-    src="https://github.com/user-attachments/assets/3faaf9ef-5889-48b9-b589-7a5df680a362"
+    src="https://github.com/user-attachments/assets/32fe9797-3c75-4d96-b0e3-71edef84078e"
   />
 </p>
 
@@ -245,17 +245,17 @@ Study preferences are remembered locally so repeated sessions do not need to be 
   <img
     width="31%"
     alt="Flashcards study hub"
-    src="https://github.com/user-attachments/assets/3e08646b-ee61-4d00-9218-14ab47e353a5"
+    src="https://github.com/user-attachments/assets/931c3016-fa78-4354-b37f-17010db35b89"
   />
   <img
     width="31%"
     alt="Flashcards study screen with a card flipped to its answer side"
-    src="https://github.com/user-attachments/assets/c82d9364-5548-4e2c-a66e-3cea78f6e2c3"
+    src="https://github.com/user-attachments/assets/cfcdfde6-cffd-4b2f-96e4-e594cc1a1ee5"
   />
   <img
     width="31%"
     alt="Flashcards study screen with a card semi-flipped to its &quot;I knew it&quot; edge"
-    src="https://github.com/user-attachments/assets/8001a25d-6276-427c-9ffd-edb6967bfb4b"
+    src="https://github.com/user-attachments/assets/a14d93f6-b428-4576-8f80-80764f30a357"
   />
 </p>
 
@@ -279,22 +279,22 @@ Written answers can be submitted directly from the keyboard, while every test ru
   <img
     width="23%"
     alt="Test study hub"
-    src="https://github.com/user-attachments/assets/cc8c000d-f808-437a-9cf6-8e807ee9c3e4"
+    src="https://github.com/user-attachments/assets/057499d6-e397-46fa-8752-66ad4aa99baf"
   />
   <img
     width="23%"
     alt="Test study screen with a Multiple Choice question answered correctly"
-    src="https://github.com/user-attachments/assets/8f379e52-f330-4122-9c35-b859149c3110"
+    src="https://github.com/user-attachments/assets/ec015a26-6d64-4639-ae9c-306b73c5027f"
   />
   <img
     width="23%"
     alt="Test study screen with a True or False question answered correctly"
-    src="https://github.com/user-attachments/assets/eb8893e8-9795-4151-bdde-4e040180251c"
+    src="https://github.com/user-attachments/assets/52c24cee-aede-4708-a089-f0b397290ba1"
   />
   <img
     width="23%"
     alt="Test study screen with a Type question answered incorrectly"
-    src="https://github.com/user-attachments/assets/32207636-14fc-4453-ab06-321d822c069b"
+    src="https://github.com/user-attachments/assets/e27e74e7-fe1a-4653-b7ff-f099e55bf660"
   />
 </p>
 
