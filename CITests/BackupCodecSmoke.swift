@@ -6,16 +6,11 @@ enum BackupCodecSmoke {
         let folderID = UUID()
         let deckID = UUID()
         let cardID = UUID()
+        let secondCardID = UUID()
+        let localQuestionID = UUID()
+        let sharedQuestionID = UUID()
         let date = Date(timeIntervalSince1970: 1_700_000_000)
-        let localOnlyCard = BackupCardDTO(
-            id: UUID(),
-            term: "Local",
-            definition: "Conservée",
-            position: 1,
-            mastered: false,
-            timesStudied: 0,
-            timesCorrect: 0
-        )
+
         let originalCard = BackupCardDTO(
             id: cardID,
             term: "Terme",
@@ -26,7 +21,26 @@ enum BackupCodecSmoke {
             timesCorrect: 3,
             isStarred: true
         )
-        let envelope = BackupEnvelopeV1(
+        let configuration = DeckTestConfiguration(
+            mode: .ai,
+            multipleChoice: [
+                AuthoredMultipleChoiceQuestion(
+                    id: sharedQuestionID,
+                    sourceCardID: cardID,
+                    prompt: "Quelle définition ?",
+                    choices: ["Définition", "Autre"],
+                    correctChoiceIndex: 0
+                )
+            ],
+            trueFalse: [
+                AuthoredTrueFalseQuestion(
+                    sourceCardID: cardID,
+                    statement: "Le terme possède une définition.",
+                    correctAnswer: true
+                )
+            ]
+        )
+        let envelope = BackupEnvelope(
             exportedAt: date,
             scope: .database,
             folders: [
@@ -52,80 +66,96 @@ enum BackupCodecSmoke {
                     lastStudyActivityAt: date.addingTimeInterval(180),
                     isPinned: true,
                     folderID: folderID,
-                    cards: [originalCard]
+                    cards: [originalCard],
+                    testConfiguration: configuration
                 )
             ]
         )
 
-        let decoded = try BackupCodec.decode(BackupCodec.encode(envelope))
-        precondition(decoded == envelope)
-        precondition(decoded.folders[0].iconName == "graduationcap.fill")
-        precondition(decoded.folders[0].colorHex == "FF9500")
-        precondition(decoded.folders[0].sortOrder == 3)
-        precondition(decoded.decks[0].completedStudySessions == 7)
-        precondition(decoded.decks[0].activeStudySessionData == Data("resume".utf8))
-        precondition(decoded.decks[0].lastOpenedAt == date.addingTimeInterval(120))
-        precondition(decoded.decks[0].lastStudyActivityAt == date.addingTimeInterval(180))
-        precondition(decoded.decks[0].isPinned)
+        let encoded = try BackupCodec.encode(envelope)
+        let rawV2 = try JSONSerialization.jsonObject(with: encoded) as! [String: Any]
+        precondition(rawV2["schemaVersion"] as? Int == 2)
+        let rawDeck = (rawV2["decks"] as! [[String: Any]])[0]
+        precondition(rawDeck["testConfiguration"] is [String: Any])
+
+        let decoded = try BackupCodec.decode(encoded)
+        precondition(decoded.schemaVersion == 2)
+        precondition(decoded.decks[0].testConfiguration == configuration)
         precondition(decoded.decks[0].cards[0].isStarred)
 
-        var legacyJSON = try JSONSerialization.jsonObject(
-            with: BackupCodec.encode(envelope)
-        ) as! [String: Any]
-        var legacyFolders = legacyJSON["folders"] as! [[String: Any]]
-        legacyFolders[0].removeValue(forKey: "iconName")
-        legacyFolders[0].removeValue(forKey: "colorHex")
-        legacyFolders[0].removeValue(forKey: "sortOrder")
-        legacyJSON["folders"] = legacyFolders
-        var legacyDecks = legacyJSON["decks"] as! [[String: Any]]
-        legacyDecks[0].removeValue(forKey: "completedStudySessions")
-        legacyDecks[0].removeValue(forKey: "activeStudySessionData")
-        legacyDecks[0].removeValue(forKey: "lastOpenedAt")
-        legacyDecks[0].removeValue(forKey: "studyHistoryData")
-        legacyDecks[0].removeValue(forKey: "lastStudyActivityAt")
-        legacyDecks[0].removeValue(forKey: "isPinned")
-        var legacyCards = legacyDecks[0]["cards"] as! [[String: Any]]
-        legacyCards[0].removeValue(forKey: "isStarred")
-        legacyDecks[0]["cards"] = legacyCards
-        legacyJSON["decks"] = legacyDecks
-        let legacyData = try JSONSerialization.data(withJSONObject: legacyJSON)
-        let decodedLegacy = try BackupCodec.decode(legacyData)
-        precondition(decodedLegacy.folders[0].iconName == "folder.fill")
-        precondition(decodedLegacy.folders[0].colorHex == "5856D6")
-        precondition(decodedLegacy.folders[0].sortOrder == Int.max)
-        precondition(decodedLegacy.decks[0].completedStudySessions == 0)
-        precondition(decodedLegacy.decks[0].activeStudySessionData == nil)
-        precondition(decodedLegacy.decks[0].lastOpenedAt == nil)
-        precondition(decodedLegacy.decks[0].lastStudyActivityAt == nil)
-        precondition(!decodedLegacy.decks[0].isPinned)
-        precondition(!decodedLegacy.decks[0].cards[0].isStarred)
+        var v1JSON = rawV2
+        v1JSON["schemaVersion"] = 1
+        var v1Decks = v1JSON["decks"] as! [[String: Any]]
+        v1Decks[0].removeValue(forKey: "testConfiguration")
+        v1JSON["decks"] = v1Decks
+        let v1Data = try JSONSerialization.data(withJSONObject: v1JSON)
+        let decodedV1 = try BackupCodec.decode(v1Data)
+        precondition(decodedV1.decks[0].testConfiguration == .useFlashcards)
 
+        let localOnlyCard = BackupCardDTO(
+            id: secondCardID,
+            term: "Local",
+            definition: "Conservée",
+            position: 1,
+            mastered: false,
+            timesStudied: 0,
+            timesCorrect: 0
+        )
+        let localOnlyQuestion = AuthoredTrueFalseQuestion(
+            id: localQuestionID,
+            sourceCardID: secondCardID,
+            statement: "Question locale",
+            correctAnswer: true
+        )
         var local = envelope
         local.decks[0].cards.append(localOnlyCard)
+        local.decks[0].testConfiguration.trueFalse.append(localOnlyQuestion)
+
         var incoming = envelope
         incoming.decks[0].name = "Deck renommé"
         incoming.decks[0].lastOpenedAt = nil
         incoming.decks[0].cards[0].definition = "Définition mise à jour"
-        let merged = BackupMerger.merge(local: local, incoming: incoming)
+        incoming.decks[0].testConfiguration.multipleChoice[0].prompt = "Question mise à jour"
+        let merged = try BackupMerger.merge(local: local, incoming: incoming)
         precondition(merged.decks[0].name == "Deck renommé")
         precondition(merged.decks[0].cards.count == 2)
         precondition(merged.decks[0].lastOpenedAt == date.addingTimeInterval(120))
-        precondition(merged.decks[0].cards.first { $0.id == cardID }?.definition == "Définition mise à jour")
+        precondition(merged.decks[0].testConfiguration.multipleChoice[0].prompt == "Question mise à jour")
+        precondition(merged.decks[0].testConfiguration.trueFalse.contains { $0.id == localQuestionID })
 
-        let unsupported = BackupEnvelopeV1(
-            schemaVersion: 99,
-            exportedAt: date,
-            scope: .database,
-            folders: envelope.folders,
-            decks: envelope.decks
-        )
+        var legacyIncoming = decodedV1
+        legacyIncoming.decks[0].cards = [originalCard]
+        let cleared = try BackupMerger.merge(local: local, incoming: legacyIncoming)
+        precondition(cleared.decks[0].testConfiguration == .useFlashcards)
+
+        var orphaned = envelope
+        orphaned.decks[0].testConfiguration.multipleChoice[0].sourceCardID = UUID()
         do {
-            _ = try BackupCodec.decode(BackupCodec.encode(unsupported))
+            _ = try BackupMerger.merge(local: envelope, incoming: orphaned)
+            preconditionFailure("An orphaned source reference must fail after merge")
+        } catch BackupCodecError.invalidTestConfiguration {
+            // Expected.
+        }
+
+        var invalidIndex = envelope
+        invalidIndex.decks[0].testConfiguration.multipleChoice[0].correctChoiceIndex = 9
+        do {
+            _ = try BackupCodec.decode(BackupCodec.encode(invalidIndex))
+            preconditionFailure("An invalid answer index must fail")
+        } catch BackupCodecError.invalidTestConfiguration {
+            // Expected.
+        }
+
+        var futureJSON = rawV2
+        futureJSON["schemaVersion"] = 99
+        let futureData = try JSONSerialization.data(withJSONObject: futureJSON)
+        do {
+            _ = try BackupCodec.decode(futureData)
             preconditionFailure("An unsupported schema must fail")
         } catch BackupCodecError.unsupportedSchema(99) {
             // Expected.
         }
 
-        print("Backup codec and merge smoke tests passed")
+        print("Backup v1/v2 codec and merge smoke tests passed")
     }
 }

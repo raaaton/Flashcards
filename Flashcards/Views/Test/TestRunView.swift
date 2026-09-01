@@ -27,22 +27,44 @@ struct TestRunView: View {
         sessionSize: SessionSize
     ) {
         self.deck = deck
-        var selectedCards = deck.cards
+        let configuration = deck.testConfiguration
+        var eligibleCards = deck.cards
             .filter { !starredOnly || $0.isStarred }
             .sorted { $0.position < $1.position }
-        if shuffle { selectedCards.shuffle() }
-        if let limit = sessionSize.limit {
-            selectedCards = Array(selectedCards.prefix(limit))
+
+        let questions: [TestQuestion]
+        if configuration.mode == .useFlashcards {
+            if shuffle { eligibleCards.shuffle() }
+            if let limit = sessionSize.limit {
+                eligibleCards = Array(eligibleCards.prefix(limit))
+            }
+            let cards = eligibleCards.map {
+                TestCardSnapshot(id: $0.id, term: $0.term, definition: $0.definition)
+            }
+            questions = TestQuestionFactory.makeQuestions(
+                cards: cards,
+                types: types,
+                count: cards.count,
+                direction: direction,
+                shuffle: shuffle
+            )
+        } else {
+            let cards = eligibleCards.map {
+                TestCardSnapshot(id: $0.id, term: $0.term, definition: $0.definition)
+            }
+            let availableCount = AuthoredTestQuestionFactory.availability(
+                cards: cards,
+                configuration: configuration
+            ).total(for: types)
+            questions = AuthoredTestQuestionFactory.makeQuestions(
+                cards: cards,
+                configuration: configuration,
+                types: types,
+                count: min(sessionSize.limit ?? availableCount, availableCount),
+                direction: direction,
+                shuffle: shuffle
+            )
         }
-        let cards = selectedCards
-            .map { TestCardSnapshot(id: $0.id, term: $0.term, definition: $0.definition) }
-        let questions = TestQuestionFactory.makeQuestions(
-            cards: cards,
-            types: types,
-            count: cards.count,
-            direction: direction,
-            shuffle: shuffle
-        )
         _session = State(initialValue: TestSessionState(questions: questions))
     }
 
@@ -350,8 +372,9 @@ struct TestRunView: View {
                 displayAnswer(record.question.correctAnswer, question: record.question)
             ))
                 .foregroundStyle(.secondary)
-            if record.question.type == .trueFalse {
-                Text(L10n.format("test.correct_pairing", record.question.referenceAnswer))
+            if record.question.type == .trueFalse,
+               let referenceAnswer = record.question.referenceAnswer {
+                Text(L10n.format("test.correct_pairing", referenceAnswer))
                     .font(.caption)
                     .foregroundStyle(.secondary)
             }

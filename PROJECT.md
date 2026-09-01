@@ -130,6 +130,7 @@ The current v2 visual system is intentionally fixed rather than theme-selectable
 │   │   ├── Deck.swift
 │   │   └── Folder.swift
 │   ├── Services/
+│   │   ├── AuthoredTestModels.swift
 │   │   ├── BackupModels.swift
 │   │   ├── BackupService.swift
 │   │   ├── BulkImportParser.swift
@@ -159,6 +160,7 @@ The current v2 visual system is intentionally fixed rather than theme-selectable
 │   │   │   ├── StudySetupView.swift
 │   │   │   └── StudyView.swift
 │   │   ├── Test/
+│   │   │   ├── AuthoredTestsEditor.swift
 │   │   │   ├── TestRunView.swift
 │   │   │   └── TestSetupView.swift
 │   │   └── HomeView.swift
@@ -237,6 +239,7 @@ Stored fields:
 - `studyHistoryData: Data?`
 - `lastStudyActivityAt: Date?`
 - `isPinned: Bool`
+- `testConfigurationData: Data?`
 - `folder: Folder?`
 - `cards: [Card]`
 
@@ -253,6 +256,7 @@ Usage notes:
 - `lastStudyActivityAt` participates in ordering resumable decks.
 - `studyHistoryData` stores encoded study history entries.
 - `completedStudySessions` is part of study progress/reset state.
+- `testConfigurationData` stores the Codable test-creation mode and authored Multiple Choice / True-False questions. Missing, corrupt, or unknown payloads read as `.useFlashcards` without being rewritten implicitly.
 - `deckDescription` exists in the SwiftData model but is not currently surfaced by `DeckFormView`. It is also not currently represented in `BackupDeckDTO`, so do not assume it survives JSON export/import without explicitly extending the backup format.
 
 ### `StudyHistoryEntry`
@@ -485,13 +489,15 @@ Folder deletion can either preserve decks by moving them to Unfiled or delete th
 
 `DeckFormView` is the public entry point for deck creation/editing.
 
-For an existing deck, it opens the existing editor behavior directly. For a new deck, it coordinates a staged flow:
+For an existing deck, it opens the existing editor behavior directly. For a new deck, `NewDeckCreationFlow` owns one `NewDeckDraft` and coordinates:
 
-1. choose the deck name
-2. choose **Create with AI — Recommended** or **Create manually**
-3. continue into the existing card editor with either empty manual drafts or parsed AI drafts
+1. deck name
+2. flashcard creation method
+3. test creation method
+4. any required provider handoff/card editor/question editor
+5. final validation and one SwiftData save
 
-The manual path deliberately reuses `DeckEditorForm` and the previous card-draft/save behavior rather than introducing a separate persistence path.
+Flashcards and tests can independently use AI/manual creation, while tests may also keep the historical `.useFlashcards` behavior. The six combinations reuse `DeckEditorForm` and `AuthoredTestsEditor`. Stable draft UUIDs keep authored questions linked while navigating backward; no real `Deck` is inserted before the terminal save.
 
 `CardFormView` handles adding/editing an individual card.
 
@@ -507,7 +513,7 @@ Key rules:
 
 ### External AI deck creation
 
-`NewDeckCreationFlow`, `ExternalAIProvider`, `ExternalAIFlashcardPromptBuilder`, and `ExternalAIFlashcardParser` implement the optional provider handoff.
+`NewDeckCreationFlow`, `ExternalAIProvider`, `ExternalAIFlashcardPromptBuilder`, `ExternalAIFlashcardParser`, and `ExternalAIAuthoredParser` implement the optional provider handoff.
 
 Provider behavior:
 
@@ -520,17 +526,20 @@ Provider behavior:
 
 Return/import behavior:
 
-- the AI prompt requests a strict JSON object with a `flashcards` array
+- the historical flashcards-only prompt/parser contract remains unchanged
+- combined and tests-only contracts add authored Multiple Choice / True-False pools linked through `sourceFlashcardID`
+- repeated source references are valid; duplicate flashcard IDs and missing/unknown references fail
+- combined/tests-only imports require both question pools initially and never fall back to generated questions
 - the response tells the user to wait for generation to finish before copying the JSON block and returning to Kavi
 - the parser accepts the expected object, fenced JSON embedded in explanatory text, and a bare top-level array as a defensive fallback
 - terms/definitions are trimmed and every imported entry must have both fields
-- valid output becomes `[ParsedCard]`
+- valid output becomes editable draft cards and/or `DeckTestConfiguration`
 - parsed cards are passed into the same editable new-deck draft UI used by manual creation
 - the same `BulkDuplicateDetector` and final SwiftData save path are reused
 
 No AI state is persisted and no AI response is sent anywhere by Flashcards.
 
-`EditCardsView` provides multi-card management including:
+`AuthoredTestsEditor` provides native manual entry, AI review, and later editing for custom test questions. `EditCardsView` provides multi-card management including:
 
 - selection
 - star / unstar
@@ -538,6 +547,8 @@ No AI state is persisted and no AI response is sent anywhere by Flashcards.
 - move to another deck
 - copy to another deck
 - card reordering
+
+Deleting source cards also deletes linked questions after confirmation. Moving source cards transfers linked questions, with an explicit confirmation before a destination using generated flashcard questions is switched to the source custom mode. Copying a card never copies its questions. Deck/folder duplication remaps card and question UUIDs.
 
 `LibraryActions` centralizes reusable mutations and normalizes positions where required.
 
@@ -692,6 +703,7 @@ Test mode is split between:
 - `TestSessionState`
 - `TestRunView`
 - `TestAnimationMetrics`
+- `AuthoredTestQuestionFactory`
 
 Question types:
 
@@ -701,14 +713,15 @@ Question types:
 
 ### Question generation
 
-The factory:
+For `.useFlashcards`, `TestQuestionFactory` keeps the historical generation path unchanged. For `.ai` and `.manual`, the authored factory:
 
-- selects cards based on requested count
-- respects direction
-- optionally shuffles cards/questions
-- cycles through enabled question types
-- generates up to three unique distractors for multiple choice
-- creates true/false propositions from other cards when possible
+- builds persisted Multiple Choice and True / False pools filtered by their source cards
+- generates written-answer questions from eligible cards through the historical factory
+- selects enabled types round-robin until a pool is exhausted
+- applies 10/20 as a global limit and All as every available selected question
+- optionally shuffles pools, final order, and Multiple Choice choices without losing the correct answer
+- applies direction only to written answers
+- never generates replacement Multiple Choice / True-False questions
 
 ### Answer normalization
 
@@ -763,8 +776,8 @@ Backup is a core product invariant.
 
 Current envelope:
 
-- `BackupEnvelopeV1`
-- `schemaVersion = 1`
+- `BackupEnvelope`
+- new exports always use `schemaVersion = 2`
 - scopes: `.deck` and `.database`
 - ISO-8601 date encoding
 - pretty-printed, sorted-key JSON
@@ -791,6 +804,7 @@ Current envelope:
 - pin state
 - folder ID
 - cards
+- structured test configuration and authored questions
 
 Current caveat: `Deck.deckDescription` is not yet part of `BackupDeckDTO`.
 
@@ -807,7 +821,7 @@ Current caveat: `Deck.deckDescription` is not yet part of `BackupDeckDTO`.
 
 ### Backward-compatible decoding
 
-Additive fields use `decodeIfPresent` + defaults where appropriate. Existing schema-v1 backups without newer optional fields should remain readable.
+Schema-v1 backups remain readable and normalize every imported deck to `.useFlashcards`. Schema v2 requires structured test configuration. Unknown versions are rejected.
 
 ### Import semantics
 
@@ -817,6 +831,8 @@ Import is a merge/upsert, not a destructive replacement:
 - existing matching items are updated
 - missing local items are added
 - local objects absent from the incoming file are not deleted
+- v2 authored questions merge/upsert by UUID; a v2 `.useFlashcards` configuration explicitly clears custom pools
+- test references are validated against the deck's cards after merge
 - folder/deck/card relationships are reconstructed from IDs
 - a missing incoming `lastOpenedAt` does not erase an existing local value
 - the `ModelContext` is rolled back if import fails
@@ -886,7 +902,7 @@ Do not assume a layered `.icon` edit automatically updates the static PNG path.
 
 The workflow compiles them directly with `xcrun swiftc -swift-version 6` and only the required source files.
 
-`BulkImportParserSmoke.swift` covers both the configurable plain-text importer and the external-AI JSON parser/prompt/provider helpers, including fenced JSON, punctuation-safe content, invalid/incomplete records, empty results, and provider host invariants.
+`BulkImportParserSmoke.swift` covers the configurable importer and all three external-AI contracts, including repeated/invalid source references and conflicting questions. `TestSessionSmoke.swift` covers the legacy and authored pool builders. `BackupCodecSmoke.swift` covers v1 compatibility, v2 round trips/merges, and invalid references/versions.
 
 This is why service files used by these tests should stay deterministic and avoid unnecessary SwiftUI/UIKit/app-model dependencies.
 

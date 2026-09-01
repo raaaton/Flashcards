@@ -66,8 +66,7 @@ struct EditCardsView: View {
                         }
                         Divider()
                         Button(role: .destructive) {
-                            selectedCardIDs = [card.id]
-                            showingDeleteConfirmation = true
+                            requestDeletion(of: [card])
                         } label: {
                             Label("Supprimer", systemImage: "trash")
                         }
@@ -76,7 +75,7 @@ struct EditCardsView: View {
                     .swipeActions(edge: .trailing, allowsFullSwipe: !isSelecting) {
                         if !isSelecting {
                             Button(role: .destructive) {
-                                LibraryActions.deleteCards([card], from: deck, in: modelContext)
+                                requestDeletion(of: [card])
                             } label: {
                                 Label("Supprimer", systemImage: "trash")
                             }
@@ -138,12 +137,7 @@ struct EditCardsView: View {
                         endSelection()
                     }
                 } message: {
-                    Text(
-                        L10n.format(
-                            "edit_cards.delete.message",
-                            L10n.cards(selectedCardIDs.count)
-                        )
-                    )
+                    Text(deleteConfirmationMessage)
                 }
                 .tint(.white)
         }
@@ -362,6 +356,29 @@ struct EditCardsView: View {
         HapticService.play(.selection)
     }
 
+    private var deleteConfirmationMessage: String {
+        let linkedCount = LibraryActions.linkedQuestionCount(
+            for: selectedCards,
+            in: deck
+        )
+        guard linkedCount > 0 else {
+            return L10n.format(
+                "edit_cards.delete.message",
+                L10n.cards(selectedCardIDs.count)
+            )
+        }
+        return L10n.format(
+            "edit_cards.delete.linked_message",
+            L10n.cards(selectedCardIDs.count),
+            L10n.questions(linkedCount)
+        )
+    }
+
+    private func requestDeletion(of cards: [Card]) {
+        selectedCardIDs = Set(cards.map(\.id))
+        showingDeleteConfirmation = true
+    }
+
     private func beginTransfer(_ mode: CardTransferMode, cardIDs: Set<UUID>) {
         guard !cardIDs.isEmpty else { return }
         transferRequest = CardTransferRequest(mode: mode, cardIDs: cardIDs)
@@ -389,6 +406,7 @@ private struct CardTransferSheet: View {
     let onComplete: () -> Void
 
     @State private var destinationDeckID: UUID?
+    @State private var showingModeSwitchConfirmation = false
 
     private var destinationDecks: [Deck] {
         decks.filter { $0.id != sourceDeck.id }
@@ -458,9 +476,36 @@ private struct CardTransferSheet: View {
                 }
             }
         }
+        .alert(
+            L10n.text("edit_cards.transfer.custom_mode_title"),
+            isPresented: $showingModeSwitchConfirmation
+        ) {
+            Button("Annuler", role: .cancel) {}
+                .normalActionColor()
+            Button(L10n.text("Continuer"), role: .destructive) {
+                performSave()
+            }
+        } message: {
+            Text(L10n.text("edit_cards.transfer.custom_mode_message"))
+        }
+        .tint(.white)
     }
 
     private func save() {
+        guard let destination = destinationDecks.first(where: { $0.id == destinationDeckID }) else {
+            return
+        }
+        if mode == .move,
+           sourceDeck.testConfiguration.mode != .useFlashcards,
+           destination.testConfiguration.mode == .useFlashcards,
+           LibraryActions.linkedQuestionCount(for: cards, in: sourceDeck) > 0 {
+            showingModeSwitchConfirmation = true
+            return
+        }
+        performSave()
+    }
+
+    private func performSave() {
         guard let destination = destinationDecks.first(where: { $0.id == destinationDeckID }) else {
             return
         }

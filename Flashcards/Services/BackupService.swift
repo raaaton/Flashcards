@@ -24,8 +24,8 @@ struct BackupImportReport: Sendable {
 
 @MainActor
 enum BackupService {
-    static func databaseEnvelope(folders: [Folder], decks: [Deck]) -> BackupEnvelopeV1 {
-        BackupEnvelopeV1(
+    static func databaseEnvelope(folders: [Folder], decks: [Deck]) -> BackupEnvelope {
+        BackupEnvelope(
             scope: .database,
             folders: folders
                 .sorted {
@@ -39,8 +39,8 @@ enum BackupService {
         )
     }
 
-    static func deckEnvelope(_ deck: Deck) -> BackupEnvelopeV1 {
-        BackupEnvelopeV1(
+    static func deckEnvelope(_ deck: Deck) -> BackupEnvelope {
+        BackupEnvelope(
             scope: .deck,
             folders: deck.folder.map { [folderDTO($0)] } ?? [],
             decks: [deckDTO(deck)]
@@ -48,7 +48,7 @@ enum BackupService {
     }
 
     static func temporaryJSONFile(
-        for envelope: BackupEnvelopeV1,
+        for envelope: BackupEnvelope,
         suggestedName: String
     ) throws -> URL {
         let safeName = suggestedName
@@ -62,7 +62,7 @@ enum BackupService {
     }
 
     static func importEnvelope(
-        _ envelope: BackupEnvelopeV1,
+        _ envelope: BackupEnvelope,
         into modelContext: ModelContext
     ) throws -> BackupImportReport {
         var report = BackupImportReport()
@@ -100,14 +100,17 @@ enum BackupService {
 
             for dto in envelope.decks {
                 let deck: Deck
+                let existingConfiguration: DeckTestConfiguration
                 if let existingDeck = decksByID[dto.id] {
                     deck = existingDeck
+                    existingConfiguration = existingDeck.testConfiguration
                     report.updatedDecks += 1
                 } else {
                     deck = Deck(name: dto.name)
                     deck.id = dto.id
                     modelContext.insert(deck)
                     decksByID[dto.id] = deck
+                    existingConfiguration = .useFlashcards
                     report.addedDecks += 1
                 }
 
@@ -148,6 +151,18 @@ enum BackupService {
                     card.isStarred = cardDTO.isStarred
                     card.deck = deck
                 }
+
+                let mergedConfiguration = existingConfiguration.mergingQuestions(
+                    from: dto.testConfiguration
+                )
+                let validCardIDs = Set(
+                    cardsByID.values.lazy
+                        .filter { $0.deck?.id == deck.id }
+                        .map(\.id)
+                )
+                deck.setTestConfiguration(
+                    try mergedConfiguration.validated(validCardIDs: validCardIDs)
+                )
             }
 
             try modelContext.save()
@@ -195,7 +210,8 @@ enum BackupService {
                         timesCorrect: $0.timesCorrect,
                         isStarred: $0.isStarred
                     )
-                }
+                },
+            testConfiguration: deck.testConfiguration
         )
     }
 }

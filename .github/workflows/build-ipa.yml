@@ -297,6 +297,7 @@ jobs:
                     -swift-version 6 \
                     Flashcards/L10n.swift \
                     Flashcards/Services/StudySessionState.swift \
+                    Flashcards/Services/AuthoredTestModels.swift \
                     Flashcards/Services/BulkImportParser.swift \
                     CITests/BulkImportParserSmoke.swift \
                     -o "$RUNNER_TEMP/bulk-import-smoke"
@@ -312,6 +313,7 @@ jobs:
                     -swift-version 6 \
                     Flashcards/L10n.swift \
                     Flashcards/Services/StudySessionState.swift \
+                    Flashcards/Services/AuthoredTestModels.swift \
                     Flashcards/Services/TestSessionState.swift \
                     CITests/TestSessionSmoke.swift \
                     -o "$RUNNER_TEMP/test-session-smoke"
@@ -320,6 +322,7 @@ jobs:
                     -swift-version 6 \
                     Flashcards/L10n.swift \
                     Flashcards/Services/StudySessionState.swift \
+                    Flashcards/Services/AuthoredTestModels.swift \
                     Flashcards/Services/BackupModels.swift \
                     CITests/BackupCodecSmoke.swift \
                     -o "$RUNNER_TEMP/backup-codec-smoke"

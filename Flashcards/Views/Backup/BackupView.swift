@@ -14,7 +14,7 @@ struct BackupView: View {
     @State private var exportURL: URL?
     @State private var showingFileImporter = false
     @State private var didAutoOpenImporter = false
-    @State private var pendingEnvelope: BackupEnvelopeV1?
+    @State private var pendingEnvelope: BackupEnvelope?
     @State private var statusTitle = ""
     @State private var statusMessage = ""
     @State private var showingStatus = false
@@ -138,7 +138,7 @@ struct BackupView: View {
 
     private func prepareExport() {
         do {
-            let envelope: BackupEnvelopeV1
+            let envelope: BackupEnvelope
             let name: String
             if let deck {
                 envelope = BackupService.deckEnvelope(deck)

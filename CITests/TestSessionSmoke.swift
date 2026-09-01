@@ -60,6 +60,110 @@ enum TestSessionSmoke {
         )
         precondition(singleCardQuestions[0].choices.count == 1)
 
+        let authored = DeckTestConfiguration(
+            mode: .manual,
+            multipleChoice: [
+                AuthoredMultipleChoiceQuestion(
+                    sourceCardID: cards[0].id,
+                    prompt: "QCM 1",
+                    choices: ["Bonne", "Fausse A", "Fausse B", "Fausse C"],
+                    correctChoiceIndex: 0
+                ),
+                AuthoredMultipleChoiceQuestion(
+                    sourceCardID: cards[0].id,
+                    prompt: "QCM 2",
+                    choices: ["A", "B"],
+                    correctChoiceIndex: 1
+                )
+            ],
+            trueFalse: [
+                AuthoredTrueFalseQuestion(
+                    sourceCardID: cards[1].id,
+                    statement: "Énoncé fixe",
+                    correctAnswer: false
+                )
+            ]
+        )
+        let availability = AuthoredTestQuestionFactory.availability(
+            cards: cards,
+            configuration: authored
+        )
+        precondition(availability.multipleChoice == 2)
+        precondition(availability.trueFalse == 1)
+        precondition(availability.written == 5)
+
+        let mixedAuthored = AuthoredTestQuestionFactory.makeQuestions(
+            cards: cards,
+            configuration: authored,
+            types: Set(TestQuestionType.allCases),
+            count: 5,
+            direction: .termToDefinition,
+            shuffle: false
+        )
+        precondition(mixedAuthored.count == 5)
+        precondition(mixedAuthored.map(\.type) == [
+            .multipleChoice, .trueFalse, .written, .multipleChoice, .written
+        ])
+        precondition(mixedAuthored.filter { $0.type == .multipleChoice }.count == 2)
+        precondition(mixedAuthored.filter { $0.type == .trueFalse }.count == 1)
+        precondition(mixedAuthored.first { $0.type == .trueFalse }?.referenceAnswer == nil)
+
+        let authoredForward = AuthoredTestQuestionFactory.makeQuestions(
+            cards: cards,
+            configuration: authored,
+            types: [.multipleChoice, .trueFalse, .written],
+            count: 3,
+            direction: .termToDefinition,
+            shuffle: false
+        )
+        let authoredReverse = AuthoredTestQuestionFactory.makeQuestions(
+            cards: cards,
+            configuration: authored,
+            types: [.multipleChoice, .trueFalse, .written],
+            count: 3,
+            direction: .definitionToTerm,
+            shuffle: false
+        )
+        precondition(authoredForward[0].prompt == authoredReverse[0].prompt)
+        precondition(authoredForward[1].prompt == authoredReverse[1].prompt)
+        precondition(authoredForward[2].correctAnswer == cards[0].definition)
+        precondition(authoredReverse[2].correctAnswer == cards[0].term)
+
+        let favoriteSubset = [cards[1]]
+        let favoriteAvailability = AuthoredTestQuestionFactory.availability(
+            cards: favoriteSubset,
+            configuration: authored
+        )
+        precondition(favoriteAvailability.multipleChoice == 0)
+        precondition(favoriteAvailability.trueFalse == 1)
+        let favoriteQuestions = AuthoredTestQuestionFactory.makeQuestions(
+            cards: favoriteSubset,
+            configuration: authored,
+            types: [.multipleChoice, .trueFalse],
+            count: 10,
+            direction: .random,
+            shuffle: false
+        )
+        precondition(favoriteQuestions.count == 1)
+        precondition(favoriteQuestions[0].type == .trueFalse)
+
+        let shuffledChoices = AuthoredTestQuestionFactory.makeQuestions(
+            cards: cards,
+            configuration: authored,
+            types: [.multipleChoice],
+            count: 2,
+            direction: .random,
+            shuffle: true
+        )
+        precondition(shuffledChoices.count == 2)
+        precondition(shuffledChoices.allSatisfy { $0.choices.contains($0.correctAnswer) })
+
+        var retrySession = TestSessionState(questions: [written])
+        retrySession.submit(answer: "faux")
+        retrySession.retryErrors()
+        precondition(retrySession.questions == [written])
+        precondition(retrySession.answers.isEmpty)
+
         print("TestSessionState smoke tests passed")
     }
 }

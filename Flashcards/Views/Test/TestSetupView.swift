@@ -20,8 +20,28 @@ struct TestSetupView: View {
         deck.cards.filter { !starredOnly || $0.isStarred }
     }
 
+    private var configuration: DeckTestConfiguration {
+        deck.testConfiguration
+    }
+
+    private var eligibleSnapshots: [TestCardSnapshot] {
+        eligibleCards.map {
+            TestCardSnapshot(id: $0.id, term: $0.term, definition: $0.definition)
+        }
+    }
+
+    private var availability: AuthoredTestAvailability {
+        AuthoredTestQuestionFactory.availability(
+            cards: eligibleSnapshots,
+            configuration: configuration
+        )
+    }
+
     private var effectiveCount: Int {
-        min(sessionSize.limit ?? eligibleCards.count, eligibleCards.count)
+        let availableCount = configuration.mode == .useFlashcards
+            ? eligibleCards.count
+            : availability.total(for: selectedTypes)
+        return min(sessionSize.limit ?? availableCount, availableCount)
     }
 
     private var hasStarredCards: Bool {
@@ -35,7 +55,16 @@ struct TestSetupView: View {
             Form {
                 Section {
                     ForEach(TestQuestionType.allCases) { type in
-                        Toggle(type.title, isOn: typeBinding(type))
+                        HStack {
+                            Toggle(type.title, isOn: typeBinding(type))
+                                .disabled(!isTypeAvailable(type))
+
+                            if configuration.mode != .useFlashcards {
+                                Text("\(availability.count(for: type))")
+                                    .foregroundStyle(.secondary)
+                                    .monospacedDigit()
+                            }
+                        }
                     }
                 } header: {
                     Text("Types de questions")
@@ -45,12 +74,20 @@ struct TestSetupView: View {
                     }
                 }
 
-                Section("Sens") {
-                    LabeledContent("Sens") {
-                        StudyDirectionMenu(selection: $direction, accent: accent)
-                            .onChange(of: direction) { _, newValue in
-                                AppPreferences.studyDirection = newValue
-                            }
+                if configuration.mode == .useFlashcards || selectedTypes.contains(.written) {
+                    Section {
+                        LabeledContent("Sens") {
+                            StudyDirectionMenu(selection: $direction, accent: accent)
+                                .onChange(of: direction) { _, newValue in
+                                    AppPreferences.studyDirection = newValue
+                                }
+                        }
+                    } header: {
+                        Text("Sens")
+                    } footer: {
+                        if configuration.mode != .useFlashcards {
+                            Text("test.authored.direction_note")
+                        }
                     }
                 }
 
@@ -62,6 +99,7 @@ struct TestSetupView: View {
                     Toggle("study.starred_only", isOn: $starredOnly)
                         .onChange(of: starredOnly) { _, newValue in
                             AppPreferences.studyStarredOnly = newValue
+                            normalizeSelectedTypes()
                         }
                 }
 
@@ -106,6 +144,7 @@ struct TestSetupView: View {
         }
         .navigationTitle("Configurer le test")
         .tint(accent)
+        .onAppear(perform: normalizeSelectedTypes)
     }
 
     private func typeBinding(_ type: TestQuestionType) -> Binding<Bool> {
@@ -113,11 +152,21 @@ struct TestSetupView: View {
             get: { selectedTypes.contains(type) },
             set: { isSelected in
                 if isSelected {
+                    guard isTypeAvailable(type) else { return }
                     selectedTypes.insert(type)
                 } else {
                     selectedTypes.remove(type)
                 }
             }
         )
+    }
+
+    private func isTypeAvailable(_ type: TestQuestionType) -> Bool {
+        configuration.mode == .useFlashcards || availability.count(for: type) > 0
+    }
+
+    private func normalizeSelectedTypes() {
+        guard configuration.mode != .useFlashcards else { return }
+        selectedTypes = Set(selectedTypes.filter(isTypeAvailable))
     }
 }

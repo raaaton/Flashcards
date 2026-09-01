@@ -54,6 +54,7 @@ The current major generation is a major visual and interaction refresh rather th
 - Matching deck presentation between Home, search, and folder pages
 - Expanded deck context menus with pin, edit, duplicate, and delete actions
 - New deck creation choice between **Create with AI — Recommended** and **Create manually**
+- Independent test creation choice: generate questions with AI, author them manually, or keep generating them from flashcards
 - External AI handoff for ChatGPT, Claude, and Gemini without an AI API or backend
 - Improved first-deck onboarding
 - More consistent native sheets, menus, alerts, haptics, and Liquid Glass controls
@@ -112,7 +113,7 @@ Cards can be created one at a time, generated through an external AI you already
 
 - Add and edit cards individually
 - Start every new deck by choosing its name
-- Choose **Create with AI — Recommended** or **Create manually**
+- Choose how to create the flashcards and how to create the Multiple Choice / True-False questions independently
 - Create a new deck with several initial cards in the manual flow
 - Add more card editors while creating a deck
 - Delete draft cards before saving
@@ -129,14 +130,14 @@ Kavi can prepare a deck using **ChatGPT**, **Claude**, or **Gemini** without emb
 
 The flow is deliberately user-controlled:
 
-1. Name the deck and choose **Create with AI**.
-2. Pick ChatGPT, Claude, or Gemini.
-3. Kavi generates a strict prompt and copies it to the clipboard.
+1. Name the deck, choose how to create its flashcards, then choose how to create its tests.
+2. When AI is selected, pick Claude, ChatGPT, or Gemini.
+3. Kavi generates the appropriate flashcards-only, flashcards-and-tests, or tests-only prompt and copies it to the clipboard.
 4. Kavi opens the provider's native app. If the prompt is not already present, paste it into the composer, attach your notes, images, or documents, and send it.
-5. The AI returns a JSON block containing the generated flashcards.
+5. The AI returns a JSON block containing the requested flashcards and/or test questions.
 6. Copy that JSON block and return to Kavi.
 7. Tap **Paste from ChatGPT / Claude / Gemini** to parse it locally.
-8. Review or edit the cards, see duplicate warnings, then create the deck using the normal local SwiftData path.
+8. Review or edit the cards and authored questions, resolve duplicate warnings, then create the deck in one local SwiftData save.
 
 Clipboard copy remains the robust fallback, and the provider itself handles any document upload outside Kavi. There is no Kavi account, AI subscription, server-side proxy, model token cost, or AI SDK in the app.
 
@@ -263,7 +264,7 @@ Study preferences are remembered locally so repeated sessions do not need to be 
 
 ### Test yourself
 
-The same deck can also generate mixed tests instead of swipe-based flashcards.
+The same deck can also run mixed tests instead of swipe-based flashcards. Multiple Choice and True / False questions can be generated from flashcards as before, authored manually, or prepared through the external AI handoff and reviewed before saving.
 
 Supported question formats:
 
@@ -271,7 +272,7 @@ Supported question formats:
 - **True / False**
 - **Written Answer**
 
-Tests reuse the same library and can respect the same study preferences such as direction, shuffle, starred-only filtering, and session size.
+Custom questions remain linked to a source flashcard, so starred-only filtering and card statistics continue to work. Direction affects generated written answers only; custom Multiple Choice and True / False wording stays fixed. Shuffle and global 10/20/All limits apply across the enabled question pools.
 
 Written answers can be submitted directly from the keyboard, while every test run stays completely on-device.
 
@@ -372,7 +373,7 @@ Your data is not tied to a Kavi account because there is no Kavi account.
 
 The full local database can be exported to **JSON** and restored later. Individual decks can also be exported from their deck page.
 
-Backups are designed to preserve the data required to reconstruct the study library independently of any external service.
+New backups use schema version 2 and preserve authored test configuration as readable structured JSON. Existing schema-v1 backups remain importable and restore decks with the historical generate-from-flashcards test behavior.
 
 This makes it possible to:
 

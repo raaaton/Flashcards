@@ -156,6 +156,8 @@ Treat stored model changes as compatibility-sensitive.
 - `Deck`
 - `Card`
 
+`Deck.testConfigurationData` is the single optional encoded storage field for test creation mode and authored questions. `AuthoredTestModels.swift` stays Foundation-only; do not turn authored questions into additional SwiftData models or relationships without an explicit migration plan.
+
 ### Explicit ordering
 
 Never rely on relationship-array order for visible ordering.
@@ -480,6 +482,14 @@ Question types:
 - true / false
 - written
 
+Deck test modes:
+
+- `.useFlashcards` preserves the historical generated-question path
+- `.ai` and `.manual` persist authored Multiple Choice / True-False questions linked to source-card UUIDs
+- written questions remain generated from eligible cards
+
+For authored modes, preserve per-type availability, source-card starred filtering, global 10/20/All limits, round-robin pool selection, and the no-fallback rule for Multiple Choice / True-False questions. Direction affects authored-mode written questions only.
+
 Preserve:
 
 - direction semantics
@@ -521,9 +531,11 @@ JSON backup/restore is not optional polish; treat it as a persistence contract.
 
 Current schema:
 
-- `BackupEnvelopeV1`
-- `schemaVersion = 1`
+- `BackupEnvelope`
+- new exports use `schemaVersion = 2`
 - scopes: `deck`, `database`
+
+Schema-v1 imports remain supported and explicitly apply `.useFlashcards`. Schema v2 requires structured test configuration; authored questions merge/upsert by UUID and references are validated after card merge. Unknown schema versions fail.
 
 ### When adding meaningful user-owned state
 
@@ -787,6 +799,8 @@ Current harnesses:
 - `BackupCodecSmoke.swift`
 
 Keep tested services Foundation-friendly.
+
+`AuthoredTestModels.swift` is compiled into the bulk-import, Test-session, and backup harnesses. Keep it free of SwiftUI, SwiftData, and UIKit.
 
 When changing these domains:
 

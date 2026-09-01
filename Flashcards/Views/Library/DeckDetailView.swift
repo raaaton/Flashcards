@@ -26,6 +26,7 @@ struct DeckDetailView: View {
             LazyVStack(alignment: .leading, spacing: 24) {
                 deckSummary
                 studySection
+                testsSection
                 if settings.studyHistoryEnabled && !deck.studyHistory.isEmpty {
                     studyHistorySection
                 }
@@ -170,6 +171,77 @@ struct DeckDetailView: View {
             }
             .padding(.horizontal, 18)
             .background(Theme.cardBackground, in: .rect(cornerRadius: 20, style: .continuous))
+        }
+    }
+
+    private var testsSection: some View {
+        let configuration = deck.testConfiguration
+        return VStack(alignment: .leading, spacing: 12) {
+            Text(L10n.text("deck.tests.title"))
+                .font(.title2.bold())
+
+            VStack(alignment: .leading, spacing: 0) {
+                HStack(spacing: 12) {
+                    Image(systemName: "checklist")
+                        .foregroundStyle(Theme.deckAccent(for: deck))
+                        .frame(width: 28)
+
+                    VStack(alignment: .leading, spacing: 4) {
+                        Text(testModeTitle(configuration.mode))
+                            .font(.headline)
+
+                        if configuration.mode == .useFlashcards {
+                            Text(L10n.text("deck.tests.generated_from_flashcards"))
+                                .font(.subheadline)
+                                .foregroundStyle(.secondary)
+                        } else {
+                            Text(
+                                L10n.format(
+                                    "deck.tests.counts",
+                                    Int64(configuration.multipleChoice.count),
+                                    Int64(configuration.trueFalse.count)
+                                )
+                            )
+                            .font(.subheadline)
+                            .foregroundStyle(.secondary)
+                        }
+                    }
+                }
+                .padding(.vertical, 15)
+
+                if configuration.mode != .useFlashcards {
+                    Divider()
+
+                    NavigationLink {
+                        AuthoredTestsEditor(deck: deck)
+                    } label: {
+                        Label(
+                            L10n.text("deck.tests.edit"),
+                            systemImage: "square.and.pencil"
+                        )
+                        .font(.headline)
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                        .padding(.vertical, 15)
+                        .contentShape(.rect)
+                    }
+                    .buttonStyle(.plain)
+                    .foregroundStyle(Theme.deckAccent(for: deck))
+                    .tint(Theme.deckAccent(for: deck))
+                }
+            }
+            .padding(.horizontal, 18)
+            .background(
+                Theme.cardBackground,
+                in: .rect(cornerRadius: 20, style: .continuous)
+            )
+        }
+    }
+
+    private func testModeTitle(_ mode: DeckTestCreationMode) -> String {
+        switch mode {
+        case .useFlashcards: L10n.text("deck.tests.mode.flashcards")
+        case .ai: L10n.text("deck.tests.mode.ai")
+        case .manual: L10n.text("deck.tests.mode.manual")
         }
     }
 

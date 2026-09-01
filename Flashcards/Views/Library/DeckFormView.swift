@@ -4,11 +4,12 @@ import SwiftUI
 import UIKit
 
 private struct DeckCardDraft: Identifiable {
-    let id = UUID()
+    let id: UUID
     var term: String
     var definition: String
 
-    init(term: String = "", definition: String = "") {
+    init(id: UUID = UUID(), term: String = "", definition: String = "") {
+        self.id = id
         self.term = term
         self.definition = definition
     }
@@ -25,13 +26,40 @@ private struct DeckCardDraft: Identifiable {
     var isComplete: Bool { !cleanTerm.isEmpty && !cleanDefinition.isEmpty }
 }
 
-private typealias AIPreviewSession = ExternalAIImportSession
-
-private enum NewDeckCreationStep: Hashable {
-    case method
+private enum FlashcardCreationMethod: Hashable {
     case ai
     case manual
-    case aiPreview(AIPreviewSession)
+}
+
+private enum ExternalAICreationRequest: Hashable {
+    case flashcardsOnly
+    case flashcardsAndTests
+    case testsOnly
+}
+
+private enum NewDeckCreationStep: Hashable {
+    case flashcardMethod
+    case testMethod
+    case ai(ExternalAICreationRequest)
+    case cards
+    case tests
+}
+
+private struct NewDeckDraft {
+    var name = ""
+    var selectedFolderID: UUID?
+    var flashcardMethod: FlashcardCreationMethod?
+    var testMethod: DeckTestCreationMode?
+    var selectedProvider = ExternalAIProvider.gemini
+    var cards = [DeckCardDraft()]
+    var testConfiguration = DeckTestConfiguration.useFlashcards
+    var activeAIRequest = ExternalAICreationRequest.flashcardsOnly
+    var hasOpenedProvider = false
+    var promptWasCopied = false
+
+    init(initialFolderID: UUID?) {
+        selectedFolderID = initialFolderID
+    }
 }
 
 private struct DeckCreationStepFade: ViewModifier {
@@ -142,23 +170,43 @@ struct DeckFormView: View {
 private struct NewDeckCreationFlow: View {
     @Environment(\.dismiss) private var dismiss
     @Environment(\.openURL) private var openURL
+    @Environment(\.modelContext) private var modelContext
+    @Query(sort: \Folder.name) private var folders: [Folder]
 
     let initialFolder: Folder?
     let onCreated: ((Deck) -> Void)?
 
     @State private var path: [NewDeckCreationStep] = []
-    @State private var name = ""
-    @State private var selectedProvider = ExternalAIProvider.gemini
-    @State private var hasOpenedProvider = false
-    @State private var promptWasCopied = false
+    @State private var draft: NewDeckDraft
     @State private var hasCompletedCreation = false
     @State private var alertTitle = ""
     @State private var alertMessage = ""
     @State private var showingAlert = false
     @FocusState private var nameFieldFocused: Bool
 
+    init(initialFolder: Folder?, onCreated: ((Deck) -> Void)?) {
+        self.initialFolder = initialFolder
+        self.onCreated = onCreated
+        _draft = State(initialValue: NewDeckDraft(initialFolderID: initialFolder?.id))
+    }
+
     private var cleanName: String {
-        name.trimmingCharacters(in: .whitespacesAndNewlines)
+        draft.name.trimmingCharacters(in: .whitespacesAndNewlines)
+    }
+
+    private var selectedFolder: Folder? {
+        folders.first { $0.id == draft.selectedFolderID }
+            ?? (initialFolder?.id == draft.selectedFolderID ? initialFolder : nil)
+    }
+
+    private var completeCardDrafts: [DeckCardDraft] {
+        draft.cards.filter(\.isComplete)
+    }
+
+    private var sourceCards: [ExternalAISourceCard] {
+        completeCardDrafts.map {
+            ExternalAISourceCard(id: $0.id, term: $0.cleanTerm, definition: $0.cleanDefinition)
+        }
     }
 
     var body: some View {
@@ -185,37 +233,42 @@ private struct NewDeckCreationFlow: View {
     @ViewBuilder
     private func destinationView(_ destination: NewDeckCreationStep) -> some View {
         switch destination {
-        case .method:
-            methodStep
-        case .ai:
-            aiStep
-        case .manual:
+        case .flashcardMethod:
+            flashcardMethodStep
+        case .testMethod:
+            testMethodStep
+        case let .ai(request):
+            aiStep(request)
+        case .cards:
             DeckEditorForm(
-                initialFolder: initialFolder,
+                initialFolder: selectedFolder,
                 initialName: cleanName,
-                onBack: returnFromManualEditor,
-                onCreated: completeCreatedDeck,
+                initialDrafts: draft.cards,
+                onBack: returnFromCardEditor,
+                onDraftsCompleted: completeCardEditing,
                 embedsInNavigationStack: false,
                 dismissesOnSave: false
             )
-        case let .aiPreview(session):
-            DeckEditorForm(
-                initialFolder: initialFolder,
-                initialName: cleanName,
-                initialCards: session.cards,
-                onBack: returnFromAIPreview,
-                onCreated: completeCreatedDeck,
-                embedsInNavigationStack: false,
-                dismissesOnSave: false
+        case .tests:
+            AuthoredTestsEditor(
+                sourceCards: sourceCards,
+                configuration: draft.testConfiguration,
+                onBack: { configuration in
+                    draft.testConfiguration = configuration
+                    navigateBack()
+                },
+                onComplete: { configuration in
+                    draft.testConfiguration = configuration
+                    createDeck()
+                }
             )
-            .id(session.id)
         }
     }
 
     private var nameStep: some View {
         Form {
             Section("Deck") {
-                TextField("Nom", text: $name)
+                TextField("Nom", text: $draft.name)
                     .focused($nameFieldFocused)
                     .submitLabel(.continue)
                     .onSubmit(advanceFromName)
@@ -244,7 +297,7 @@ private struct NewDeckCreationFlow: View {
         }
     }
 
-    private var methodStep: some View {
+    private var flashcardMethodStep: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: 18) {
                 Text(L10n.text("ai.creation.method.title"))
@@ -256,9 +309,8 @@ private struct NewDeckCreationFlow: View {
                     systemImage: "sparkles",
                     isRecommended: true
                 ) {
-                    hasOpenedProvider = false
-                    promptWasCopied = false
-                    navigateForward(to: .ai)
+                    draft.flashcardMethod = .ai
+                    navigateForward(to: .testMethod)
                 }
 
                 creationChoice(
@@ -267,7 +319,8 @@ private struct NewDeckCreationFlow: View {
                     systemImage: "square.and.pencil",
                     isRecommended: false
                 ) {
-                    navigateForward(to: .manual)
+                    draft.flashcardMethod = .manual
+                    navigateForward(to: .testMethod)
                 }
             }
             .padding(20)
@@ -284,7 +337,54 @@ private struct NewDeckCreationFlow: View {
         }
     }
 
-    private var aiStep: some View {
+    private var testMethodStep: some View {
+        ScrollView {
+            VStack(alignment: .leading, spacing: 18) {
+                Text(L10n.text("ai.creation.test_method.title"))
+                    .font(.title2.bold())
+
+                creationChoice(
+                    title: L10n.text("ai.create.with_ai"),
+                    subtitle: L10n.text("ai.recommended"),
+                    systemImage: "sparkles",
+                    isRecommended: true
+                ) {
+                    selectTestMethod(.ai)
+                }
+
+                creationChoice(
+                    title: L10n.text("ai.test.use_flashcards"),
+                    subtitle: nil,
+                    systemImage: "rectangle.stack",
+                    isRecommended: false
+                ) {
+                    selectTestMethod(.useFlashcards)
+                }
+
+                creationChoice(
+                    title: L10n.text("ai.create.manual"),
+                    subtitle: nil,
+                    systemImage: "square.and.pencil",
+                    isRecommended: false
+                ) {
+                    selectTestMethod(.manual)
+                }
+            }
+            .padding(20)
+        }
+        .navigationTitle(L10n.text("deck.new.title"))
+        .navigationBarTitleDisplayMode(.inline)
+        .navigationBarBackButtonHidden(true)
+        .toolbar {
+            ToolbarItem(placement: .topBarLeading) {
+                DeckCreationBackButton {
+                    navigateBack()
+                }
+            }
+        }
+    }
+
+    private func aiStep(_ request: ExternalAICreationRequest) -> some View {
         ScrollView {
             VStack(alignment: .leading, spacing: 20) {
                 VStack(alignment: .leading, spacing: 6) {
@@ -306,7 +406,7 @@ private struct NewDeckCreationFlow: View {
             .padding(.bottom, 12)
         }
         .safeAreaInset(edge: .bottom, spacing: 0) {
-            aiBottomPanel
+            aiBottomPanel(request)
         }
         .navigationTitle(L10n.text("ai.create.with_ai"))
         .navigationBarTitleDisplayMode(.inline)
@@ -319,40 +419,45 @@ private struct NewDeckCreationFlow: View {
             }
         }
         .onAppear {
-            guard !promptWasCopied else { return }
-            copyPrompt(playsHaptic: false)
+            if draft.activeAIRequest != request {
+                draft.activeAIRequest = request
+                draft.hasOpenedProvider = false
+                draft.promptWasCopied = false
+            }
+            guard !draft.promptWasCopied else { return }
+            copyPrompt(for: request, playsHaptic: false)
         }
     }
 
     @ViewBuilder
-    private var aiBottomPanel: some View {
+    private func aiBottomPanel(_ request: ExternalAICreationRequest) -> some View {
         VStack(spacing: 12) {
-            if hasOpenedProvider {
+            if draft.hasOpenedProvider {
                 VStack(alignment: .leading, spacing: 12) {
                     Text(
                         L10n.format(
                             "ai.return.title",
-                            selectedProvider.displayName
+                            draft.selectedProvider.displayName
                         )
                     )
                     .font(.headline)
 
                     Text(
                         L10n.format(
-                            "ai.return.body",
-                            selectedProvider.displayName
+                            returnBodyKey(for: request),
+                            draft.selectedProvider.displayName
                         )
                     )
                     .font(.subheadline)
                     .foregroundStyle(.secondary)
 
                     Button {
-                        pasteAIResult()
+                        pasteAIResult(for: request)
                     } label: {
                         Label(
                             L10n.format(
                                 "ai.paste",
-                                selectedProvider.displayName
+                                draft.selectedProvider.displayName
                             ),
                             systemImage: "doc.on.clipboard.fill"
                         )
@@ -364,12 +469,12 @@ private struct NewDeckCreationFlow: View {
                     .tint(Theme.accent)
 
                     Button {
-                        openSelectedProvider()
+                        openSelectedProvider(for: request)
                     } label: {
                         Label(
                             L10n.format(
                                 "ai.open_again",
-                                selectedProvider.displayName
+                                draft.selectedProvider.displayName
                             ),
                             systemImage: "arrow.up.right.square"
                         )
@@ -386,7 +491,7 @@ private struct NewDeckCreationFlow: View {
             } else {
                 VStack(alignment: .leading, spacing: 10) {
                     Label(
-                        L10n.format("ai.instructions.title", selectedProvider.displayName),
+                        L10n.format("ai.instructions.title", draft.selectedProvider.displayName),
                         systemImage: "doc.on.clipboard"
                     )
                     .font(.headline)
@@ -394,7 +499,7 @@ private struct NewDeckCreationFlow: View {
                     Text(
                         L10n.format(
                             "ai.instructions.body",
-                            selectedProvider.displayName
+                            draft.selectedProvider.displayName
                         )
                     )
                     .font(.subheadline)
@@ -408,12 +513,12 @@ private struct NewDeckCreationFlow: View {
                 )
 
                 Button {
-                    openSelectedProvider()
+                    openSelectedProvider(for: request)
                 } label: {
                     Label(
                         L10n.format(
                             "ai.open",
-                            selectedProvider.displayName
+                            draft.selectedProvider.displayName
                         ),
                         systemImage: "arrow.up.right.square"
                     )
@@ -434,7 +539,24 @@ private struct NewDeckCreationFlow: View {
         guard !cleanName.isEmpty else { return }
         HapticService.play(.selection)
         nameFieldFocused = false
-        navigateForward(to: .method)
+        navigateForward(to: .flashcardMethod)
+    }
+
+    private func selectTestMethod(_ method: DeckTestCreationMode) {
+        draft.testMethod = method
+        draft.testConfiguration.mode = method
+        draft.hasOpenedProvider = false
+        draft.promptWasCopied = false
+
+        if draft.flashcardMethod == .ai {
+            let request: ExternalAICreationRequest = method == .ai
+                ? .flashcardsAndTests
+                : .flashcardsOnly
+            draft.activeAIRequest = request
+            navigateForward(to: .ai(request))
+        } else {
+            navigateForward(to: .cards)
+        }
     }
 
     private func navigateForward(to destination: NewDeckCreationStep) {
@@ -446,21 +568,47 @@ private struct NewDeckCreationFlow: View {
         path.removeLast()
     }
 
-    private func returnFromManualEditor(_ updatedName: String) {
-        name = updatedName
+    private func returnFromCardEditor(
+        _ updatedName: String,
+        _ folderID: UUID?,
+        _ drafts: [DeckCardDraft]
+    ) {
+        draft.name = updatedName
+        draft.selectedFolderID = folderID
+        draft.cards = drafts
         navigateBack()
     }
 
-    private func returnFromAIPreview(_ updatedName: String) {
-        name = updatedName
-        navigateBack()
-    }
+    private func completeCardEditing(
+        _ updatedName: String,
+        _ folderID: UUID?,
+        _ drafts: [DeckCardDraft],
+        _ remappedCardIDs: [UUID: UUID]
+    ) {
+        draft.name = updatedName
+        draft.selectedFolderID = folderID
+        draft.cards = drafts
+        remapTestSources(remappedCardIDs)
 
-    private func completeCreatedDeck(_ deck: Deck) {
-        guard !hasCompletedCreation else { return }
-        hasCompletedCreation = true
-        onCreated?(deck)
-        dismiss()
+        switch draft.testMethod {
+        case .useFlashcards:
+            createDeck()
+        case .manual:
+            draft.testConfiguration.mode = .manual
+            navigateForward(to: .tests)
+        case .ai:
+            draft.testConfiguration.mode = .ai
+            if draft.flashcardMethod == .manual {
+                draft.activeAIRequest = .testsOnly
+                draft.hasOpenedProvider = false
+                draft.promptWasCopied = false
+                navigateForward(to: .ai(.testsOnly))
+            } else {
+                navigateForward(to: .tests)
+            }
+        case nil:
+            break
+        }
     }
 
     private func creationChoice(
@@ -519,12 +667,12 @@ private struct NewDeckCreationFlow: View {
 
     private func providerRow(_ provider: ExternalAIProvider) -> some View {
         Button {
-            guard selectedProvider != provider else { return }
+            guard draft.selectedProvider != provider else { return }
             HapticService.play(.selection)
-            selectedProvider = provider
-            hasOpenedProvider = false
-            promptWasCopied = false
-            copyPrompt(playsHaptic: false)
+            draft.selectedProvider = provider
+            draft.hasOpenedProvider = false
+            draft.promptWasCopied = false
+            copyPrompt(for: draft.activeAIRequest, playsHaptic: false)
         } label: {
             HStack(spacing: 14) {
                 AIProviderLogoBadge(provider: provider)
@@ -536,13 +684,13 @@ private struct NewDeckCreationFlow: View {
                 Spacer(minLength: 8)
 
                 Image(
-                    systemName: selectedProvider == provider
+                    systemName: draft.selectedProvider == provider
                         ? "checkmark.circle.fill"
                         : "circle"
                 )
                 .font(.title3)
                 .foregroundStyle(
-                    selectedProvider == provider
+                    draft.selectedProvider == provider
                         ? Theme.accent
                         : Color.secondary
                 )
@@ -555,10 +703,10 @@ private struct NewDeckCreationFlow: View {
             .overlay {
                 RoundedRectangle(cornerRadius: 18, style: .continuous)
                     .stroke(
-                        selectedProvider == provider
+                        draft.selectedProvider == provider
                             ? Theme.accent.opacity(0.55)
                             : Theme.subtleStroke,
-                        lineWidth: selectedProvider == provider ? 1 : 0.5
+                        lineWidth: draft.selectedProvider == provider ? 1 : 0.5
                     )
             }
             .contentShape(.rect(cornerRadius: 18, style: .continuous))
@@ -566,25 +714,26 @@ private struct NewDeckCreationFlow: View {
         .buttonStyle(.plain)
     }
 
-    private func copyPrompt(playsHaptic: Bool = true) {
-        UIPasteboard.general.string = ExternalAIFlashcardPromptBuilder.makePrompt(
-            deckName: cleanName
-        )
-        promptWasCopied = true
+    private func copyPrompt(
+        for request: ExternalAICreationRequest,
+        playsHaptic: Bool = true
+    ) {
+        UIPasteboard.general.string = prompt(for: request)
+        draft.promptWasCopied = true
         if playsHaptic {
             HapticService.play(.selection)
         }
     }
 
-    private func openSelectedProvider() {
-        let prompt = ExternalAIFlashcardPromptBuilder.makePrompt(deckName: cleanName)
+    private func openSelectedProvider(for request: ExternalAICreationRequest) {
+        let prompt = prompt(for: request)
         UIPasteboard.general.string = prompt
-        promptWasCopied = true
-        hasOpenedProvider = false
+        draft.promptWasCopied = true
+        draft.hasOpenedProvider = false
         HapticService.play(.selection)
 
         openNativeProvider(
-            selectedProvider.nativeLaunchCandidates(for: prompt),
+            draft.selectedProvider.nativeLaunchCandidates(for: prompt),
             at: 0
         )
     }
@@ -594,11 +743,11 @@ private struct NewDeckCreationFlow: View {
             showAlert(
                 title: L10n.format(
                     "ai.error.app_not_installed_title",
-                    selectedProvider.displayName
+                    draft.selectedProvider.displayName
                 ),
                 message: L10n.format(
                     "ai.error.app_not_installed_body",
-                    selectedProvider.displayName
+                    draft.selectedProvider.displayName
                 )
             )
             return
@@ -606,14 +755,14 @@ private struct NewDeckCreationFlow: View {
 
         openURL(candidates[index]) { accepted in
             if accepted {
-                hasOpenedProvider = true
+                draft.hasOpenedProvider = true
             } else {
                 openNativeProvider(candidates, at: index + 1)
             }
         }
     }
 
-    private func pasteAIResult() {
+    private func pasteAIResult(for request: ExternalAICreationRequest) {
         guard let clipboardText = UIPasteboard.general.string,
               !clipboardText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else {
             showAlert(
@@ -624,28 +773,130 @@ private struct NewDeckCreationFlow: View {
         }
 
         do {
-            let cards = try ExternalAIFlashcardParser.parse(clipboardText)
-            HapticService.play(.selection)
-            navigateForward(to: .aiPreview(AIPreviewSession(cards: cards)))
-        } catch let error as ExternalAIFlashcardParserError {
-            switch error {
-            case .emptyResult:
-                showAlert(
-                    title: L10n.text("ai.error.empty_title"),
-                    message: L10n.text("ai.error.empty_body")
+            switch request {
+            case .flashcardsOnly:
+                let parsedCards = try ExternalAIFlashcardParser.parse(clipboardText)
+                draft.cards = parsedCards.map {
+                    DeckCardDraft(term: $0.term, definition: $0.definition)
+                }
+                navigateForward(to: .cards)
+            case .flashcardsAndTests:
+                let imported = try ExternalAIAuthoredParser.parseCombined(clipboardText)
+                draft.cards = imported.cards.map {
+                    DeckCardDraft(id: $0.id, term: $0.term, definition: $0.definition)
+                }
+                draft.testConfiguration = imported.testConfiguration
+                navigateForward(to: .cards)
+            case .testsOnly:
+                draft.testConfiguration = try ExternalAIAuthoredParser.parseTestsOnly(
+                    clipboardText,
+                    sourceCards: sourceCards
                 )
-            case .invalidJSON, .incompleteRecord:
-                showAlert(
-                    title: L10n.text("ai.error.invalid_title"),
-                    message: L10n.text("ai.error.invalid_body")
-                )
+                navigateForward(to: .tests)
             }
+            HapticService.play(.selection)
+        } catch ExternalAIFlashcardParserError.emptyResult {
+            showAlert(
+                title: L10n.text("ai.error.empty_title"),
+                message: L10n.text("ai.error.empty_body")
+            )
         } catch {
             showAlert(
                 title: L10n.text("ai.error.invalid_title"),
-                message: L10n.text("ai.error.invalid_body")
+                message: L10n.text(
+                    request == .flashcardsOnly
+                        ? "ai.error.invalid_body"
+                        : (request == .flashcardsAndTests
+                            ? "ai.error.combined_invalid_body"
+                            : "ai.error.tests_invalid_body")
+                )
             )
         }
+    }
+
+    private func prompt(for request: ExternalAICreationRequest) -> String {
+        switch request {
+        case .flashcardsOnly:
+            ExternalAIFlashcardPromptBuilder.makePrompt(deckName: cleanName)
+        case .flashcardsAndTests:
+            ExternalAIFlashcardPromptBuilder.makeCombinedPrompt(deckName: cleanName)
+        case .testsOnly:
+            ExternalAIFlashcardPromptBuilder.makeTestsOnlyPrompt(
+                deckName: cleanName,
+                cards: sourceCards
+            )
+        }
+    }
+
+    private func returnBodyKey(for request: ExternalAICreationRequest) -> String {
+        switch request {
+        case .flashcardsOnly: "ai.return.body"
+        case .flashcardsAndTests: "ai.return.body.combined"
+        case .testsOnly: "ai.return.body.tests"
+        }
+    }
+
+    private func remapTestSources(_ cardIDMap: [UUID: UUID]) {
+        guard !cardIDMap.isEmpty else { return }
+        draft.testConfiguration.multipleChoice = draft.testConfiguration.multipleChoice.map { question in
+            var copy = question
+            copy.sourceCardID = cardIDMap[question.sourceCardID] ?? question.sourceCardID
+            return copy
+        }
+        draft.testConfiguration.trueFalse = draft.testConfiguration.trueFalse.map { question in
+            var copy = question
+            copy.sourceCardID = cardIDMap[question.sourceCardID] ?? question.sourceCardID
+            return copy
+        }
+    }
+
+    private func createDeck() {
+        guard !hasCompletedCreation, !cleanName.isEmpty, !completeCardDrafts.isEmpty else { return }
+
+        let configuration: DeckTestConfiguration
+        if draft.testMethod == .useFlashcards {
+            configuration = .useFlashcards
+        } else {
+            guard let validated = try? draft.testConfiguration.validated(
+                validCardIDs: Set(completeCardDrafts.map(\.id))
+            ), validated.authoredQuestionCount > 0 else {
+                showAlert(
+                    title: L10n.text("ai.error.invalid_title"),
+                    message: L10n.text("test.editor.validation_error")
+                )
+                return
+            }
+            configuration = validated
+        }
+
+        let deck = Deck(name: cleanName, folder: selectedFolder)
+        modelContext.insert(deck)
+        for (position, draft) in completeCardDrafts.enumerated() {
+            let card = Card(
+                term: draft.cleanTerm,
+                definition: draft.cleanDefinition,
+                position: position
+            )
+            card.id = draft.id
+            card.deck = deck
+            modelContext.insert(card)
+        }
+        deck.setTestConfiguration(configuration)
+
+        do {
+            try modelContext.save()
+        } catch {
+            modelContext.rollback()
+            showAlert(
+                title: L10n.text("deck.new.save_error.title"),
+                message: error.localizedDescription
+            )
+            return
+        }
+
+        hasCompletedCreation = true
+        onCreated?(deck)
+        dismiss()
     }
 
     private func showAlert(title: String, message: String) {
@@ -661,8 +912,8 @@ private struct DeckEditorForm: View {
     @Query(sort: \Folder.name) private var folders: [Folder]
 
     let deck: Deck?
-    let onBack: ((String) -> Void)?
-    let onCreated: ((Deck) -> Void)?
+    let onBack: ((String, UUID?, [DeckCardDraft]) -> Void)?
+    let onDraftsCompleted: ((String, UUID?, [DeckCardDraft], [UUID: UUID]) -> Void)?
     let embedsInNavigationStack: Bool
     let dismissesOnSave: Bool
     private let shouldFocusName: Bool
@@ -678,15 +929,15 @@ private struct DeckEditorForm: View {
         deck: Deck? = nil,
         initialFolder: Folder? = nil,
         initialName: String = "",
-        initialCards: [ParsedCard] = [],
-        onBack: ((String) -> Void)? = nil,
-        onCreated: ((Deck) -> Void)? = nil,
+        initialDrafts: [DeckCardDraft] = [],
+        onBack: ((String, UUID?, [DeckCardDraft]) -> Void)? = nil,
+        onDraftsCompleted: ((String, UUID?, [DeckCardDraft], [UUID: UUID]) -> Void)? = nil,
         embedsInNavigationStack: Bool = true,
         dismissesOnSave: Bool = true
     ) {
         self.deck = deck
         self.onBack = onBack
-        self.onCreated = onCreated
+        self.onDraftsCompleted = onDraftsCompleted
         self.embedsInNavigationStack = embedsInNavigationStack
         self.dismissesOnSave = dismissesOnSave
         shouldFocusName = deck == nil
@@ -695,11 +946,9 @@ private struct DeckEditorForm: View {
         _selectedFolderID = State(initialValue: deck?.folder?.id ?? initialFolder?.id)
         _cardDrafts = State(
             initialValue: deck == nil
-                ? (initialCards.isEmpty
+                ? (initialDrafts.isEmpty
                     ? [DeckCardDraft()]
-                    : initialCards.map {
-                        DeckCardDraft(term: $0.term, definition: $0.definition)
-                    })
+                    : initialDrafts)
                 : []
         )
     }
@@ -891,7 +1140,7 @@ private struct DeckEditorForm: View {
             if let onBack {
                 ToolbarItem(placement: .topBarLeading) {
                     DeckCreationBackButton {
-                        onBack(cleanName)
+                        onBack(cleanName, selectedFolderID, cardDrafts)
                     }
                 }
             } else {
@@ -997,25 +1246,29 @@ private struct DeckEditorForm: View {
         isSaving = true
 
         let selectedFolder = folders.first { $0.id == selectedFolderID }
-        var createdDeck: Deck?
 
         if let deck {
             deck.name = cleanName
             deck.folder = selectedFolder
             deck.updatedAt = .now
         } else {
+            let (draftsToSave, remappedCardIDs) = finalizedDrafts(
+                skippingExactDuplicates: skipExactDuplicates
+            )
+
+            if let onDraftsCompleted {
+                isSaving = false
+                onDraftsCompleted(
+                    cleanName,
+                    selectedFolderID,
+                    draftsToSave,
+                    remappedCardIDs
+                )
+                return
+            }
+
             let newDeck = Deck(name: cleanName, folder: selectedFolder)
             modelContext.insert(newDeck)
-            createdDeck = newDeck
-
-            let draftsToSave = cardDrafts.enumerated().compactMap { index, draft -> DeckCardDraft? in
-                guard draft.isComplete else { return nil }
-                if skipExactDuplicates,
-                   duplicateAnalysis.exactRecordIndexes.contains(index) {
-                    return nil
-                }
-                return draft
-            }
 
             for (position, draft) in draftsToSave.enumerated() {
                 let card = Card(
@@ -1023,6 +1276,7 @@ private struct DeckEditorForm: View {
                     definition: draft.cleanDefinition,
                     position: position
                 )
+                card.id = draft.id
                 card.deck = newDeck
                 modelContext.insert(card)
             }
@@ -1035,12 +1289,38 @@ private struct DeckEditorForm: View {
             return
         }
 
-        if let createdDeck {
-            onCreated?(createdDeck)
-        }
         if dismissesOnSave {
             dismiss()
         }
+    }
+
+    private func finalizedDrafts(
+        skippingExactDuplicates: Bool
+    ) -> ([DeckCardDraft], [UUID: UUID]) {
+        let indexedDrafts = cardDrafts.enumerated().filter { $0.element.isComplete }
+        guard skippingExactDuplicates else {
+            return (indexedDrafts.map(\.element), [:])
+        }
+
+        var firstDraftIDByContent: [String: UUID] = [:]
+        var keptDrafts: [DeckCardDraft] = []
+        var remappedCardIDs: [UUID: UUID] = [:]
+
+        for (index, draft) in indexedDrafts {
+            let key = [
+                BulkDuplicateDetector.normalizedValue(draft.cleanTerm),
+                BulkDuplicateDetector.normalizedValue(draft.cleanDefinition)
+            ].joined(separator: "\u{1F}")
+
+            if duplicateAnalysis.exactRecordIndexes.contains(index),
+               let keptID = firstDraftIDByContent[key] {
+                remappedCardIDs[draft.id] = keptID
+            } else {
+                firstDraftIDByContent[key] = draft.id
+                keptDrafts.append(draft)
+            }
+        }
+        return (keptDrafts, remappedCardIDs)
     }
 
     private func removeDraft(_ id: UUID) {

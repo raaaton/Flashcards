@@ -14,6 +14,7 @@ final class Deck {
     var studyHistoryData: Data?
     var lastStudyActivityAt: Date?
     var isPinned: Bool = false
+    var testConfigurationData: Data?
     var folder: Folder?
 
     @Relationship(deleteRule: .cascade, inverse: \Card.deck)
@@ -31,6 +32,7 @@ final class Deck {
         studyHistoryData = nil
         lastStudyActivityAt = nil
         isPinned = false
+        testConfigurationData = nil
         self.folder = folder
         cards = []
     }
@@ -63,6 +65,28 @@ struct StudyHistoryEntry: Codable, Identifiable, Sendable {
 }
 
 extension Deck {
+    var testConfiguration: DeckTestConfiguration {
+        guard let testConfigurationData,
+              let configuration = try? JSONDecoder().decode(
+                  DeckTestConfiguration.self,
+                  from: testConfigurationData
+              ),
+              let validated = try? configuration.validated(
+                  validCardIDs: Set(cards.map(\.id))
+              ) else {
+            return .useFlashcards
+        }
+        return validated
+    }
+
+    func setTestConfiguration(_ configuration: DeckTestConfiguration) {
+        if configuration == .useFlashcards {
+            testConfigurationData = nil
+        } else {
+            testConfigurationData = try? JSONEncoder().encode(configuration)
+        }
+    }
+
     var studyHistory: [StudyHistoryEntry] {
         guard let studyHistoryData else { return [] }
         return (try? JSONDecoder().decode([StudyHistoryEntry].self, from: studyHistoryData)) ?? []

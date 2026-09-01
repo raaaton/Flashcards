@@ -29,7 +29,7 @@ struct TestQuestion: Identifiable, Equatable, Sendable {
     let prompt: String
     let secondaryText: String?
     let correctAnswer: String
-    let referenceAnswer: String
+    let referenceAnswer: String?
     let choices: [String]
 }
 
@@ -72,16 +72,7 @@ enum TestQuestionFactory {
     }
 
     static func normalize(_ value: String) -> String {
-        let locale = Locale(identifier: "fr_FR")
-        return value
-            .folding(
-                options: [.caseInsensitive, .diacriticInsensitive, .widthInsensitive],
-                locale: locale
-            )
-            .lowercased(with: locale)
-            .components(separatedBy: .whitespacesAndNewlines)
-            .filter { !$0.isEmpty }
-            .joined(separator: " ")
+        AuthoredTestText.normalize(value)
     }
 
     private static func makeQuestion(
@@ -162,6 +153,133 @@ enum TestQuestionFactory {
                 choices: []
             )
         }
+    }
+}
+
+struct AuthoredTestAvailability: Equatable, Sendable {
+    let multipleChoice: Int
+    let trueFalse: Int
+    let written: Int
+
+    func count(for type: TestQuestionType) -> Int {
+        switch type {
+        case .multipleChoice: multipleChoice
+        case .trueFalse: trueFalse
+        case .written: written
+        }
+    }
+
+    func total(for types: Set<TestQuestionType>) -> Int {
+        types.reduce(into: 0) { total, type in
+            total += count(for: type)
+        }
+    }
+}
+
+enum AuthoredTestQuestionFactory {
+    static func availability(
+        cards: [TestCardSnapshot],
+        configuration: DeckTestConfiguration
+    ) -> AuthoredTestAvailability {
+        let cardIDs = Set(cards.map(\.id))
+        return AuthoredTestAvailability(
+            multipleChoice: configuration.multipleChoice.count(where: {
+                cardIDs.contains($0.sourceCardID)
+            }),
+            trueFalse: configuration.trueFalse.count(where: {
+                cardIDs.contains($0.sourceCardID)
+            }),
+            written: cards.count
+        )
+    }
+
+    static func makeQuestions(
+        cards: [TestCardSnapshot],
+        configuration: DeckTestConfiguration,
+        types: Set<TestQuestionType>,
+        count: Int,
+        direction: StudyDirection,
+        shuffle: Bool
+    ) -> [TestQuestion] {
+        guard configuration.mode != .useFlashcards, !types.isEmpty, count > 0 else {
+            return []
+        }
+
+        let cardIDs = Set(cards.map(\.id))
+        var pools: [TestQuestionType: [TestQuestion]] = [:]
+
+        if types.contains(.multipleChoice) {
+            pools[.multipleChoice] = configuration.multipleChoice.compactMap { question in
+                guard cardIDs.contains(question.sourceCardID),
+                      question.choices.indices.contains(question.correctChoiceIndex) else {
+                    return nil
+                }
+                var choices = question.choices
+                let correctAnswer = choices[question.correctChoiceIndex]
+                if shuffle { choices.shuffle() }
+                return TestQuestion(
+                    id: question.id,
+                    cardID: question.sourceCardID,
+                    type: .multipleChoice,
+                    prompt: question.prompt,
+                    secondaryText: nil,
+                    correctAnswer: correctAnswer,
+                    referenceAnswer: nil,
+                    choices: choices
+                )
+            }
+        }
+
+        if types.contains(.trueFalse) {
+            pools[.trueFalse] = configuration.trueFalse.compactMap { question in
+                guard cardIDs.contains(question.sourceCardID) else { return nil }
+                return TestQuestion(
+                    id: question.id,
+                    cardID: question.sourceCardID,
+                    type: .trueFalse,
+                    prompt: question.statement,
+                    secondaryText: nil,
+                    correctAnswer: question.correctAnswer ? "Vrai" : "Faux",
+                    referenceAnswer: nil,
+                    choices: ["Vrai", "Faux"]
+                )
+            }
+        }
+
+        if types.contains(.written) {
+            pools[.written] = TestQuestionFactory.makeQuestions(
+                cards: cards,
+                types: [.written],
+                count: cards.count,
+                direction: direction,
+                shuffle: shuffle
+            )
+        }
+
+        if shuffle {
+            for type in TestQuestionType.allCases where type != .written {
+                pools[type]?.shuffle()
+            }
+        }
+
+        let enabledTypes = TestQuestionType.allCases.filter(types.contains)
+        var offsets = Dictionary(uniqueKeysWithValues: enabledTypes.map { ($0, 0) })
+        var questions: [TestQuestion] = []
+
+        while questions.count < count {
+            var appendedQuestion = false
+            for type in enabledTypes where questions.count < count {
+                let offset = offsets[type, default: 0]
+                guard let pool = pools[type], pool.indices.contains(offset) else { continue }
+                questions.append(pool[offset])
+                offsets[type] = offset + 1
+                appendedQuestion = true
+            }
+            if !appendedQuestion { break }
+        }
+
+        if shuffle { questions.shuffle() }
+        return questions
     }
 }
 

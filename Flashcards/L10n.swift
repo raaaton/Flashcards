@@ -52,10 +52,22 @@ enum L10n {
             "es": "Guardar de todos modos"
         ],
         "ai.creation.method.title": [
-            "fr": "Comment veux-tu créer ce deck ?",
-            "en": "How do you want to create this deck?",
-            "de": "Wie möchtest du dieses Deck erstellen?",
-            "es": "¿Cómo quieres crear este deck?"
+            "fr": "Comment veux-tu créer les flashcards ?",
+            "en": "How do you want to create the flashcards?",
+            "de": "Wie möchtest du die Flashcards erstellen?",
+            "es": "¿Cómo quieres crear las tarjetas?"
+        ],
+        "ai.creation.test_method.title": [
+            "fr": "Comment veux-tu créer les tests (QCM, Vrai / Faux) ?",
+            "en": "How do you want to create the tests (Multiple Choice, True / False)?",
+            "de": "Wie möchtest du die Tests (Multiple Choice, Wahr / Falsch) erstellen?",
+            "es": "¿Cómo quieres crear los tests (opción múltiple, verdadero / falso)?"
+        ],
+        "ai.test.use_flashcards": [
+            "fr": "Utiliser les flashcards",
+            "en": "Use flashcards",
+            "de": "Flashcards verwenden",
+            "es": "Usar las tarjetas"
         ],
         "ai.create.with_ai": [
             "fr": "Créer avec l’IA",
@@ -147,6 +159,18 @@ enum L10n {
             "de": "Kopiere den in %@ erzeugten JSON-Block und füge ihn hier ein. Du kannst die Karten vor dem Erstellen des Decks prüfen und bearbeiten.",
             "es": "Copia el bloque JSON generado en %@ y pégalo aquí. Podrás revisar y editar las tarjetas antes de crear el deck."
         ],
+        "ai.return.body.combined": [
+            "fr": "Copie le bloc JSON généré dans %@, puis colle-le ici. Tu pourras vérifier les cartes, puis les questions avant de créer le deck.",
+            "en": "Copy the JSON block generated in %@, then paste it here. You can review the cards and then the questions before creating the deck.",
+            "de": "Kopiere den in %@ erzeugten JSON-Block und füge ihn hier ein. Du kannst zuerst die Karten und dann die Fragen prüfen.",
+            "es": "Copia el bloque JSON generado en %@ y pégalo aquí. Podrás revisar las tarjetas y después las preguntas antes de crear el deck."
+        ],
+        "ai.return.body.tests": [
+            "fr": "Copie le bloc JSON de tests généré dans %@, puis colle-le ici. Tu pourras vérifier les questions avant de créer le deck.",
+            "en": "Copy the test JSON block generated in %@, then paste it here. You can review the questions before creating the deck.",
+            "de": "Kopiere den in %@ erzeugten Test-JSON-Block und füge ihn hier ein. Du kannst die Fragen vor dem Erstellen des Decks prüfen.",
+            "es": "Copia el bloque JSON de tests generado en %@ y pégalo aquí. Podrás revisar las preguntas antes de crear el deck."
+        ],
         "ai.paste": [
             "fr": "Coller depuis %@",
             "en": "Paste from %@",
@@ -194,6 +218,24 @@ enum L10n {
             "en": "The pasted content doesn’t match the expected flashcard format. Copy the complete JSON block from the AI and try again.",
             "de": "Der eingefügte Inhalt entspricht nicht dem erwarteten Flashcard-Format. Kopiere den vollständigen JSON-Block aus der KI und versuche es erneut.",
             "es": "El contenido pegado no coincide con el formato de tarjetas esperado. Copia el bloque JSON completo de la IA y vuelve a intentarlo."
+        ],
+        "ai.error.combined_invalid_body": [
+            "fr": "Le contenu collé ne correspond pas au format attendu pour les cartes et tests. Recopie le bloc JSON complet depuis l’IA.",
+            "en": "The pasted content doesn’t match the expected cards and tests format. Copy the complete JSON block from the AI and try again.",
+            "de": "Der eingefügte Inhalt entspricht nicht dem erwarteten Karten- und Testformat. Kopiere den vollständigen JSON-Block aus der KI.",
+            "es": "El contenido pegado no coincide con el formato esperado de tarjetas y tests. Copia el bloque JSON completo de la IA."
+        ],
+        "ai.error.tests_invalid_body": [
+            "fr": "Le contenu collé ne correspond pas au format de tests attendu. Recopie le bloc JSON complet depuis l’IA.",
+            "en": "The pasted content doesn’t match the expected test format. Copy the complete JSON block from the AI and try again.",
+            "de": "Der eingefügte Inhalt entspricht nicht dem erwarteten Testformat. Kopiere den vollständigen JSON-Block aus der KI.",
+            "es": "El contenido pegado no coincide con el formato de tests esperado. Copia el bloque JSON completo de la IA."
+        ],
+        "deck.new.save_error.title": [
+            "fr": "Impossible de créer le deck",
+            "en": "Couldn’t Create Deck",
+            "de": "Deck konnte nicht erstellt werden",
+            "es": "No se pudo crear el deck"
         ],
         "ai.error.empty_title": [
             "fr": "Aucune carte trouvée",

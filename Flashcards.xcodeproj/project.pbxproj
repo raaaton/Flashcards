@@ -46,6 +46,8 @@
 		B10000000000000000000025 /* L10n.swift in Sources */ = {isa = PBXBuildFile; fileRef = C10000000000000000000026 /* L10n.swift */; };
 		B10000000000000000000026 /* Localizable.xcstrings in Resources */ = {isa = PBXBuildFile; fileRef = C10000000000000000000027 /* Localizable.xcstrings */; };
 		B10000000000000000000027 /* AppIcon.icon in Resources */ = {isa = PBXBuildFile; fileRef = C10000000000000000000028 /* AppIcon.icon */; };
+		B10000000000000000000028 /* AuthoredTestModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = C10000000000000000000029 /* AuthoredTestModels.swift */; };
+		B10000000000000000000029 /* AuthoredTestsEditor.swift in Sources */ = {isa = PBXBuildFile; fileRef = C1000000000000000000002A /* AuthoredTestsEditor.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -89,6 +91,8 @@
 		C10000000000000000000026 /* L10n.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = L10n.swift; sourceTree = "<group>"; };
 		C10000000000000000000027 /* Localizable.xcstrings */ = {isa = PBXFileReference; lastKnownFileType = text.json.xcstrings; path = Localizable.xcstrings; sourceTree = "<group>"; };
 		C10000000000000000000028 /* AppIcon.icon */ = {isa = PBXFileReference; lastKnownFileType = folder.iconcomposer.icon; path = AppIcon.icon; sourceTree = "<group>"; };
+		C10000000000000000000029 /* AuthoredTestModels.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AuthoredTestModels.swift; sourceTree = "<group>"; };
+		C1000000000000000000002A /* AuthoredTestsEditor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AuthoredTestsEditor.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -176,6 +180,7 @@
 			children = (
 				C1000000000000000000001B /* LibraryActions.swift */,
 				C10000000000000000000021 /* HapticService.swift */,
+				C10000000000000000000029 /* AuthoredTestModels.swift */,
 				C1000000000000000000000F /* BulkImportParser.swift */,
 				C10000000000000000000011 /* StudySessionState.swift */,
 				C10000000000000000000014 /* TestSessionState.swift */,
@@ -206,6 +211,7 @@
 		E1000000000000000000000A /* Test */ = {
 			isa = PBXGroup;
 			children = (
+				C1000000000000000000002A /* AuthoredTestsEditor.swift */,
 				C10000000000000000000015 /* TestSetupView.swift */,
 				C10000000000000000000016 /* TestRunView.swift */,
 			);
@@ -352,6 +358,8 @@
 				B10000000000000000000023 /* AppSettings.swift in Sources */,
 				B10000000000000000000024 /* SettingsView.swift in Sources */,
 				B10000000000000000000025 /* L10n.swift in Sources */,
+				B10000000000000000000028 /* AuthoredTestModels.swift in Sources */,
+				B10000000000000000000029 /* AuthoredTestsEditor.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

@@ -104,6 +104,7 @@ struct BackupDeckDTO: Codable, Equatable, Identifiable, Sendable {
     var isPinned: Bool
     var folderID: UUID?
     var cards: [BackupCardDTO]
+    var testConfiguration: DeckTestConfiguration
 
     init(
         id: UUID,
@@ -117,7 +118,8 @@ struct BackupDeckDTO: Codable, Equatable, Identifiable, Sendable {
         lastStudyActivityAt: Date? = nil,
         isPinned: Bool = false,
         folderID: UUID?,
-        cards: [BackupCardDTO]
+        cards: [BackupCardDTO],
+        testConfiguration: DeckTestConfiguration = .useFlashcards
     ) {
         self.id = id
         self.name = name
@@ -131,7 +133,55 @@ struct BackupDeckDTO: Codable, Equatable, Identifiable, Sendable {
         self.isPinned = isPinned
         self.folderID = folderID
         self.cards = cards
+        self.testConfiguration = testConfiguration
     }
+
+    private enum CodingKeys: String, CodingKey {
+        case id, name, createdAt, updatedAt, lastOpenedAt
+        case completedStudySessions, activeStudySessionData, studyHistoryData
+        case lastStudyActivityAt, isPinned, folderID, cards, testConfiguration
+    }
+
+    init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        id = try container.decode(UUID.self, forKey: .id)
+        name = try container.decode(String.self, forKey: .name)
+        createdAt = try container.decode(Date.self, forKey: .createdAt)
+        updatedAt = try container.decode(Date.self, forKey: .updatedAt)
+        lastOpenedAt = try container.decodeIfPresent(Date.self, forKey: .lastOpenedAt)
+        completedStudySessions = try container.decodeIfPresent(
+            Int.self,
+            forKey: .completedStudySessions
+        ) ?? 0
+        activeStudySessionData = try container.decodeIfPresent(
+            Data.self,
+            forKey: .activeStudySessionData
+        )
+        studyHistoryData = try container.decodeIfPresent(Data.self, forKey: .studyHistoryData)
+        lastStudyActivityAt = try container.decodeIfPresent(Date.self, forKey: .lastStudyActivityAt)
+        isPinned = try container.decodeIfPresent(Bool.self, forKey: .isPinned) ?? false
+        folderID = try container.decodeIfPresent(UUID.self, forKey: .folderID)
+        cards = try container.decode([BackupCardDTO].self, forKey: .cards)
+        testConfiguration = try container.decode(
+            DeckTestConfiguration.self,
+            forKey: .testConfiguration
+        )
+    }
+}
+
+private struct LegacyBackupDeckDTO: Decodable {
+    let id: UUID
+    var name: String
+    var createdAt: Date
+    var updatedAt: Date
+    var lastOpenedAt: Date?
+    var completedStudySessions: Int
+    var activeStudySessionData: Data?
+    var studyHistoryData: Data?
+    var lastStudyActivityAt: Date?
+    var isPinned: Bool
+    var folderID: UUID?
+    var cards: [BackupCardDTO]
 
     private enum CodingKeys: String, CodingKey {
         case id, name, createdAt, updatedAt, lastOpenedAt
@@ -160,10 +210,40 @@ struct BackupDeckDTO: Codable, Equatable, Identifiable, Sendable {
         folderID = try container.decodeIfPresent(UUID.self, forKey: .folderID)
         cards = try container.decode([BackupCardDTO].self, forKey: .cards)
     }
+
+    var currentDTO: BackupDeckDTO {
+        BackupDeckDTO(
+            id: id,
+            name: name,
+            createdAt: createdAt,
+            updatedAt: updatedAt,
+            lastOpenedAt: lastOpenedAt,
+            completedStudySessions: completedStudySessions,
+            activeStudySessionData: activeStudySessionData,
+            studyHistoryData: studyHistoryData,
+            lastStudyActivityAt: lastStudyActivityAt,
+            isPinned: isPinned,
+            folderID: folderID,
+            cards: cards,
+            testConfiguration: .useFlashcards
+        )
+    }
 }
 
-struct BackupEnvelopeV1: Codable, Equatable, Sendable {
-    static let currentSchemaVersion = 1
+private struct LegacyBackupEnvelopeV1: Decodable {
+    var schemaVersion: Int
+    var exportedAt: Date
+    var scope: BackupScope
+    var folders: [BackupFolderDTO]
+    var decks: [LegacyBackupDeckDTO]
+}
+
+private struct BackupVersionHeader: Decodable {
+    var schemaVersion: Int
+}
+
+struct BackupEnvelope: Codable, Equatable, Sendable {
+    static let currentSchemaVersion = 2
 
     var schemaVersion: Int
     var exportedAt: Date
@@ -189,6 +269,7 @@ struct BackupEnvelopeV1: Codable, Equatable, Sendable {
 enum BackupCodecError: LocalizedError {
     case unsupportedSchema(Int)
     case emptyBackup
+    case invalidTestConfiguration
 
     var errorDescription: String? {
         switch self {
@@ -196,37 +277,72 @@ enum BackupCodecError: LocalizedError {
             L10n.format("backup.error.unsupported_schema", Int64(version))
         case .emptyBackup:
             L10n.text("backup.error.empty")
+        case .invalidTestConfiguration:
+            L10n.text("backup.error.invalid_test_configuration")
         }
     }
 }
 
 enum BackupCodec {
-    static func encode(_ envelope: BackupEnvelopeV1) throws -> Data {
+    static func encode(_ envelope: BackupEnvelope) throws -> Data {
         let encoder = JSONEncoder()
         encoder.dateEncodingStrategy = .iso8601
         encoder.outputFormatting = [.prettyPrinted, .sortedKeys, .withoutEscapingSlashes]
-        return try encoder.encode(envelope)
+        var currentEnvelope = envelope
+        currentEnvelope.schemaVersion = BackupEnvelope.currentSchemaVersion
+        return try encoder.encode(currentEnvelope)
     }
 
-    static func decode(_ data: Data) throws -> BackupEnvelopeV1 {
+    static func decode(_ data: Data) throws -> BackupEnvelope {
         let decoder = JSONDecoder()
         decoder.dateDecodingStrategy = .iso8601
-        let envelope = try decoder.decode(BackupEnvelopeV1.self, from: data)
-        guard envelope.schemaVersion == BackupEnvelopeV1.currentSchemaVersion else {
-            throw BackupCodecError.unsupportedSchema(envelope.schemaVersion)
+
+        let header = try decoder.decode(BackupVersionHeader.self, from: data)
+        let envelope: BackupEnvelope
+        switch header.schemaVersion {
+        case 1:
+            let legacy = try decoder.decode(LegacyBackupEnvelopeV1.self, from: data)
+            envelope = BackupEnvelope(
+                exportedAt: legacy.exportedAt,
+                scope: legacy.scope,
+                folders: legacy.folders,
+                decks: legacy.decks.map(\.currentDTO)
+            )
+        case BackupEnvelope.currentSchemaVersion:
+            envelope = try decoder.decode(BackupEnvelope.self, from: data)
+        default:
+            throw BackupCodecError.unsupportedSchema(header.schemaVersion)
         }
+
         guard !envelope.decks.isEmpty || !envelope.folders.isEmpty else {
             throw BackupCodecError.emptyBackup
         }
+        try validateTestConfigurations(in: envelope)
         return envelope
+    }
+
+    private static func validateTestConfigurations(in envelope: BackupEnvelope) throws {
+        do {
+            for deck in envelope.decks {
+                let referencedCardIDs = Set(
+                    deck.testConfiguration.multipleChoice.map(\.sourceCardID)
+                    + deck.testConfiguration.trueFalse.map(\.sourceCardID)
+                )
+                _ = try deck.testConfiguration.validated(
+                    validCardIDs: Set(deck.cards.map(\.id)).union(referencedCardIDs)
+                )
+            }
+        } catch {
+            throw BackupCodecError.invalidTestConfiguration
+        }
     }
 }
 
 enum BackupMerger {
     static func merge(
-        local: BackupEnvelopeV1,
-        incoming: BackupEnvelopeV1
-    ) -> BackupEnvelopeV1 {
+        local: BackupEnvelope,
+        incoming: BackupEnvelope
+    ) throws -> BackupEnvelope {
         var folders = Dictionary(uniqueKeysWithValues: local.folders.map { ($0.id, $0) })
         for folder in incoming.folders {
             folders[folder.id] = folder
@@ -245,10 +361,13 @@ enum BackupMerger {
             var mergedDeck = incomingDeck
             mergedDeck.lastOpenedAt = incomingDeck.lastOpenedAt ?? localDeck.lastOpenedAt
             mergedDeck.cards = cards.values.sorted { $0.position < $1.position }
+            mergedDeck.testConfiguration = localDeck.testConfiguration.mergingQuestions(
+                from: incomingDeck.testConfiguration
+            )
             decks[incomingDeck.id] = mergedDeck
         }
 
-        return BackupEnvelopeV1(
+        let result = BackupEnvelope(
             exportedAt: incoming.exportedAt,
             scope: .database,
             folders: folders.values.sorted {
@@ -259,5 +378,15 @@ enum BackupMerger {
             },
             decks: decks.values.sorted { $0.createdAt < $1.createdAt }
         )
+        do {
+            for deck in result.decks {
+                _ = try deck.testConfiguration.validated(
+                    validCardIDs: Set(deck.cards.map(\.id))
+                )
+            }
+        } catch {
+            throw BackupCodecError.invalidTestConfiguration
+        }
+        return result
     }
 }
