@@ -271,9 +271,8 @@ enum ExternalAIProvider: String, CaseIterable, Identifiable, Sendable {
         }
     }
 
-    /// Ordered URLs to try for a native handoff. ChatGPT gets conservative prefill
-    /// attempts first; Claude and Gemini only use their app-launch schemes because no
-    /// consumer-chat prefill route is known to be reliable.
+    /// Ordered native handoff URLs. The UI opens at most one candidate per user action
+    /// so declining the system confirmation remains a terminal cancellation.
     func nativeLaunchCandidates(for prompt: String) -> [URL] {
         switch self {
         case .chatGPT:

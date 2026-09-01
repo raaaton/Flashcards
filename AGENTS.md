@@ -367,6 +367,10 @@ Some forms intentionally keep literal `Button("Annuler")` source text because th
 
 Do not “clean up” audited literals without checking the workflow.
 
+### External AI handoff cancellation
+
+The native Claude, ChatGPT, and Gemini handoff preflights its declared URL schemes and opens at most one URL for each explicit user action. Do not recursively retry another custom URL when `openURL` reports `false`: that result also covers the user cancelling the iOS confirmation, and retrying creates a confirmation loop.
+
 ## 12. Duplicate detection rules
 
 Duplicate detection is centralized in `BulkDuplicateDetector`.
@@ -753,6 +757,7 @@ CI expects:
 - no remote Swift package references
 - no package product dependencies
 - no system capabilities in the project
+- the Claude, ChatGPT, and Gemini query schemes in the generated Info.plist
 - one `PBXNativeTarget`
 - iOS 26.0 deployment target in both configurations
 - Swift 6.0 in both configurations

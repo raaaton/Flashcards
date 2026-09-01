@@ -733,13 +733,12 @@ private struct NewDeckCreationFlow: View {
         HapticService.play(.selection)
 
         openNativeProvider(
-            draft.selectedProvider.nativeLaunchCandidates(for: prompt),
-            at: 0
+            draft.selectedProvider.nativeLaunchCandidates(for: prompt)
         )
     }
 
-    private func openNativeProvider(_ candidates: [URL], at index: Int) {
-        guard candidates.indices.contains(index) else {
+    private func openNativeProvider(_ candidates: [URL]) {
+        guard let launchURL = candidates.first(where: { UIApplication.shared.canOpenURL($0) }) else {
             showAlert(
                 title: L10n.format(
                     "ai.error.app_not_installed_title",
@@ -753,12 +752,9 @@ private struct NewDeckCreationFlow: View {
             return
         }
 
-        openURL(candidates[index]) { accepted in
-            if accepted {
-                draft.hasOpenedProvider = true
-            } else {
-                openNativeProvider(candidates, at: index + 1)
-            }
+        openURL(launchURL) { accepted in
+            guard accepted else { return }
+            draft.hasOpenedProvider = true
         }
     }
 
