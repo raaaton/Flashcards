@@ -456,6 +456,8 @@ Other preferences:
 - shuffle
 - starred-only
 
+`StudySetupView` and `TestSetupView` render their title/session header as plain content above the form, not as toolbar items: the title is larger on the left and the smaller mint session number is aligned right. Do not wrap these labels in Liquid Glass controls.
+
 Outcomes:
 
 - knew
@@ -971,7 +973,7 @@ For drag, swipe, flip, reorder, and animated transitions:
 
 If a system API becomes unreliable on the current iOS runtime, a small custom SwiftUI interaction is acceptable, but keep it understandable and test actual runtime behavior.
 
-`EditCardsView` and `AuthoredTestsEditor` intentionally retain the native automatic grouped-list presentation so their rows appear inside inset neutral section surfaces with shared separators and rounded outer corners. Keep both editors visually aligned when changing list styling.
+`EditCardsView` and `AuthoredTestsEditor` intentionally use plain lists so Test section headers remain pinned while scrolling. `GroupedEditorRowBackground` recreates the inset neutral grouped surfaces with shared separators and rounded outer corners; keep both editors visually aligned when changing this styling.
 
 ## 31. Performance guidance
 

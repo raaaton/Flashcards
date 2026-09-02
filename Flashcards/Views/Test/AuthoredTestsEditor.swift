@@ -61,6 +61,8 @@ struct AuthoredTestsEditor: View {
             multipleChoiceSection
             trueFalseSection
         }
+        .listStyle(.plain)
+        .contentMargins(.horizontal, 16, for: .scrollContent)
         .navigationTitle(
             isSelecting
                 ? L10n.format(
@@ -132,6 +134,12 @@ struct AuthoredTestsEditor: View {
                     ) {
                         multipleChoiceToEdit = question
                     }
+                    .listRowBackground(
+                        GroupedEditorRowBackground(
+                            roundsTopCorners: question.id == draft.multipleChoice.first?.id,
+                            roundsBottomCorners: question.id == draft.multipleChoice.last?.id
+                        )
+                    )
                     .contextMenu {
                         if !isSelecting {
                             deleteQuestionButton { removeMultipleChoice(question.id) }
@@ -165,6 +173,12 @@ struct AuthoredTestsEditor: View {
                     ) {
                         trueFalseToEdit = question
                     }
+                    .listRowBackground(
+                        GroupedEditorRowBackground(
+                            roundsTopCorners: question.id == draft.trueFalse.first?.id,
+                            roundsBottomCorners: question.id == draft.trueFalse.last?.id
+                        )
+                    )
                     .contextMenu {
                         if !isSelecting {
                             deleteQuestionButton { removeTrueFalse(question.id) }
@@ -187,6 +201,12 @@ struct AuthoredTestsEditor: View {
     private var emptyRow: some View {
         Text("test.editor.no_questions_in_section")
             .foregroundStyle(.secondary)
+            .listRowBackground(
+                GroupedEditorRowBackground(
+                    roundsTopCorners: true,
+                    roundsBottomCorners: true
+                )
+            )
     }
 
     @ViewBuilder

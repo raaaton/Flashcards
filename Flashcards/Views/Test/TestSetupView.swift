@@ -107,6 +107,8 @@ struct TestSetupView: View {
 
     var body: some View {
         VStack(spacing: 0) {
+            setupHeader
+
             Form {
                 if resumableSession != nil {
                     Section {
@@ -237,19 +239,6 @@ struct TestSetupView: View {
         }
         .navigationTitle("")
         .navigationBarTitleDisplayMode(.inline)
-        .toolbar {
-            ToolbarItem(placement: .topBarLeading) {
-                Text(L10n.text("Configurer le test"))
-                    .font(.headline)
-            }
-
-            ToolbarItem(placement: .topBarTrailing) {
-                Text(L10n.format("study.session.number", Int64(nextSessionNumber)))
-                    .font(.caption.weight(.semibold))
-                    .foregroundStyle(accent)
-                    .monospacedDigit()
-            }
-        }
         .tint(accent)
         .background {
             Color.clear
@@ -288,6 +277,24 @@ struct TestSetupView: View {
                 normalizeSelectedTypes()
             }
         }
+    }
+
+    private var setupHeader: some View {
+        HStack(alignment: .firstTextBaseline) {
+            Text(L10n.text("Configurer le test"))
+                .font(.title3.weight(.bold))
+
+            Spacer()
+
+            Text(L10n.format("study.session.number", Int64(nextSessionNumber)))
+                .font(.subheadline.weight(.semibold))
+                .foregroundStyle(accent)
+                .monospacedDigit()
+        }
+        .padding(.horizontal, 20)
+        .padding(.top, 8)
+        .padding(.bottom, 4)
+        .accessibilityElement(children: .combine)
     }
 
     private func typeBinding(_ type: TestQuestionType) -> Binding<Bool> {

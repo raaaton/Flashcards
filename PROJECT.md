@@ -546,7 +546,7 @@ Return/import behavior:
 
 No AI state is persisted and no AI response is sent anywhere by Kavi.
 
-`AuthoredTestsEditor` provides native manual entry, AI review, and later editing for custom test questions. Questions and Multiple Choice options use the same tap-to-edit, long-press delete, and trailing-swipe delete interaction language as cards. For an existing deck, its large navigation title and top toolbar mirror card editing with a back control that validates/persists the draft, a selection control for bulk deletion, and a `+` menu for adding Multiple Choice or True / False questions; there is no separate save control or duplicate add control at the bottom. The terminal new-deck creation/review variant retains its confirmation control because it creates the deck. True / False editors consistently show True on the left and False on the right. `EditCardsView` and `AuthoredTestsEditor` both retain the native automatic grouped-list presentation: inset neutral section surfaces, shared separators, and rounded outer section corners. `EditCardsView` provides multi-card management including:
+`AuthoredTestsEditor` provides native manual entry, AI review, and later editing for custom test questions. Questions and Multiple Choice options use the same tap-to-edit, long-press delete, and trailing-swipe delete interaction language as cards. For an existing deck, its large navigation title and top toolbar mirror card editing with a back control that validates/persists the draft, a selection control for bulk deletion, and a `+` menu for adding Multiple Choice or True / False questions; there is no separate save control or duplicate add control at the bottom. The terminal new-deck creation/review variant retains its confirmation control because it creates the deck. True / False editors consistently show True on the left and False on the right. `EditCardsView` and `AuthoredTestsEditor` use plain lists to keep Test type headers pinned while scrolling, with `GroupedEditorRowBackground` recreating the inset neutral surfaces, shared separators, and rounded outer section corners. `EditCardsView` provides multi-card management including:
 
 - selection
 - star / unstar
@@ -655,6 +655,8 @@ Other options:
 
 - shuffle
 - starred-only
+
+The Cards and Test setup screens share a plain text header above their forms: a larger configuration title aligned left and a smaller mint session number aligned right. These labels are content, not Liquid Glass toolbar controls.
 
 ### Session state
 

@@ -49,6 +49,12 @@ struct EditCardsView: View {
             ForEach(orderedCards) { card in
                 cardRow(card)
                     .contentShape(.rect)
+                    .listRowBackground(
+                        GroupedEditorRowBackground(
+                            roundsTopCorners: card.id == orderedCards.first?.id,
+                            roundsBottomCorners: card.id == orderedCards.last?.id
+                        )
+                    )
                     .contextMenu {
                         Button(
                             L10n.text(
@@ -85,6 +91,8 @@ struct EditCardsView: View {
             }
             .onMove(perform: reorderCards)
         }
+        .listStyle(.plain)
+        .contentMargins(.horizontal, 16, for: .scrollContent)
         .overlay {
             if orderedCards.isEmpty {
                 ContentUnavailableView(

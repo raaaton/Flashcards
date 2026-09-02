@@ -60,6 +60,8 @@ struct StudySetupView: View {
 
     var body: some View {
         VStack(spacing: 0) {
+            setupHeader
+
             Form {
                 if resumableSession != nil {
                     Section {
@@ -151,19 +153,6 @@ struct StudySetupView: View {
         }
         .navigationTitle("")
         .navigationBarTitleDisplayMode(.inline)
-        .toolbar {
-            ToolbarItem(placement: .topBarLeading) {
-                Text(L10n.text("study.configure_cards.title"))
-                    .font(.headline)
-            }
-
-            ToolbarItem(placement: .topBarTrailing) {
-                Text(L10n.format("study.session.number", Int64(nextSessionNumber)))
-                    .font(.caption.weight(.semibold))
-                    .foregroundStyle(accent)
-                    .monospacedDigit()
-            }
-        }
         .tint(accent)
         .navigationDestination(isPresented: $showingSession) {
             if let launchedSession {
@@ -204,6 +193,24 @@ struct StudySetupView: View {
                 sessionSize = resumableSession.state.sessionSize ?? .all
             }
         }
+    }
+
+    private var setupHeader: some View {
+        HStack(alignment: .firstTextBaseline) {
+            Text(L10n.text("study.configure_cards.title"))
+                .font(.title3.weight(.bold))
+
+            Spacer()
+
+            Text(L10n.format("study.session.number", Int64(nextSessionNumber)))
+                .font(.subheadline.weight(.semibold))
+                .foregroundStyle(accent)
+                .monospacedDigit()
+        }
+        .padding(.horizontal, 20)
+        .padding(.top, 8)
+        .padding(.bottom, 4)
+        .accessibilityElement(children: .combine)
     }
 
     private func resetProgress() {

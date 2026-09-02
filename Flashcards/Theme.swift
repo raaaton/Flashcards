@@ -83,6 +83,22 @@ struct NeutralIconBadge: View {
     }
 }
 
+struct GroupedEditorRowBackground: View {
+    let roundsTopCorners: Bool
+    let roundsBottomCorners: Bool
+
+    var body: some View {
+        UnevenRoundedRectangle(
+            topLeadingRadius: roundsTopCorners ? 24 : 0,
+            bottomLeadingRadius: roundsBottomCorners ? 24 : 0,
+            bottomTrailingRadius: roundsBottomCorners ? 24 : 0,
+            topTrailingRadius: roundsTopCorners ? 24 : 0,
+            style: .continuous
+        )
+        .fill(Theme.cardBackground)
+    }
+}
+
 struct PrimaryStartButton: View {
     let title: LocalizedStringKey
     let isEnabled: Bool
