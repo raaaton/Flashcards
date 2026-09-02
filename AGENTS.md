@@ -1,6 +1,6 @@
 # AGENTS.md
 
-Instructions for coding agents working in the Flashcards repository.
+Instructions for coding agents working in the Kavi repository. Internal source paths, the Xcode project, target, and scheme intentionally retain the `Flashcards` name.
 
 Read this file together with `PROJECT.md` before making non-trivial changes. `README.md` is public-facing documentation; `PROJECT.md` is the architecture/product map; this file defines how automated coding work should be performed safely.
 
@@ -84,7 +84,7 @@ The v2 design language is intentionally fixed.
 - red: destructive actions + exact duplicate warnings
 - orange: possible duplicate warnings
 - folder cards: neutral surfaces
-- folder icon circles: mint
+- folder icon circles: neutral surfaces with white symbols
 - deck accents: global mint
 
 There is no current user-facing accent/theme picker.
@@ -209,6 +209,8 @@ Current centralized operations include:
 Preserve card ordering when moving/copying/deleting.
 
 Do not copy session progress/history into duplicated decks unless explicitly intended; current duplication copies content/starred state, not the full study-state history.
+
+Duplicated deck/folder names use the localized suffix from `L10n` (`copie`, `copy`, `Kopie`, or `copia`). Do not hard-code the French suffix in `LibraryActions`.
 
 ## 9. Folder drag/reorder — high-risk interaction area
 
@@ -496,6 +498,8 @@ Deck test modes:
 For authored modes, preserve per-type availability, source-card starred filtering, global 10/20/All limits, round-robin pool selection, and the no-fallback rule for Multiple Choice / True-False questions. Direction affects authored-mode written questions only.
 
 The Test-run edit control edits the current Test question, never its source card. Authored Multiple Choice / True-False changes persist to `Deck.testConfigurationData`; generated and written question edits remain scoped to the resumable session.
+
+True / False editor segmented controls keep True on the left and False on the right in every supported language.
 
 Test resume/progress is independent from Flashcards resume/progress. Preserve `Card.testMastered`, `Deck.activeTestSessionData`, `Deck.completedTestSessions`, and `Deck.lastTestActivityAt`; multiple questions sharing a source card count once after every linked question present in the current session is correct.
 
@@ -964,6 +968,8 @@ For drag, swipe, flip, reorder, and animated transitions:
 - persistence timing should not create visible stale-state flashes
 
 If a system API becomes unreliable on the current iOS runtime, a small custom SwiftUI interaction is acceptable, but keep it understandable and test actual runtime behavior.
+
+`EditCardsView` and `AuthoredTestsEditor` intentionally use plain lists so trailing-swipe rows remain rectangular and do not acquire delayed bottom-corner rounding. Do not restore automatic/grouped list styling without device validation.
 
 ## 31. Performance guidance
 

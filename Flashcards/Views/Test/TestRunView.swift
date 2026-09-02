@@ -830,8 +830,8 @@ private struct RuntimeTestQuestionEditor: View {
                 case .trueFalse:
                     Section {
                         Picker("test.editor.correct_answer", selection: $question.correctAnswer) {
-                            Text("test.false").tag("Faux")
                             Text("test.true").tag("Vrai")
+                            Text("test.false").tag("Faux")
                         }
                         .pickerStyle(.segmented)
                     }

@@ -14,6 +14,9 @@ struct AuthoredTestsEditor: View {
     @State private var multipleChoiceToEdit: AuthoredMultipleChoiceQuestion?
     @State private var trueFalseToEdit: AuthoredTrueFalseQuestion?
     @State private var saveErrorMessage: String?
+    @State private var isSelecting = false
+    @State private var selectedQuestionIDs: Set<UUID> = []
+    @State private var showingDeleteSelectionConfirmation = false
 
     init(deck: Deck) {
         self.deck = deck
@@ -40,6 +43,10 @@ struct AuthoredTestsEditor: View {
 
     private var validCardIDs: Set<UUID> { Set(sourceCards.map(\.id)) }
 
+    private var allQuestionIDs: Set<UUID> {
+        Set(draft.multipleChoice.map(\.id) + draft.trueFalse.map(\.id))
+    }
+
     private var validatedConfiguration: DeckTestConfiguration? {
         guard draft.authoredQuestionCount > 0 else { return nil }
         return try? draft.validated(validCardIDs: validCardIDs)
@@ -53,49 +60,19 @@ struct AuthoredTestsEditor: View {
         List {
             multipleChoiceSection
             trueFalseSection
-
-            Section {
-                Menu {
-                    Button("test.editor.add_multiple_choice", systemImage: "list.bullet.circle") {
-                        addMultipleChoice()
-                    }
-                    Button("test.editor.add_true_false", systemImage: "checkmark.circle") {
-                        addTrueFalse()
-                    }
-                } label: {
-                    Label("test.editor.add_question", systemImage: "plus")
-                        .frame(maxWidth: .infinity, alignment: .leading)
-                        .contentShape(.rect)
-                }
-                .frame(maxWidth: .infinity, alignment: .leading)
-                .normalActionColor()
-                .disabled(sourceCards.isEmpty)
-            } footer: {
-                validationFooter
-            }
         }
-        .navigationTitle("test.editor.title")
+        .listStyle(.plain)
+        .navigationTitle(
+            isSelecting
+                ? L10n.format(
+                    "edit_cards.selection_count",
+                    Int64(selectedQuestionIDs.count)
+                )
+                : L10n.text("test.editor.title")
+        )
         .navigationBarTitleDisplayMode(.inline)
-        .navigationBarBackButtonHidden(onBack != nil)
-        .toolbar {
-            if let onBack {
-                ToolbarItem(placement: .topBarLeading) {
-                    Button {
-                        onBack(draft)
-                    } label: {
-                        Image(systemName: "chevron.left")
-                    }
-                    .tint(.white)
-                    .accessibilityLabel("common.back")
-                }
-            }
-
-            ToolbarItem(placement: .confirmationAction) {
-                CircularSaveButton(accent: accent, isEnabled: validatedConfiguration != nil) {
-                    complete()
-                }
-            }
-        }
+        .navigationBarBackButtonHidden(onBack != nil || isSelecting)
+        .toolbar { toolbarContent }
         .sheet(item: $multipleChoiceToEdit) { question in
             MultipleChoiceQuestionEditor(
                 question: question,
@@ -124,6 +101,22 @@ struct AuthoredTestsEditor: View {
         } message: {
             Text(saveErrorMessage ?? "")
         }
+        .background {
+            Color.clear
+                .alert(
+                    "test.editor.delete_selection.title",
+                    isPresented: $showingDeleteSelectionConfirmation
+                ) {
+                    Button("Supprimer", role: .destructive) {
+                        deleteSelectedQuestions()
+                    }
+                    Button("Annuler", role: .cancel) {}
+                        .normalActionColor()
+                } message: {
+                    Text("test.editor.delete_selection.message")
+                }
+                .tint(.white)
+        }
         .tint(.white)
     }
 
@@ -134,6 +127,7 @@ struct AuthoredTestsEditor: View {
             } else {
                 ForEach(draft.multipleChoice) { question in
                     questionRow(
+                        id: question.id,
                         title: question.prompt,
                         sourceCardID: question.sourceCardID,
                         answer: question.correctAnswer ?? ""
@@ -141,10 +135,14 @@ struct AuthoredTestsEditor: View {
                         multipleChoiceToEdit = question
                     }
                     .contextMenu {
-                        deleteQuestionButton { removeMultipleChoice(question.id) }
+                        if !isSelecting {
+                            deleteQuestionButton { removeMultipleChoice(question.id) }
+                        }
                     }
-                    .swipeActions(edge: .trailing, allowsFullSwipe: true) {
-                        swipeDeleteButton { removeMultipleChoice(question.id) }
+                    .swipeActions(edge: .trailing, allowsFullSwipe: !isSelecting) {
+                        if !isSelecting {
+                            swipeDeleteButton { removeMultipleChoice(question.id) }
+                        }
                     }
                 }
             }
@@ -160,6 +158,7 @@ struct AuthoredTestsEditor: View {
             } else {
                 ForEach(draft.trueFalse) { question in
                     questionRow(
+                        id: question.id,
                         title: question.statement,
                         sourceCardID: question.sourceCardID,
                         answer: question.correctAnswer
@@ -169,15 +168,21 @@ struct AuthoredTestsEditor: View {
                         trueFalseToEdit = question
                     }
                     .contextMenu {
-                        deleteQuestionButton { removeTrueFalse(question.id) }
+                        if !isSelecting {
+                            deleteQuestionButton { removeTrueFalse(question.id) }
+                        }
                     }
-                    .swipeActions(edge: .trailing, allowsFullSwipe: true) {
-                        swipeDeleteButton { removeTrueFalse(question.id) }
+                    .swipeActions(edge: .trailing, allowsFullSwipe: !isSelecting) {
+                        if !isSelecting {
+                            swipeDeleteButton { removeTrueFalse(question.id) }
+                        }
                     }
                 }
             }
         } header: {
             Text("\(L10n.text("test.type.true_false")) (\(draft.trueFalse.count))")
+        } footer: {
+            validationFooter
         }
     }
 
@@ -200,39 +205,156 @@ struct AuthoredTestsEditor: View {
     }
 
     private func questionRow(
+        id: UUID,
         title: String,
         sourceCardID: UUID,
         answer: String,
         action: @escaping () -> Void
     ) -> some View {
-        Button {
-            HapticService.play(.selection)
-            action()
-        } label: {
-            VStack(alignment: .leading, spacing: 6) {
-                Text(title)
-                    .font(.headline)
-                    .foregroundStyle(.primary)
-                    .multilineTextAlignment(.leading)
-                    .lineLimit(3)
-
-                if let sourceCard = sourceCards.first(where: { $0.id == sourceCardID }) {
-                    Label(sourceCard.term, systemImage: "rectangle.on.rectangle")
-                        .lineLimit(1)
+        HStack(spacing: 12) {
+            if isSelecting {
+                Button {
+                    toggleSelection(id)
+                } label: {
+                    Image(
+                        systemName: selectedQuestionIDs.contains(id)
+                            ? "checkmark.circle.fill"
+                            : "circle"
+                    )
+                    .font(.title3)
+                    .foregroundStyle(
+                        selectedQuestionIDs.contains(id) ? accent : Color.secondary
+                    )
+                    .frame(width: 44, height: 44)
+                    .contentShape(.rect)
                 }
+                .buttonStyle(.plain)
+                .accessibilityLabel(
+                    L10n.text(
+                        selectedQuestionIDs.contains(id)
+                            ? "Désélectionner"
+                            : "Sélectionner"
+                    )
+                )
+            }
 
-                if !answer.isEmpty {
-                    Label(answer, systemImage: "checkmark.circle")
-                        .lineLimit(2)
+            Button {
+                if isSelecting {
+                    toggleSelection(id)
+                } else {
+                    HapticService.play(.selection)
+                    action()
+                }
+            } label: {
+                VStack(alignment: .leading, spacing: 6) {
+                    Text(title)
+                        .font(.headline)
+                        .foregroundStyle(.primary)
+                        .multilineTextAlignment(.leading)
+                        .lineLimit(3)
+
+                    if let sourceCard = sourceCards.first(where: { $0.id == sourceCardID }) {
+                        Label(sourceCard.term, systemImage: "rectangle.on.rectangle")
+                            .lineLimit(1)
+                    }
+
+                    if !answer.isEmpty {
+                        Label(answer, systemImage: "checkmark.circle")
+                            .lineLimit(2)
+                    }
+                }
+                .font(.subheadline)
+                .foregroundStyle(.secondary)
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .padding(.vertical, 4)
+                .contentShape(.rect)
+            }
+            .buttonStyle(.plain)
+        }
+    }
+
+    @ToolbarContentBuilder
+    private var toolbarContent: some ToolbarContent {
+        if isSelecting {
+            ToolbarItem(placement: .cancellationAction) {
+                Button("Annuler") { endSelection() }
+            }
+
+            ToolbarItem(placement: .topBarTrailing) {
+                Button(
+                    L10n.text(
+                        selectedQuestionIDs == allQuestionIDs
+                            ? "edit_cards.select_none"
+                            : "edit_cards.select_all"
+                    )
+                ) {
+                    selectedQuestionIDs = selectedQuestionIDs == allQuestionIDs
+                        ? []
+                        : allQuestionIDs
                 }
             }
-            .font(.subheadline)
-            .foregroundStyle(.secondary)
-            .frame(maxWidth: .infinity, alignment: .leading)
-            .padding(.vertical, 4)
-            .contentShape(.rect)
+
+            ToolbarItemGroup(placement: .bottomBar) {
+                Button(role: .destructive) {
+                    showingDeleteSelectionConfirmation = true
+                } label: {
+                    Label("Supprimer", systemImage: "trash")
+                        .foregroundStyle(.red)
+                }
+                .tint(.red)
+                .disabled(selectedQuestionIDs.isEmpty)
+                Spacer()
+            }
+        } else {
+            if let onBack {
+                ToolbarItem(placement: .topBarLeading) {
+                    Button {
+                        onBack(draft)
+                    } label: {
+                        Image(systemName: "chevron.left")
+                    }
+                    .tint(.white)
+                    .accessibilityLabel("common.back")
+                }
+            }
+
+            ToolbarItem(placement: .topBarTrailing) {
+                Button {
+                    beginSelection()
+                } label: {
+                    Label(L10n.text("Modifier"), systemImage: "checkmark.circle")
+                }
+                .disabled(allQuestionIDs.isEmpty)
+                .tint(.white)
+            }
+
+            ToolbarSpacer(.fixed, placement: .topBarTrailing)
+
+            ToolbarItem(placement: .topBarTrailing) {
+                Menu {
+                    Button("test.editor.add_multiple_choice", systemImage: "list.bullet.circle") {
+                        addMultipleChoice()
+                    }
+                    Button("test.editor.add_true_false", systemImage: "checkmark.circle") {
+                        addTrueFalse()
+                    }
+                } label: {
+                    Image(systemName: "plus")
+                        .neutralIconColor()
+                }
+                .tint(.white)
+                .disabled(sourceCards.isEmpty)
+                .accessibilityLabel("test.editor.add_question")
+            }
+
+            ToolbarSpacer(.fixed, placement: .topBarTrailing)
+
+            ToolbarItem(placement: .confirmationAction) {
+                CircularSaveButton(accent: accent, isEnabled: validatedConfiguration != nil) {
+                    complete()
+                }
+            }
         }
-        .buttonStyle(.plain)
     }
 
     private func deleteQuestionButton(action: @escaping () -> Void) -> some View {
@@ -294,6 +416,36 @@ struct AuthoredTestsEditor: View {
     private func removeTrueFalse(_ id: UUID) {
         draft.trueFalse.removeAll { $0.id == id }
         HapticService.play(.selection)
+    }
+
+    private func beginSelection() {
+        selectedQuestionIDs.removeAll()
+        withAnimation(.snappy(duration: 0.25)) {
+            isSelecting = true
+        }
+    }
+
+    private func endSelection() {
+        withAnimation(.snappy(duration: 0.25)) {
+            selectedQuestionIDs.removeAll()
+            isSelecting = false
+        }
+    }
+
+    private func toggleSelection(_ id: UUID) {
+        if selectedQuestionIDs.contains(id) {
+            selectedQuestionIDs.remove(id)
+        } else {
+            selectedQuestionIDs.insert(id)
+        }
+        HapticService.play(.selection)
+    }
+
+    private func deleteSelectedQuestions() {
+        draft.multipleChoice.removeAll { selectedQuestionIDs.contains($0.id) }
+        draft.trueFalse.removeAll { selectedQuestionIDs.contains($0.id) }
+        HapticService.play(.selection)
+        endSelection()
     }
 
     private func complete() {
@@ -481,8 +633,8 @@ private struct TrueFalseQuestionEditor: View {
                         .lineLimit(2...5)
                     SourceCardPicker(sourceCards: sourceCards, selection: $question.sourceCardID)
                     Picker("test.editor.correct_answer", selection: $question.correctAnswer) {
-                        Text("test.false").tag(false)
                         Text("test.true").tag(true)
+                        Text("test.false").tag(false)
                     }
                     .pickerStyle(.segmented)
                 } footer: {

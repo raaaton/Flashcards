@@ -1,12 +1,12 @@
-# Flashcards — Project Guide
+# Kavi — Project Guide
 
-`PROJECT.md` is the technical map of the Flashcards repository. It complements `README.md`, which is user-facing, and `AGENTS.md`, which contains operational rules for coding agents.
+`PROJECT.md` is the technical map of the Kavi repository. It complements `README.md`, which is user-facing, and `AGENTS.md`, which contains operational rules for coding agents. Internal source paths, the Xcode project, target, and scheme intentionally retain the `Flashcards` name.
 
 This document describes the current v2 architecture on `main`. When documentation and implementation disagree, the current source code, tests, and workflow are the final behavioral truth.
 
 ## 1. Product summary
 
-Flashcards is a native, local-first iOS study app focused on fast card creation, simple organization, focused revision, and full ownership of study data.
+Kavi is a native, local-first iOS study app focused on fast card creation, simple organization, focused revision, and full ownership of study data.
 
 The product intentionally avoids infrastructure that is unnecessary for a personal study tool:
 
@@ -22,7 +22,7 @@ The product intentionally avoids infrastructure that is unnecessary for a person
 - no CloudKit synchronization
 - JSON export/restore for user-owned data
 
-The optional Create with AI flow is a user-initiated handoff to ChatGPT, Claude, or Gemini: Flashcards creates and copies a prompt, opens the provider through the system URL handler, and later parses JSON that the user explicitly pastes back. The provider's app/site owns its own network access, document upload, account state, and AI processing. Flashcards does not embed an AI model, call an AI API, proxy requests, or upload the user's study documents itself.
+The optional Create with AI flow is a user-initiated handoff to ChatGPT, Claude, or Gemini: Kavi creates and copies a prompt, opens the provider through the system URL handler, and later parses JSON that the user explicitly pastes back. The provider's app/site owns its own network access, document upload, account state, and AI processing. Kavi does not embed an AI model, call an AI API, proxy requests, or upload the user's study documents itself.
 
 The app should feel like an Apple-native utility rather than a cross-platform product ported to iOS.
 
@@ -529,7 +529,7 @@ Provider behavior:
 - provider launch uses stable public HTTPS entry points
 - the feature does not depend on undocumented prompt-prefill parameters
 - if a provider does not prefill the composer, the user pastes the already-copied prompt manually
-- source notes/images/documents are attached inside the provider, not read or uploaded by Flashcards
+- source notes/images/documents are attached inside the provider, not read or uploaded by Kavi
 
 Return/import behavior:
 
@@ -544,9 +544,9 @@ Return/import behavior:
 - parsed cards are passed into the same editable new-deck draft UI used by manual creation
 - the same `BulkDuplicateDetector` and final SwiftData save path are reused
 
-No AI state is persisted and no AI response is sent anywhere by Flashcards.
+No AI state is persisted and no AI response is sent anywhere by Kavi.
 
-`AuthoredTestsEditor` provides native manual entry, AI review, and later editing for custom test questions. Questions and Multiple Choice options use the same tap-to-edit, long-press delete, and trailing-swipe delete interaction language as cards. `EditCardsView` provides multi-card management including:
+`AuthoredTestsEditor` provides native manual entry, AI review, and later editing for custom test questions. Questions and Multiple Choice options use the same tap-to-edit, long-press delete, and trailing-swipe delete interaction language as cards. Its top toolbar mirrors card editing with a selection control for bulk deletion and a `+` menu for adding Multiple Choice or True / False questions; there is no duplicate add control at the bottom. True / False editors consistently show True on the left and False on the right. `EditCardsView` and `AuthoredTestsEditor` intentionally use plain lists so swipe rows stay rectangular instead of acquiring delayed bottom-corner rounding. `EditCardsView` provides multi-card management including:
 
 - selection
 - star / unstar
@@ -1075,7 +1075,7 @@ Some current CI assertions grep exact source literals. Refactors that are semant
 
 ### External provider handoff
 
-Provider websites/apps can change their URL handling independently of Flashcards. Keep clipboard copy as the reliable path, avoid depending on undocumented query parameters, and manually validate the ChatGPT/Claude/Gemini open-return experience on a real iPhone when this flow changes.
+Provider websites/apps can change their URL handling independently of Kavi. Keep clipboard copy as the reliable path, avoid depending on undocumented query parameters, and manually validate the ChatGPT/Claude/Gemini open-return experience on a real iPhone when this flow changes.
 
 ## 30. Definition of project consistency
 

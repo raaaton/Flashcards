@@ -85,6 +85,7 @@ struct EditCardsView: View {
             }
             .onMove(perform: reorderCards)
         }
+        .listStyle(.plain)
         .overlay {
             if orderedCards.isEmpty {
                 ContentUnavailableView(
