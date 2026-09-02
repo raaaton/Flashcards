@@ -70,8 +70,7 @@ struct AuthoredTestsEditor: View {
                 )
                 : L10n.text("test.editor.title")
         )
-        .navigationBarTitleDisplayMode(.inline)
-        .navigationBarBackButtonHidden(onBack != nil || isSelecting)
+        .navigationBarBackButtonHidden(true)
         .toolbar { toolbarContent }
         .sheet(item: $multipleChoiceToEdit) { question in
             MultipleChoiceQuestionEditor(
@@ -134,6 +133,7 @@ struct AuthoredTestsEditor: View {
                     ) {
                         multipleChoiceToEdit = question
                     }
+                    .listRowBackground(Theme.cardBackground)
                     .contextMenu {
                         if !isSelecting {
                             deleteQuestionButton { removeMultipleChoice(question.id) }
@@ -167,6 +167,7 @@ struct AuthoredTestsEditor: View {
                     ) {
                         trueFalseToEdit = question
                     }
+                    .listRowBackground(Theme.cardBackground)
                     .contextMenu {
                         if !isSelecting {
                             deleteQuestionButton { removeTrueFalse(question.id) }
@@ -189,6 +190,7 @@ struct AuthoredTestsEditor: View {
     private var emptyRow: some View {
         Text("test.editor.no_questions_in_section")
             .foregroundStyle(.secondary)
+            .listRowBackground(Theme.cardBackground)
     }
 
     @ViewBuilder
@@ -306,16 +308,14 @@ struct AuthoredTestsEditor: View {
                 Spacer()
             }
         } else {
-            if let onBack {
-                ToolbarItem(placement: .topBarLeading) {
-                    Button {
-                        onBack(draft)
-                    } label: {
-                        Image(systemName: "chevron.left")
-                    }
-                    .tint(.white)
-                    .accessibilityLabel("common.back")
+            ToolbarItem(placement: .topBarLeading) {
+                Button {
+                    navigateBack()
+                } label: {
+                    Image(systemName: "chevron.left")
                 }
+                .tint(.white)
+                .accessibilityLabel("common.back")
             }
 
             ToolbarItem(placement: .topBarTrailing) {
@@ -347,11 +347,13 @@ struct AuthoredTestsEditor: View {
                 .accessibilityLabel("test.editor.add_question")
             }
 
-            ToolbarSpacer(.fixed, placement: .topBarTrailing)
+            if deck == nil {
+                ToolbarSpacer(.fixed, placement: .topBarTrailing)
 
-            ToolbarItem(placement: .confirmationAction) {
-                CircularSaveButton(accent: accent, isEnabled: validatedConfiguration != nil) {
-                    complete()
+                ToolbarItem(placement: .confirmationAction) {
+                    CircularSaveButton(accent: accent, isEnabled: validatedConfiguration != nil) {
+                        complete()
+                    }
                 }
             }
         }
@@ -448,9 +450,13 @@ struct AuthoredTestsEditor: View {
         endSelection()
     }
 
-    private func complete() {
-        guard let validatedConfiguration else { return }
+    private func navigateBack() {
         if let deck {
+            guard let validatedConfiguration else {
+                saveErrorMessage = L10n.text("test.editor.validation_error")
+                return
+            }
+
             deck.setTestConfiguration(validatedConfiguration)
             deck.updatedAt = .now
             do {
@@ -461,8 +467,13 @@ struct AuthoredTestsEditor: View {
                 saveErrorMessage = error.localizedDescription
             }
         } else {
-            onComplete?(validatedConfiguration)
+            onBack?(draft)
         }
+    }
+
+    private func complete() {
+        guard deck == nil, let validatedConfiguration else { return }
+        onComplete?(validatedConfiguration)
     }
 }
 

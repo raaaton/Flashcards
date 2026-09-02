@@ -499,6 +499,8 @@ For authored modes, preserve per-type availability, source-card starred filterin
 
 The Test-run edit control edits the current Test question, never its source card. Authored Multiple Choice / True-False changes persist to `Deck.testConfigurationData`; generated and written question edits remain scoped to the resumable session.
 
+For an existing deck, `AuthoredTestsEditor` validates and persists changes from its leading back control; it has no separate confirmation checkmark. The new-deck creation/review variant keeps its terminal confirmation control because that action creates the deck.
+
 True / False editor segmented controls keep True on the left and False on the right in every supported language.
 
 Test resume/progress is independent from Flashcards resume/progress. Preserve `Card.testMastered`, `Deck.activeTestSessionData`, `Deck.completedTestSessions`, and `Deck.lastTestActivityAt`; multiple questions sharing a source card count once after every linked question present in the current session is correct.
@@ -969,7 +971,7 @@ For drag, swipe, flip, reorder, and animated transitions:
 
 If a system API becomes unreliable on the current iOS runtime, a small custom SwiftUI interaction is acceptable, but keep it understandable and test actual runtime behavior.
 
-`EditCardsView` and `AuthoredTestsEditor` intentionally use plain lists so trailing-swipe rows remain rectangular and do not acquire delayed bottom-corner rounding. Do not restore automatic/grouped list styling without device validation.
+`EditCardsView` and `AuthoredTestsEditor` intentionally use plain lists with explicit `Theme.cardBackground` row surfaces so trailing-swipe rows remain rectangular and do not acquire delayed bottom-corner rounding. Do not restore automatic/grouped list styling without device validation.
 
 ## 31. Performance guidance
 

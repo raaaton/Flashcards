@@ -49,6 +49,7 @@ struct EditCardsView: View {
             ForEach(orderedCards) { card in
                 cardRow(card)
                     .contentShape(.rect)
+                    .listRowBackground(Theme.cardBackground)
                     .contextMenu {
                         Button(
                             L10n.text(
