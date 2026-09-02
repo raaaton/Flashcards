@@ -126,16 +126,17 @@ struct TestSetupView: View {
 
                 Section {
                     ForEach(TestQuestionType.allCases) { type in
-                        HStack {
-                            Toggle(type.title, isOn: typeBinding(type))
-                                .disabled(resumableSession != nil || !isTypeAvailable(type))
-
-                            if configuration.mode != .useFlashcards {
-                                Text("\(availability.count(for: type))")
-                                    .foregroundStyle(.secondary)
-                                    .monospacedDigit()
+                        Toggle(isOn: typeBinding(type)) {
+                            HStack(spacing: 4) {
+                                Text(type.title)
+                                if configuration.mode != .useFlashcards {
+                                    Text("(\(availability.count(for: type)))")
+                                        .foregroundStyle(.secondary)
+                                        .monospacedDigit()
+                                }
                             }
                         }
+                        .disabled(resumableSession != nil || !isTypeAvailable(type))
                     }
                 } header: {
                     Text("Types de questions")

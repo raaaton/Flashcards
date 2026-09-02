@@ -484,6 +484,17 @@ struct HomeView: View {
                                 .contentShape(.rect(cornerRadius: 22, style: .continuous))
                             }
                             .buttonStyle(.plain)
+                            .contextMenu {
+                                Button(role: .destructive) {
+                                    resetProgress(for: resumableDeck)
+                                } label: {
+                                    Label(
+                                        resetProgressTitle(for: resumableDeck),
+                                        systemImage: "trash"
+                                    )
+                                }
+                                .tint(.red)
+                            }
                             .accessibilityLabel(
                                 "Reprendre \(resumableDeck.session.title), \(resumableDeck.deck.name)"
                             )
@@ -1054,6 +1065,25 @@ struct HomeView: View {
         try? modelContext.save()
         quickResume = resumable
         showingQuickResume = true
+    }
+
+    private func resetProgress(for resumable: ResumableDeck) {
+        switch resumable.session {
+        case .flashcards:
+            LibraryActions.resetStudyProgress(for: resumable.deck, in: modelContext)
+        case .test:
+            LibraryActions.resetTestProgress(for: resumable.deck, in: modelContext)
+        }
+        HapticService.play(.selection)
+    }
+
+    private func resetProgressTitle(for resumable: ResumableDeck) -> String {
+        switch resumable.session {
+        case .flashcards:
+            L10n.text("Réinitialiser la progression")
+        case .test:
+            L10n.text("test.progress.reset.action")
+        }
     }
 
     private func activityDate(for resumable: ResumableDeck) -> Date {

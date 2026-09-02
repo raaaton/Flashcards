@@ -24,6 +24,8 @@ struct TestRunView: View {
     @State private var didRecordCompletion = false
     @State private var showCelebration = false
     @State private var confirmingReset = false
+    @State private var cardToEdit: Card?
+    @State private var cardBeforeEditing: TestCardSnapshot?
     @FocusState private var writtenFieldIsFocused: Bool
 
     init(
@@ -72,6 +74,39 @@ struct TestRunView: View {
                 }
                 .tint(.white)
                 .accessibilityLabel("Quitter")
+            }
+
+            if !session.isComplete {
+                ToolbarItem(placement: .topBarTrailing) {
+                    Button {
+                        guard feedbackIsCorrect == nil,
+                              !isTransitioning,
+                              let card = currentDeckCard else { return }
+                        HapticService.play(.selection)
+                        cardBeforeEditing = TestCardSnapshot(
+                            id: card.id,
+                            term: card.term,
+                            definition: card.definition
+                        )
+                        cardToEdit = card
+                    } label: {
+                        Image(systemName: "square.and.pencil")
+                            .neutralIconColor()
+                    }
+                    .buttonStyle(.plain)
+                    .tint(.white)
+                    .disabled(
+                        feedbackIsCorrect != nil
+                            || isTransitioning
+                            || currentDeckCard == nil
+                    )
+                    .accessibilityLabel(L10n.text("card.edit.title"))
+                }
+            }
+        }
+        .sheet(item: $cardToEdit) { card in
+            CardFormView(deck: deck, card: card) {
+                refreshSourceCard(from: card)
             }
         }
         .overlay {
@@ -144,7 +179,7 @@ struct TestRunView: View {
                     } label: {
                         Text(session.isLastQuestion ? "test.see_results" : "common.next")
                             .font(.headline)
-                            .foregroundStyle(.white)
+                            .foregroundStyle(Theme.foreground(on: accent))
                             .frame(maxWidth: .infinity)
                             .padding(.vertical, 14)
                             .background(
@@ -226,21 +261,19 @@ struct TestRunView: View {
     }
 
     private func trueFalseAnswers(_ question: TestQuestion) -> some View {
-        GlassEffectContainer(spacing: 16) {
-            HStack(spacing: 16) {
-                verdictButton(
-                    canonicalAnswer: "Faux",
-                    title: L10n.text("test.false"),
-                    systemImage: "xmark",
-                    question: question
-                )
-                verdictButton(
-                    canonicalAnswer: "Vrai",
-                    title: L10n.text("test.true"),
-                    systemImage: "checkmark",
-                    question: question
-                )
-            }
+        HStack(spacing: 12) {
+            verdictButton(
+                canonicalAnswer: "Faux",
+                title: L10n.text("test.false"),
+                systemImage: "xmark",
+                question: question
+            )
+            verdictButton(
+                canonicalAnswer: "Vrai",
+                title: L10n.text("test.true"),
+                systemImage: "checkmark",
+                question: question
+            )
         }
     }
 
@@ -250,19 +283,64 @@ struct TestRunView: View {
         systemImage: String,
         question: TestQuestion
     ) -> some View {
-        Button(title, systemImage: systemImage) { submit(canonicalAnswer) }
-            .buttonStyle(.glassProminent)
-            .tint(verdictTint(canonicalAnswer, question: question))
-            .frame(maxWidth: .infinity)
-            .scaleEffect(selectedAnswer == canonicalAnswer ? 1.025 : 1)
-            .disabled(isTransitioning || feedbackIsCorrect != nil)
-            .animation(.easeOut(duration: 0.15), value: selectedAnswer)
+        Button {
+            submit(canonicalAnswer)
+        } label: {
+            VStack(spacing: 9) {
+                Image(systemName: systemImage)
+                    .font(.title2.weight(.bold))
+                    .frame(width: 34, height: 34)
+                    .background(
+                        verdictSymbolBackground(canonicalAnswer, question: question),
+                        in: .circle
+                    )
+
+                Text(title)
+                    .font(.headline)
+            }
+            .foregroundStyle(verdictForeground(canonicalAnswer, question: question))
+            .frame(maxWidth: .infinity, minHeight: 88)
+            .background(
+                verdictBackground(canonicalAnswer, question: question),
+                in: .rect(cornerRadius: 18, style: .continuous)
+            )
+            .overlay {
+                RoundedRectangle(cornerRadius: 18, style: .continuous)
+                    .stroke(
+                        verdictStroke(canonicalAnswer, question: question),
+                        lineWidth: 1.5
+                    )
+            }
+            .contentShape(.rect(cornerRadius: 18, style: .continuous))
+        }
+        .buttonStyle(.plain)
+        .scaleEffect(selectedAnswer == canonicalAnswer ? 1.025 : 1)
+        .disabled(isTransitioning || feedbackIsCorrect != nil)
+        .animation(.easeOut(duration: 0.15), value: selectedAnswer)
     }
 
     private func writtenAnswerForm(_ question: TestQuestion) -> some View {
-        VStack(spacing: 16) {
-            TextField("Votre réponse", text: $writtenAnswer)
-                .textFieldStyle(.roundedBorder)
+        let canSubmit = !isTransitioning
+            && feedbackIsCorrect == nil
+            && !writtenAnswer.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+
+        return VStack(spacing: 12) {
+            TextField("Votre réponse", text: $writtenAnswer, axis: .vertical)
+                .font(.body)
+                .lineLimit(1...4)
+                .padding(.horizontal, 16)
+                .padding(.vertical, 15)
+                .background(
+                    Theme.cardBackground,
+                    in: .rect(cornerRadius: 16, style: .continuous)
+                )
+                .overlay {
+                    RoundedRectangle(cornerRadius: 16, style: .continuous)
+                        .stroke(
+                            writtenFieldIsFocused ? accent : Theme.subtleStroke,
+                            lineWidth: writtenFieldIsFocused ? 1.5 : 1
+                        )
+                }
                 .submitLabel(.done)
                 .focused($writtenFieldIsFocused)
                 .disabled(isTransitioning || feedbackIsCorrect != nil)
@@ -272,16 +350,20 @@ struct TestRunView: View {
                 submitWrittenAnswer()
             } label: {
                 Label("Valider", systemImage: "checkmark")
+                    .font(.headline)
+                    .foregroundStyle(
+                        canSubmit ? Theme.foreground(on: accent) : Color.secondary
+                    )
                     .frame(maxWidth: .infinity)
-                    .contentShape(.rect)
+                    .padding(.vertical, 14)
+                    .background(
+                        canSubmit ? accent : Theme.cardBackground,
+                        in: .rect(cornerRadius: 16, style: .continuous)
+                    )
+                    .contentShape(.rect(cornerRadius: 16, style: .continuous))
             }
-                .buttonStyle(.borderedProminent)
-                .foregroundStyle(.white)
-                .disabled(
-                    isTransitioning
-                        || feedbackIsCorrect != nil
-                        || writtenAnswer.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
-                )
+            .buttonStyle(.plain)
+            .disabled(!canSubmit)
         }
     }
 
@@ -409,11 +491,35 @@ struct TestRunView: View {
         return .secondary.opacity(0.25)
     }
 
-    private func verdictTint(_ answer: String, question: TestQuestion) -> Color {
-        guard selectedAnswer != nil else { return answer == "Vrai" ? .green : .red }
+    private func verdictBackground(_ answer: String, question: TestQuestion) -> Color {
+        guard selectedAnswer != nil else { return Theme.cardBackground }
+        if answersMatch(answer, question.correctAnswer) { return .green.opacity(0.22) }
+        if selectedAnswer == answer { return .red.opacity(0.22) }
+        return Theme.cardBackground.opacity(0.7)
+    }
+
+    private func verdictStroke(_ answer: String, question: TestQuestion) -> Color {
+        guard selectedAnswer != nil else { return Theme.subtleStroke }
         if answersMatch(answer, question.correctAnswer) { return .green }
         if selectedAnswer == answer { return .red }
-        return .gray
+        return Theme.subtleStroke
+    }
+
+    private func verdictSymbolBackground(_ answer: String, question: TestQuestion) -> Color {
+        let color: Color = answer == "Vrai" ? .green : .red
+        guard selectedAnswer != nil else { return color.opacity(0.18) }
+        if answersMatch(answer, question.correctAnswer) || selectedAnswer == answer {
+            return color
+        }
+        return color.opacity(0.12)
+    }
+
+    private func verdictForeground(_ answer: String, question: TestQuestion) -> Color {
+        guard selectedAnswer != nil else { return .primary }
+        if answersMatch(answer, question.correctAnswer) || selectedAnswer == answer {
+            return .primary
+        }
+        return .secondary
     }
 
     private func answersMatch(_ lhs: String, _ rhs: String) -> Bool {
@@ -429,6 +535,31 @@ struct TestRunView: View {
         let cleanAnswer = writtenAnswer.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !cleanAnswer.isEmpty else { return }
         submit(cleanAnswer)
+    }
+
+    private var currentDeckCard: Card? {
+        guard let cardID = session.currentQuestion?.cardID else { return nil }
+        return deck.cards.first(where: { $0.id == cardID })
+    }
+
+    private func refreshSourceCard(from card: Card) {
+        guard let previous = cardBeforeEditing, previous.id == card.id else { return }
+        let updated = TestCardSnapshot(
+            id: card.id,
+            term: card.term,
+            definition: card.definition
+        )
+        session.refreshSourceCard(
+            previous: previous,
+            updated: updated,
+            configurationMode: deck.testConfiguration.mode
+        )
+        cardBeforeEditing = nil
+        deck.updatedAt = .now
+        if session.currentIndex > 0 || !session.answers.isEmpty {
+            persistActiveSession()
+        }
+        try? modelContext.save()
     }
 
     private func submit(_ answer: String) {

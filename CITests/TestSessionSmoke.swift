@@ -167,6 +167,43 @@ enum TestSessionSmoke {
         precondition(mixedAuthored.filter { $0.type == .trueFalse }.count == 1)
         precondition(mixedAuthored.first { $0.type == .trueFalse }?.referenceAnswer == nil)
 
+        let updatedFirstCard = TestCardSnapshot(
+            id: cards[0].id,
+            term: "Terme modifié",
+            definition: "Définition modifiée"
+        )
+        var authoredEditSession = TestSessionState(questions: mixedAuthored)
+        authoredEditSession.refreshSourceCard(
+            previous: cards[0],
+            updated: updatedFirstCard,
+            configurationMode: .manual
+        )
+        precondition(authoredEditSession.questions[0].prompt == "QCM 1")
+        let refreshedWritten = authoredEditSession.questions.first {
+            $0.cardID == cards[0].id && $0.type == .written
+        }
+        precondition(refreshedWritten?.prompt == updatedFirstCard.term)
+        precondition(refreshedWritten?.correctAnswer == updatedFirstCard.definition)
+
+        let generatedEditQuestions = TestQuestionFactory.makeQuestions(
+            cards: cards,
+            types: [.multipleChoice],
+            count: 1,
+            direction: .termToDefinition,
+            shuffle: false
+        )
+        var generatedEditSession = TestSessionState(questions: generatedEditQuestions)
+        generatedEditSession.refreshSourceCard(
+            previous: cards[0],
+            updated: updatedFirstCard,
+            configurationMode: .useFlashcards
+        )
+        precondition(generatedEditSession.currentQuestion?.prompt == updatedFirstCard.term)
+        precondition(generatedEditSession.currentQuestion?.correctAnswer == updatedFirstCard.definition)
+        precondition(
+            generatedEditSession.currentQuestion?.choices.contains(updatedFirstCard.definition) == true
+        )
+
         let authoredForward = AuthoredTestQuestionFactory.makeQuestions(
             cards: cards,
             configuration: authored,

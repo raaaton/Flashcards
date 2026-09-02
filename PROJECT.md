@@ -546,7 +546,7 @@ Return/import behavior:
 
 No AI state is persisted and no AI response is sent anywhere by Flashcards.
 
-`AuthoredTestsEditor` provides native manual entry, AI review, and later editing for custom test questions. `EditCardsView` provides multi-card management including:
+`AuthoredTestsEditor` provides native manual entry, AI review, and later editing for custom test questions. Questions and Multiple Choice options use the same tap-to-edit, long-press delete, and trailing-swipe delete interaction language as cards. `EditCardsView` provides multi-card management including:
 
 - selection
 - star / unstar
@@ -746,13 +746,15 @@ Test answers are normalized case-insensitively, diacritic-insensitively, width-i
 
 Written answers can be manually overridden to correct when the automatic matcher is too strict. Incorrect questions can be retried through `retryErrors()`.
 
+The current source card can be edited directly from `TestRunView`, as in the Flashcards flow. Generated pending question content is refreshed in place while authored Multiple Choice / True-False wording remains fixed.
+
 `ActiveTestSessionSnapshot` preserves the generated questions, configuration, submitted answers, current feedback, and session number. It is stored in `activeTestSessionData`, shown in Home Resume alongside Flashcards sessions, and cleared when the Test completes or its progress is reset.
 
 Test mastery is independent from Flashcards mastery. A source card becomes Test-mastered once every question for that card in the current Test session is correct; multiple authored questions linked to the same card therefore count only once toward deck progress.
 
 ## 18. Study history and progress
 
-Deck detail shows separate Flashcards and Test mastery progress. `DeckProgressBar` is labeled “Flashcards Progress” in English; `TestProgressBar` displays the independent Test state.
+Flashcards and Test mastery stay independent. Their progress bars live in the corresponding setup screens, while deck detail stays focused on study actions, cards, test configuration, and history.
 
 When enabled, completed Flashcards/Test sessions are recorded in each deck's bounded study history.
 

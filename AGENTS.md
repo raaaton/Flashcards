@@ -736,7 +736,7 @@ CI expects:
 - deck detail uses the contextual accent several times
 - `CircularSaveButton`, `DeckProgressBar`, `TestProgressBar`, and `CardEditorSurface` exist in `Theme.swift`
 - `DeckFormView` and `CardFormView` use `CardEditorSurface`
-- `DeckDetailView` and `StudySetupView` use `DeckProgressBar`
+- `StudySetupView` uses `DeckProgressBar`; deck detail intentionally shows no progress bars
 
 ### Form toolbar literals
 

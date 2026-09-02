@@ -268,7 +268,6 @@ jobs:
                   grep -q 'CircularSaveButton(' Flashcards/Views/Import/BulkImportView.swift
                   grep -q 'CardEditorSurface(' Flashcards/Views/Library/DeckFormView.swift
                   grep -q 'CardEditorSurface(' Flashcards/Views/Library/CardFormView.swift
-                  grep -q 'DeckProgressBar(' Flashcards/Views/Library/DeckDetailView.swift
                   grep -q 'DeckProgressBar(' Flashcards/Views/Study/StudySetupView.swift
                   grep -q 'TestProgressBar(' Flashcards/Views/Test/TestSetupView.swift
                   grep -q 'TestSessionPersistence.decode' Flashcards/Views/HomeView.swift

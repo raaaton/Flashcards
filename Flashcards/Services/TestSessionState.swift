@@ -26,11 +26,11 @@ struct TestQuestion: Identifiable, Equatable, Codable, Sendable {
     let id: UUID
     let cardID: UUID
     let type: TestQuestionType
-    let prompt: String
-    let secondaryText: String?
-    let correctAnswer: String
-    let referenceAnswer: String?
-    let choices: [String]
+    var prompt: String
+    var secondaryText: String?
+    var correctAnswer: String
+    var referenceAnswer: String?
+    var choices: [String]
 }
 
 struct TestAnswerRecord: Identifiable, Equatable, Codable, Sendable {
@@ -366,6 +366,62 @@ struct TestSessionState: Equatable, Codable, Sendable {
         currentIndex = 0
         answers = []
         currentAnswer = nil
+    }
+
+    mutating func refreshSourceCard(
+        previous: TestCardSnapshot,
+        updated: TestCardSnapshot,
+        configurationMode: DeckTestCreationMode
+    ) {
+        guard previous.id == updated.id, currentAnswer == nil else { return }
+
+        for index in questions.indices where index >= currentIndex {
+            guard questions[index].cardID == updated.id else { continue }
+            if configurationMode != .useFlashcards,
+               questions[index].type != .written {
+                continue
+            }
+
+            let promptMatchesDefinition = TestQuestionFactory.normalize(
+                questions[index].prompt
+            ) == TestQuestionFactory.normalize(previous.definition)
+            let promptMatchesTerm = TestQuestionFactory.normalize(
+                questions[index].prompt
+            ) == TestQuestionFactory.normalize(previous.term)
+            guard promptMatchesDefinition || promptMatchesTerm else { continue }
+
+            let isReversed = promptMatchesDefinition && !promptMatchesTerm
+            let oldAnswer = isReversed ? previous.term : previous.definition
+            let newPrompt = isReversed ? updated.definition : updated.term
+            let newAnswer = isReversed ? updated.term : updated.definition
+
+            questions[index].prompt = newPrompt
+
+            switch questions[index].type {
+            case .multipleChoice:
+                questions[index].correctAnswer = newAnswer
+                questions[index].referenceAnswer = newAnswer
+                questions[index].choices = questions[index].choices.map { choice in
+                    TestQuestionFactory.normalize(choice)
+                        == TestQuestionFactory.normalize(oldAnswer)
+                        ? newAnswer
+                        : choice
+                }
+
+            case .trueFalse:
+                questions[index].referenceAnswer = newAnswer
+                if questions[index].correctAnswer == "Vrai",
+                   let secondaryText = questions[index].secondaryText,
+                   TestQuestionFactory.normalize(secondaryText)
+                    == TestQuestionFactory.normalize(oldAnswer) {
+                    questions[index].secondaryText = newAnswer
+                }
+
+            case .written:
+                questions[index].correctAnswer = newAnswer
+                questions[index].referenceAnswer = newAnswer
+            }
+        }
     }
 }
 

@@ -17,20 +17,15 @@ struct DeckDetailView: View {
         deck.cards.sorted { $0.position < $1.position }
     }
 
-    private var masteredCount: Int {
-        deck.cards.count(where: \.mastered)
-    }
-
     var body: some View {
         ScrollView {
             LazyVStack(alignment: .leading, spacing: 24) {
-                deckSummary
                 studySection
+                cardsSection
                 testsSection
                 if settings.studyHistoryEnabled && !deck.studyHistory.isEmpty {
                     studyHistorySection
                 }
-                cardsSection
             }
             .padding(.horizontal)
             .padding(.top, 8)
@@ -83,29 +78,6 @@ struct DeckDetailView: View {
                 }
                 .tint(.white)
         }
-    }
-
-    private var deckSummary: some View {
-        VStack(alignment: .leading, spacing: 16) {
-            DeckProgressBar(
-                deckName: deck.name,
-                masteredCount: masteredCount,
-                totalCount: deck.cards.count,
-                accent: Theme.deckAccent(for: deck)
-            )
-
-            Divider()
-
-            TestProgressBar(
-                deckName: deck.name,
-                masteredCount: deck.cards.count(where: \.testMastered),
-                totalCount: deck.cards.count,
-                accent: Theme.deckAccent(for: deck)
-            )
-        }
-        .frame(maxWidth: .infinity, alignment: .leading)
-        .padding(18)
-        .background(Theme.cardBackground, in: .rect(cornerRadius: 20, style: .continuous))
     }
 
     private var studySection: some View {
@@ -185,11 +157,32 @@ struct DeckDetailView: View {
 
     private var testsSection: some View {
         let configuration = deck.testConfiguration
+        let previews = testQuestionPreviews(configuration)
         return VStack(alignment: .leading, spacing: 12) {
             Text(L10n.text("deck.tests.title"))
                 .font(.title2.bold())
 
             VStack(alignment: .leading, spacing: 0) {
+                if configuration.mode != .useFlashcards {
+                    NavigationLink {
+                        AuthoredTestsEditor(deck: deck)
+                    } label: {
+                        Label(
+                            L10n.text("deck.tests.edit"),
+                            systemImage: "square.and.pencil"
+                        )
+                        .font(.headline)
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                        .padding(.vertical, 15)
+                        .contentShape(.rect)
+                    }
+                    .buttonStyle(.plain)
+                    .foregroundStyle(Theme.deckAccent(for: deck))
+                    .tint(Theme.deckAccent(for: deck))
+
+                    Divider()
+                }
+
                 HStack(spacing: 12) {
                     Image(systemName: "checklist")
                         .foregroundStyle(Theme.deckAccent(for: deck))
@@ -219,31 +212,67 @@ struct DeckDetailView: View {
                 .padding(.vertical, 15)
 
                 if configuration.mode != .useFlashcards {
-                    Divider()
+                    ForEach(previews) { preview in
+                        Divider()
 
-                    NavigationLink {
-                        AuthoredTestsEditor(deck: deck)
-                    } label: {
-                        Label(
-                            L10n.text("deck.tests.edit"),
-                            systemImage: "square.and.pencil"
-                        )
-                        .font(.headline)
+                        VStack(alignment: .leading, spacing: 4) {
+                            Text(preview.title)
+                                .font(.headline)
+                                .lineLimit(2)
+                            Text(preview.type)
+                                .font(.subheadline)
+                                .foregroundStyle(.secondary)
+                        }
                         .frame(maxWidth: .infinity, alignment: .leading)
-                        .padding(.vertical, 15)
-                        .contentShape(.rect)
+                        .padding(.vertical, 13)
+                        .accessibilityElement(children: .combine)
+                        .accessibilityLabel("\(preview.type), \(preview.title)")
                     }
-                    .buttonStyle(.plain)
-                    .foregroundStyle(Theme.deckAccent(for: deck))
-                    .tint(Theme.deckAccent(for: deck))
+
+                    if configuration.authoredQuestionCount > previews.count {
+                        Divider()
+                        Text(L10n.format(
+                            "deck.tests.more_questions",
+                            Int64(configuration.authoredQuestionCount - previews.count)
+                        ))
+                        .foregroundStyle(.secondary)
+                        .padding(.vertical, 13)
+                    }
                 }
             }
+            .frame(maxWidth: .infinity, alignment: .leading)
             .padding(.horizontal, 18)
             .background(
                 Theme.cardBackground,
                 in: .rect(cornerRadius: 20, style: .continuous)
             )
         }
+    }
+
+    private struct TestQuestionPreview: Identifiable {
+        let id: UUID
+        let title: String
+        let type: String
+    }
+
+    private func testQuestionPreviews(
+        _ configuration: DeckTestConfiguration
+    ) -> [TestQuestionPreview] {
+        let multipleChoice = configuration.multipleChoice.map {
+            TestQuestionPreview(
+                id: $0.id,
+                title: $0.prompt,
+                type: L10n.text("test.type.multiple_choice")
+            )
+        }
+        let trueFalse = configuration.trueFalse.map {
+            TestQuestionPreview(
+                id: $0.id,
+                title: $0.statement,
+                type: L10n.text("test.type.true_false")
+            )
+        }
+        return Array((multipleChoice + trueFalse).prefix(5))
     }
 
     private func testModeTitle(_ mode: DeckTestCreationMode) -> String {
