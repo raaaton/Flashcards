@@ -738,7 +738,7 @@ private struct NewDeckCreationFlow: View {
     }
 
     private func openNativeProvider(_ candidates: [URL]) {
-        guard let launchURL = candidates.first(where: { UIApplication.shared.canOpenURL($0) }) else {
+        guard let launchURL = candidates.first else {
             showAlert(
                 title: L10n.format(
                     "ai.error.app_not_installed_title",

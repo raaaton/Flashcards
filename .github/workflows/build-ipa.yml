@@ -279,8 +279,6 @@ jobs:
                   test "$(grep -F -c "CURRENT_PROJECT_VERSION = ${{ steps.project_version.outputs.build }};" Flashcards.xcodeproj/project.pbxproj)" -eq 2
                   test "$(grep -F -c "MARKETING_VERSION = ${{ steps.project_version.outputs.version }};" Flashcards.xcodeproj/project.pbxproj)" -eq 2
                   test "$(grep -c 'INFOPLIST_KEY_CFBundleDisplayName = Kavi;' Flashcards.xcodeproj/project.pbxproj)" -eq 2
-                  test "$(grep -c 'INFOPLIST_FILE = Flashcards/Info.plist;' Flashcards.xcodeproj/project.pbxproj)" -eq 2
-                  plutil -lint Flashcards/Info.plist
                   test "$(grep -c 'PRODUCT_NAME = Kavi;' Flashcards.xcodeproj/project.pbxproj)" -eq 2
                   test "$(grep -c 'PRODUCT_BUNDLE_IDENTIFIER = com.raton.flashcards;' Flashcards.xcodeproj/project.pbxproj)" -eq 2
                   test "$(grep -c 'SWIFT_VERSION = 6.0;' Flashcards.xcodeproj/project.pbxproj)" -eq 2
@@ -362,9 +360,6 @@ jobs:
                   test "$(plutil -extract CFBundleIdentifier raw "$INFO_PLIST")" = "com.raton.flashcards"
                   test "$(plutil -extract MinimumOSVersion raw "$INFO_PLIST")" = "26.0"
                   test "$(plutil -extract CFBundleSupportedPlatforms.0 raw "$INFO_PLIST")" = "iPhoneOS"
-                  test "$(plutil -extract LSApplicationQueriesSchemes.0 raw "$INFO_PLIST")" = "chatgpt"
-                  test "$(plutil -extract LSApplicationQueriesSchemes.1 raw "$INFO_PLIST")" = "claude"
-                  test "$(plutil -extract LSApplicationQueriesSchemes.2 raw "$INFO_PLIST")" = "googlegemini"
                   test -x "$EXECUTABLE_PATH"
                   test -z "$(find "$APP_PATH" -maxdepth 1 \( -name 'PlugIns' -o -name 'Watch' \) -print -quit)"
                   test ! -e "$APP_PATH/embedded.mobileprovision"

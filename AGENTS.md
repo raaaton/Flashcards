@@ -369,7 +369,7 @@ Do not “clean up” audited literals without checking the workflow.
 
 ### External AI handoff cancellation
 
-The native Claude, ChatGPT, and Gemini handoff preflights its declared URL schemes and opens at most one URL for each explicit user action. Do not recursively retry another custom URL when `openURL` reports `false`: that result also covers the user cancelling the iOS confirmation, and retrying creates a confirmation loop.
+The native Claude, ChatGPT, and Gemini handoff opens at most one URL for each explicit user action. Do not recursively retry another custom URL when `openURL` reports `false`: that result also covers the user cancelling the iOS confirmation, and retrying creates a confirmation loop. Do not gate the handoff with `canOpenURL`; it can report false in the supported sideloaded environment even when the provider app is installed.
 
 ## 12. Duplicate detection rules
 
@@ -757,7 +757,6 @@ CI expects:
 - no remote Swift package references
 - no package product dependencies
 - no system capabilities in the project
-- the Claude, ChatGPT, and Gemini query schemes in the generated Info.plist
 - one `PBXNativeTarget`
 - iOS 26.0 deployment target in both configurations
 - Swift 6.0 in both configurations
