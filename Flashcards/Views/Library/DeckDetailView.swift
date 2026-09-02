@@ -87,7 +87,7 @@ struct DeckDetailView: View {
 
             HStack(spacing: 12) {
                 studyTile(
-                    title: L10n.text("Cartes"),
+                    title: "Cartes",
                     systemImage: "rectangle.on.rectangle.angled"
                 ) {
                     StudySetupView(deck: deck)
