@@ -246,6 +246,7 @@ struct AuthoredTestsEditor: View {
         Button(role: .destructive, action: action) {
             Label("test.editor.delete_question", systemImage: "trash")
         }
+        .tint(.red)
     }
 
     private func addMultipleChoice() {
