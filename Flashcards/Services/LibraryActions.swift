@@ -83,6 +83,16 @@ enum LibraryActions {
         try? modelContext.save()
     }
 
+    static func resetTestProgress(for deck: Deck, in modelContext: ModelContext) {
+        for card in deck.cards {
+            card.testMastered = false
+        }
+        deck.completedTestSessions = 0
+        deck.activeTestSessionData = nil
+        deck.updatedAt = .now
+        try? modelContext.save()
+    }
+
     static func moveCards(
         _ cards: [Card],
         from source: Deck,

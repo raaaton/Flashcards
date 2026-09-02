@@ -17,6 +17,7 @@ enum BackupCodecSmoke {
             definition: "Définition",
             position: 0,
             mastered: true,
+            testMastered: true,
             timesStudied: 4,
             timesCorrect: 3,
             isStarred: true
@@ -62,8 +63,11 @@ enum BackupCodecSmoke {
                     lastOpenedAt: date.addingTimeInterval(120),
                     completedStudySessions: 7,
                     activeStudySessionData: Data("resume".utf8),
+                    completedTestSessions: 5,
+                    activeTestSessionData: Data("test-resume".utf8),
                     studyHistoryData: Data("history".utf8),
                     lastStudyActivityAt: date.addingTimeInterval(180),
+                    lastTestActivityAt: date.addingTimeInterval(240),
                     isPinned: true,
                     folderID: folderID,
                     cards: [originalCard],
@@ -82,15 +86,29 @@ enum BackupCodecSmoke {
         precondition(decoded.schemaVersion == 2)
         precondition(decoded.decks[0].testConfiguration == configuration)
         precondition(decoded.decks[0].cards[0].isStarred)
+        precondition(decoded.decks[0].cards[0].testMastered)
+        precondition(decoded.decks[0].completedTestSessions == 5)
+        precondition(decoded.decks[0].activeTestSessionData == Data("test-resume".utf8))
+        precondition(decoded.decks[0].lastTestActivityAt == date.addingTimeInterval(240))
 
         var v1JSON = rawV2
         v1JSON["schemaVersion"] = 1
         var v1Decks = v1JSON["decks"] as! [[String: Any]]
         v1Decks[0].removeValue(forKey: "testConfiguration")
+        v1Decks[0].removeValue(forKey: "completedTestSessions")
+        v1Decks[0].removeValue(forKey: "activeTestSessionData")
+        v1Decks[0].removeValue(forKey: "lastTestActivityAt")
+        var v1Cards = v1Decks[0]["cards"] as! [[String: Any]]
+        v1Cards[0].removeValue(forKey: "testMastered")
+        v1Decks[0]["cards"] = v1Cards
         v1JSON["decks"] = v1Decks
         let v1Data = try JSONSerialization.data(withJSONObject: v1JSON)
         let decodedV1 = try BackupCodec.decode(v1Data)
         precondition(decodedV1.decks[0].testConfiguration == .useFlashcards)
+        precondition(!decodedV1.decks[0].cards[0].testMastered)
+        precondition(decodedV1.decks[0].completedTestSessions == 0)
+        precondition(decodedV1.decks[0].activeTestSessionData == nil)
+        precondition(decodedV1.decks[0].lastTestActivityAt == nil)
 
         let localOnlyCard = BackupCardDTO(
             id: secondCardID,

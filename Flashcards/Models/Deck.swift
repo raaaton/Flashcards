@@ -11,8 +11,11 @@ final class Deck {
     var lastOpenedAt: Date?
     var completedStudySessions: Int = 0
     var activeStudySessionData: Data?
+    var completedTestSessions: Int = 0
+    var activeTestSessionData: Data?
     var studyHistoryData: Data?
     var lastStudyActivityAt: Date?
+    var lastTestActivityAt: Date?
     var isPinned: Bool = false
     var testConfigurationData: Data?
     var folder: Folder?
@@ -29,8 +32,11 @@ final class Deck {
         lastOpenedAt = nil
         completedStudySessions = 0
         activeStudySessionData = nil
+        completedTestSessions = 0
+        activeTestSessionData = nil
         studyHistoryData = nil
         lastStudyActivityAt = nil
+        lastTestActivityAt = nil
         isPinned = false
         testConfigurationData = nil
         self.folder = folder

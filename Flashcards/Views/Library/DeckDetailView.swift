@@ -93,6 +93,15 @@ struct DeckDetailView: View {
                 totalCount: deck.cards.count,
                 accent: Theme.deckAccent(for: deck)
             )
+
+            Divider()
+
+            TestProgressBar(
+                deckName: deck.name,
+                masteredCount: deck.cards.count(where: \.testMastered),
+                totalCount: deck.cards.count,
+                accent: Theme.deckAccent(for: deck)
+            )
         }
         .frame(maxWidth: .infinity, alignment: .leading)
         .padding(18)

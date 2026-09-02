@@ -45,6 +45,65 @@ enum TestSessionSmoke {
         precondition(correctSession.isComplete)
         precondition(!correctSession.advance())
 
+        var resumableState = TestSessionState(questions: [written, questions[1]])
+        resumableState.submit(answer: "faux")
+        let activeSnapshot = ActiveTestSessionSnapshot(
+            deckID: UUID(),
+            sessionNumber: 3,
+            selectedTypes: [.written, .trueFalse],
+            direction: .definitionToTerm,
+            shuffle: false,
+            starredOnly: true,
+            sessionSize: .twenty,
+            state: resumableState
+        )
+        let activeData = try! TestSessionPersistence.encode(activeSnapshot)
+        let restoredSnapshot = TestSessionPersistence.decode(
+            activeData,
+            deckID: activeSnapshot.deckID
+        )
+        precondition(restoredSnapshot == activeSnapshot)
+        precondition(restoredSnapshot?.state.currentAnswer?.givenAnswer == "faux")
+        precondition(TestSessionPersistence.decode(activeData, deckID: UUID()) == nil)
+
+        var completedState = resumableState
+        precondition(completedState.advance())
+        completedState.submit(answer: completedState.currentQuestion!.correctAnswer)
+        precondition(completedState.advance())
+        let completedSnapshot = ActiveTestSessionSnapshot(
+            deckID: activeSnapshot.deckID,
+            sessionNumber: 3,
+            selectedTypes: [.written, .trueFalse],
+            direction: .definitionToTerm,
+            shuffle: false,
+            starredOnly: true,
+            sessionSize: .twenty,
+            state: completedState
+        )
+        let completedData = try! TestSessionPersistence.encode(completedSnapshot)
+        precondition(TestSessionPersistence.decode(
+            completedData,
+            deckID: activeSnapshot.deckID
+        ) == nil)
+
+        let secondWritten = TestQuestion(
+            id: UUID(),
+            cardID: cards[0].id,
+            type: .written,
+            prompt: "Deuxième question",
+            secondaryText: nil,
+            correctAnswer: "Deuxième réponse",
+            referenceAnswer: "Deuxième réponse",
+            choices: []
+        )
+        var sharedSourceSession = TestSessionState(questions: [written, secondWritten])
+        sharedSourceSession.submit(answer: written.correctAnswer)
+        precondition(sharedSourceSession.masteryStatus(for: cards[0].id) == nil)
+        precondition(sharedSourceSession.advance())
+        sharedSourceSession.submit(answer: "incorrect")
+        precondition(sharedSourceSession.masteryStatus(for: cards[0].id) == false)
+        precondition(sharedSourceSession.masteryStatus(for: cards[1].id) == nil)
+
         var overrideSession = TestSessionState(questions: [written])
         overrideSession.submit(answer: "une formulation équivalente")
         precondition(overrideSession.score == 0)

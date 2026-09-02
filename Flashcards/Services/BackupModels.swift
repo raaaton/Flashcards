@@ -50,6 +50,7 @@ struct BackupCardDTO: Codable, Equatable, Identifiable, Sendable {
     var definition: String
     var position: Int
     var mastered: Bool
+    var testMastered: Bool
     var timesStudied: Int
     var timesCorrect: Int
     var isStarred: Bool
@@ -60,6 +61,7 @@ struct BackupCardDTO: Codable, Equatable, Identifiable, Sendable {
         definition: String,
         position: Int,
         mastered: Bool,
+        testMastered: Bool = false,
         timesStudied: Int,
         timesCorrect: Int,
         isStarred: Bool = false
@@ -69,13 +71,15 @@ struct BackupCardDTO: Codable, Equatable, Identifiable, Sendable {
         self.definition = definition
         self.position = position
         self.mastered = mastered
+        self.testMastered = testMastered
         self.timesStudied = timesStudied
         self.timesCorrect = timesCorrect
         self.isStarred = isStarred
     }
 
     private enum CodingKeys: String, CodingKey {
-        case id, term, definition, position, mastered, timesStudied, timesCorrect, isStarred
+        case id, term, definition, position, mastered, testMastered
+        case timesStudied, timesCorrect, isStarred
     }
 
     init(from decoder: Decoder) throws {
@@ -85,6 +89,7 @@ struct BackupCardDTO: Codable, Equatable, Identifiable, Sendable {
         definition = try container.decode(String.self, forKey: .definition)
         position = try container.decode(Int.self, forKey: .position)
         mastered = try container.decode(Bool.self, forKey: .mastered)
+        testMastered = try container.decodeIfPresent(Bool.self, forKey: .testMastered) ?? false
         timesStudied = try container.decode(Int.self, forKey: .timesStudied)
         timesCorrect = try container.decode(Int.self, forKey: .timesCorrect)
         isStarred = try container.decodeIfPresent(Bool.self, forKey: .isStarred) ?? false
@@ -99,8 +104,11 @@ struct BackupDeckDTO: Codable, Equatable, Identifiable, Sendable {
     var lastOpenedAt: Date?
     var completedStudySessions: Int
     var activeStudySessionData: Data?
+    var completedTestSessions: Int
+    var activeTestSessionData: Data?
     var studyHistoryData: Data?
     var lastStudyActivityAt: Date?
+    var lastTestActivityAt: Date?
     var isPinned: Bool
     var folderID: UUID?
     var cards: [BackupCardDTO]
@@ -114,8 +122,11 @@ struct BackupDeckDTO: Codable, Equatable, Identifiable, Sendable {
         lastOpenedAt: Date? = nil,
         completedStudySessions: Int = 0,
         activeStudySessionData: Data? = nil,
+        completedTestSessions: Int = 0,
+        activeTestSessionData: Data? = nil,
         studyHistoryData: Data? = nil,
         lastStudyActivityAt: Date? = nil,
+        lastTestActivityAt: Date? = nil,
         isPinned: Bool = false,
         folderID: UUID?,
         cards: [BackupCardDTO],
@@ -128,8 +139,11 @@ struct BackupDeckDTO: Codable, Equatable, Identifiable, Sendable {
         self.lastOpenedAt = lastOpenedAt
         self.completedStudySessions = completedStudySessions
         self.activeStudySessionData = activeStudySessionData
+        self.completedTestSessions = completedTestSessions
+        self.activeTestSessionData = activeTestSessionData
         self.studyHistoryData = studyHistoryData
         self.lastStudyActivityAt = lastStudyActivityAt
+        self.lastTestActivityAt = lastTestActivityAt
         self.isPinned = isPinned
         self.folderID = folderID
         self.cards = cards
@@ -139,6 +153,7 @@ struct BackupDeckDTO: Codable, Equatable, Identifiable, Sendable {
     private enum CodingKeys: String, CodingKey {
         case id, name, createdAt, updatedAt, lastOpenedAt
         case completedStudySessions, activeStudySessionData, studyHistoryData
+        case completedTestSessions, activeTestSessionData, lastTestActivityAt
         case lastStudyActivityAt, isPinned, folderID, cards, testConfiguration
     }
 
@@ -157,8 +172,17 @@ struct BackupDeckDTO: Codable, Equatable, Identifiable, Sendable {
             Data.self,
             forKey: .activeStudySessionData
         )
+        completedTestSessions = try container.decodeIfPresent(
+            Int.self,
+            forKey: .completedTestSessions
+        ) ?? 0
+        activeTestSessionData = try container.decodeIfPresent(
+            Data.self,
+            forKey: .activeTestSessionData
+        )
         studyHistoryData = try container.decodeIfPresent(Data.self, forKey: .studyHistoryData)
         lastStudyActivityAt = try container.decodeIfPresent(Date.self, forKey: .lastStudyActivityAt)
+        lastTestActivityAt = try container.decodeIfPresent(Date.self, forKey: .lastTestActivityAt)
         isPinned = try container.decodeIfPresent(Bool.self, forKey: .isPinned) ?? false
         folderID = try container.decodeIfPresent(UUID.self, forKey: .folderID)
         cards = try container.decode([BackupCardDTO].self, forKey: .cards)

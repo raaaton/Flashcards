@@ -200,6 +200,7 @@ Current centralized operations include:
 - duplicate folder
 - delete folder while keeping decks
 - reset study progress
+- reset Test progress
 - move cards
 - copy cards
 - delete cards
@@ -494,6 +495,8 @@ Deck test modes:
 
 For authored modes, preserve per-type availability, source-card starred filtering, global 10/20/All limits, round-robin pool selection, and the no-fallback rule for Multiple Choice / True-False questions. Direction affects authored-mode written questions only.
 
+Test resume/progress is independent from Flashcards resume/progress. Preserve `Card.testMastered`, `Deck.activeTestSessionData`, `Deck.completedTestSessions`, and `Deck.lastTestActivityAt`; multiple questions sharing a source card count once after every linked question present in the current session is correct.
+
 Preserve:
 
 - direction semantics
@@ -689,10 +692,13 @@ CI currently expects:
 CI expects:
 
 - `Deck.activeStudySessionData`
+- `Deck.activeTestSessionData`
+- `Deck.completedTestSessions`
 - `Deck.lastOpenedAt`
 - `Deck.studyHistoryData`
 - `Deck.isPinned`
 - `Card.isStarred`
+- `Card.testMastered`
 - `StudySessionState.undoLastAnswer()`
 - `StudyCardProgressSnapshot`
 - `BulkDuplicateDetector`
@@ -706,6 +712,7 @@ CI expects:
 - written answer submit through `onSubmit { submitWrittenAnswer() }`
 - `private var accent: Color { Theme.deckAccent(for: deck) }` in Study/Test setup/run files
 - `Button("Continuer", role: .destructive)` in `StudySetupView`
+- `TestSessionPersistence` in Home Resume
 
 ### Bulk import
 
@@ -727,7 +734,7 @@ CI expects:
 - `DeckRow` contains `private func cardPreview`
 - `Theme.deckAccent(for:)`
 - deck detail uses the contextual accent several times
-- `CircularSaveButton`, `DeckProgressBar`, and `CardEditorSurface` exist in `Theme.swift`
+- `CircularSaveButton`, `DeckProgressBar`, `TestProgressBar`, and `CardEditorSurface` exist in `Theme.swift`
 - `DeckFormView` and `CardFormView` use `CardEditorSurface`
 - `DeckDetailView` and `StudySetupView` use `DeckProgressBar`
 

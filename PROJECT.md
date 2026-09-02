@@ -236,8 +236,11 @@ Stored fields:
 - `lastOpenedAt: Date?`
 - `completedStudySessions: Int`
 - `activeStudySessionData: Data?`
+- `completedTestSessions: Int`
+- `activeTestSessionData: Data?`
 - `studyHistoryData: Data?`
 - `lastStudyActivityAt: Date?`
+- `lastTestActivityAt: Date?`
 - `isPinned: Bool`
 - `testConfigurationData: Data?`
 - `folder: Folder?`
@@ -254,8 +257,11 @@ Usage notes:
 - `isPinned` drives the Pinned Home section.
 - `activeStudySessionData` stores an encoded `ActiveStudySessionSnapshot` for Resume.
 - `lastStudyActivityAt` participates in ordering resumable decks.
+- `activeTestSessionData` stores an encoded `ActiveTestSessionSnapshot` for Test Resume.
+- `lastTestActivityAt` orders resumable Test sessions independently from Flashcards sessions.
 - `studyHistoryData` stores encoded study history entries.
 - `completedStudySessions` is part of study progress/reset state.
+- `completedTestSessions` is part of the independent Test progress/reset state.
 - `testConfigurationData` stores the Codable test-creation mode and authored Multiple Choice / True-False questions. Missing, corrupt, or unknown payloads read as `.useFlashcards` without being rewritten implicitly.
 - `deckDescription` exists in the SwiftData model but is not currently surfaced by `DeckFormView`. It is also not currently represented in `BackupDeckDTO`, so do not assume it survives JSON export/import without explicitly extending the backup format.
 
@@ -285,6 +291,7 @@ Stored fields:
 - `definition: String`
 - `position: Int`
 - `mastered: Bool`
+- `testMastered: Bool`
 - `timesStudied: Int`
 - `timesCorrect: Int`
 - `isStarred: Bool`
@@ -739,9 +746,13 @@ Test answers are normalized case-insensitively, diacritic-insensitively, width-i
 
 Written answers can be manually overridden to correct when the automatic matcher is too strict. Incorrect questions can be retried through `retryErrors()`.
 
+`ActiveTestSessionSnapshot` preserves the generated questions, configuration, submitted answers, current feedback, and session number. It is stored in `activeTestSessionData`, shown in Home Resume alongside Flashcards sessions, and cleared when the Test completes or its progress is reset.
+
+Test mastery is independent from Flashcards mastery. A source card becomes Test-mastered once every question for that card in the current Test session is correct; multiple authored questions linked to the same card therefore count only once toward deck progress.
+
 ## 18. Study history and progress
 
-Deck detail shows mastered-card progress with `DeckProgressBar`.
+Deck detail shows separate Flashcards and Test mastery progress. `DeckProgressBar` is labeled “Flashcards Progress” in English; `TestProgressBar` displays the independent Test state.
 
 When enabled, completed Flashcards/Test sessions are recorded in each deck's bounded study history.
 

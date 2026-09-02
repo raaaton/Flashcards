@@ -1,6 +1,6 @@
 import Foundation
 
-enum TestQuestionType: String, CaseIterable, Identifiable, Hashable, Sendable {
+enum TestQuestionType: String, CaseIterable, Identifiable, Hashable, Codable, Sendable {
     case multipleChoice
     case trueFalse
     case written
@@ -16,13 +16,13 @@ enum TestQuestionType: String, CaseIterable, Identifiable, Hashable, Sendable {
     }
 }
 
-struct TestCardSnapshot: Identifiable, Equatable, Sendable {
+struct TestCardSnapshot: Identifiable, Equatable, Codable, Sendable {
     let id: UUID
     let term: String
     let definition: String
 }
 
-struct TestQuestion: Identifiable, Equatable, Sendable {
+struct TestQuestion: Identifiable, Equatable, Codable, Sendable {
     let id: UUID
     let cardID: UUID
     let type: TestQuestionType
@@ -33,7 +33,7 @@ struct TestQuestion: Identifiable, Equatable, Sendable {
     let choices: [String]
 }
 
-struct TestAnswerRecord: Identifiable, Equatable, Sendable {
+struct TestAnswerRecord: Identifiable, Equatable, Codable, Sendable {
     let question: TestQuestion
     let givenAnswer: String
     var isCorrect: Bool
@@ -283,7 +283,7 @@ enum AuthoredTestQuestionFactory {
     }
 }
 
-struct TestSessionState: Equatable, Sendable {
+struct TestSessionState: Equatable, Codable, Sendable {
     private(set) var questions: [TestQuestion]
     private(set) var currentIndex = 0
     private(set) var answers: [TestAnswerRecord] = []
@@ -313,6 +313,18 @@ struct TestSessionState: Equatable, Sendable {
     var score: Int {
         guard !answers.isEmpty else { return 0 }
         return Int((Double(correctCount) / Double(answers.count) * 100).rounded())
+    }
+
+    func masteryStatus(for cardID: UUID) -> Bool? {
+        let questionIDs = Set(
+            questions.lazy
+                .filter { $0.cardID == cardID }
+                .map(\.id)
+        )
+        guard !questionIDs.isEmpty else { return nil }
+        let linkedAnswers = answers.filter { questionIDs.contains($0.question.id) }
+        guard linkedAnswers.count == questionIDs.count else { return nil }
+        return linkedAnswers.allSatisfy(\.isCorrect)
     }
 
     @discardableResult
@@ -354,5 +366,35 @@ struct TestSessionState: Equatable, Sendable {
         currentIndex = 0
         answers = []
         currentAnswer = nil
+    }
+}
+
+struct ActiveTestSessionSnapshot: Equatable, Codable, Sendable {
+    let deckID: UUID
+    let sessionNumber: Int
+    let selectedTypes: Set<TestQuestionType>
+    let direction: StudyDirection
+    let shuffle: Bool
+    let starredOnly: Bool
+    let sessionSize: SessionSize
+    let state: TestSessionState
+}
+
+enum TestSessionPersistence {
+    static func encode(_ snapshot: ActiveTestSessionSnapshot) throws -> Data {
+        try JSONEncoder().encode(snapshot)
+    }
+
+    static func decode(_ data: Data, deckID: UUID) -> ActiveTestSessionSnapshot? {
+        guard let snapshot = try? JSONDecoder().decode(
+            ActiveTestSessionSnapshot.self,
+            from: data
+        ),
+        snapshot.deckID == deckID,
+        !snapshot.state.isComplete,
+        snapshot.state.currentIndex > 0 || !snapshot.state.answers.isEmpty else {
+            return nil
+        }
+        return snapshot
     }
 }

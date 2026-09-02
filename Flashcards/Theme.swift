@@ -149,19 +149,50 @@ struct DeckProgressBar: View {
     let totalCount: Int
     let accent: Color
 
+    var body: some View {
+        MasteryProgressBar(
+            title: L10n.text("deck.flashcards_progress.title"),
+            accessibilityLabel: L10n.format("deck.flashcards_progress.label", deckName),
+            masteredCount: masteredCount,
+            totalCount: totalCount,
+            accent: accent
+        )
+    }
+}
+
+struct TestProgressBar: View {
+    let deckName: String
+    let masteredCount: Int
+    let totalCount: Int
+    let accent: Color
+
+    var body: some View {
+        MasteryProgressBar(
+            title: L10n.text("deck.test_progress.title"),
+            accessibilityLabel: L10n.format("deck.test_progress.label", deckName),
+            masteredCount: masteredCount,
+            totalCount: totalCount,
+            accent: accent
+        )
+    }
+}
+
+private struct MasteryProgressBar: View {
+    let title: String
+    let accessibilityLabel: String
+    let masteredCount: Int
+    let totalCount: Int
+    let accent: Color
+
     private var progress: Double {
         guard totalCount > 0 else { return 0 }
-
-        return min(
-            max(Double(masteredCount) / Double(totalCount), 0),
-            1
-        )
+        return min(max(Double(masteredCount) / Double(totalCount), 0), 1)
     }
 
     var body: some View {
         VStack(alignment: .leading, spacing: 10) {
             HStack {
-                Text("Progression")
+                Text(title)
                     .font(.subheadline.weight(.semibold))
 
                 Spacer()
@@ -185,9 +216,7 @@ struct DeckProgressBar: View {
             .animation(.snappy(duration: 0.35), value: progress)
         }
         .accessibilityElement(children: .ignore)
-        .accessibilityLabel(
-            L10n.format("deck.progress.label", deckName)
-        )
+        .accessibilityLabel(accessibilityLabel)
         .accessibilityValue(
             L10n.format(
                 "deck.progress.value",

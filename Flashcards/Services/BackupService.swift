@@ -120,8 +120,11 @@ enum BackupService {
                 deck.lastOpenedAt = dto.lastOpenedAt ?? deck.lastOpenedAt
                 deck.completedStudySessions = dto.completedStudySessions
                 deck.activeStudySessionData = dto.activeStudySessionData
+                deck.completedTestSessions = dto.completedTestSessions
+                deck.activeTestSessionData = dto.activeTestSessionData
                 deck.studyHistoryData = dto.studyHistoryData
                 deck.lastStudyActivityAt = dto.lastStudyActivityAt
+                deck.lastTestActivityAt = dto.lastTestActivityAt
                 deck.isPinned = dto.isPinned
                 deck.folder = dto.folderID.flatMap { foldersByID[$0] }
 
@@ -146,6 +149,7 @@ enum BackupService {
                     card.definition = cardDTO.definition
                     card.position = cardDTO.position
                     card.mastered = cardDTO.mastered
+                    card.testMastered = cardDTO.testMastered
                     card.timesStudied = cardDTO.timesStudied
                     card.timesCorrect = cardDTO.timesCorrect
                     card.isStarred = cardDTO.isStarred
@@ -193,8 +197,11 @@ enum BackupService {
             lastOpenedAt: deck.lastOpenedAt,
             completedStudySessions: deck.completedStudySessions,
             activeStudySessionData: deck.activeStudySessionData,
+            completedTestSessions: deck.completedTestSessions,
+            activeTestSessionData: deck.activeTestSessionData,
             studyHistoryData: deck.studyHistoryData,
             lastStudyActivityAt: deck.lastStudyActivityAt,
+            lastTestActivityAt: deck.lastTestActivityAt,
             isPinned: deck.isPinned,
             folderID: deck.folder?.id,
             cards: deck.cards
@@ -206,6 +213,7 @@ enum BackupService {
                         definition: $0.definition,
                         position: $0.position,
                         mastered: $0.mastered,
+                        testMastered: $0.testMastered,
                         timesStudied: $0.timesStudied,
                         timesCorrect: $0.timesCorrect,
                         isStarred: $0.isStarred

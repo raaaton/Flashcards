@@ -8,7 +8,14 @@ struct TestRunView: View {
 
     let deck: Deck
 
+    private let selectedTypes: Set<TestQuestionType>
+    private let direction: StudyDirection
+    private let shuffle: Bool
+    private let starredOnly: Bool
+    private let sessionSize: SessionSize
+
     @State private var session: TestSessionState
+    @State private var sessionNumber: Int
     @State private var writtenAnswer = ""
     @State private var selectedAnswer: String?
     @State private var feedbackIsCorrect: Bool?
@@ -16,56 +23,30 @@ struct TestRunView: View {
     @State private var didCelebrate = false
     @State private var didRecordCompletion = false
     @State private var showCelebration = false
+    @State private var confirmingReset = false
     @FocusState private var writtenFieldIsFocused: Bool
 
     init(
         deck: Deck,
-        types: Set<TestQuestionType>,
-        direction: StudyDirection,
-        shuffle: Bool,
-        starredOnly: Bool,
-        sessionSize: SessionSize
+        snapshot: ActiveTestSessionSnapshot
     ) {
         self.deck = deck
-        let configuration = deck.testConfiguration
-        var eligibleCards = deck.cards
-            .filter { !starredOnly || $0.isStarred }
-            .sorted { $0.position < $1.position }
+        selectedTypes = snapshot.selectedTypes
+        direction = snapshot.direction
+        shuffle = snapshot.shuffle
+        starredOnly = snapshot.starredOnly
+        sessionSize = snapshot.sessionSize
+        _session = State(initialValue: snapshot.state)
+        _sessionNumber = State(initialValue: snapshot.sessionNumber)
 
-        let questions: [TestQuestion]
-        if configuration.mode == .useFlashcards {
-            if shuffle { eligibleCards.shuffle() }
-            if let limit = sessionSize.limit {
-                eligibleCards = Array(eligibleCards.prefix(limit))
-            }
-            let cards = eligibleCards.map {
-                TestCardSnapshot(id: $0.id, term: $0.term, definition: $0.definition)
-            }
-            questions = TestQuestionFactory.makeQuestions(
-                cards: cards,
-                types: types,
-                count: cards.count,
-                direction: direction,
-                shuffle: shuffle
-            )
-        } else {
-            let cards = eligibleCards.map {
-                TestCardSnapshot(id: $0.id, term: $0.term, definition: $0.definition)
-            }
-            let availableCount = AuthoredTestQuestionFactory.availability(
-                cards: cards,
-                configuration: configuration
-            ).total(for: types)
-            questions = AuthoredTestQuestionFactory.makeQuestions(
-                cards: cards,
-                configuration: configuration,
-                types: types,
-                count: min(sessionSize.limit ?? availableCount, availableCount),
-                direction: direction,
-                shuffle: shuffle
-            )
-        }
-        _session = State(initialValue: TestSessionState(questions: questions))
+        let currentAnswer = snapshot.state.currentAnswer
+        _writtenAnswer = State(
+            initialValue: currentAnswer?.question.type == .written
+                ? currentAnswer?.givenAnswer ?? ""
+                : ""
+        )
+        _selectedAnswer = State(initialValue: currentAnswer?.givenAnswer)
+        _feedbackIsCorrect = State(initialValue: currentAnswer?.isCorrect)
     }
 
     private var accent: Color { Theme.deckAccent(for: deck) }
@@ -98,6 +79,17 @@ struct TestRunView: View {
                 ConfettiView()
                     .ignoresSafeArea()
             }
+        }
+        .background {
+            Color.clear
+                .alert("test.progress.reset.title", isPresented: $confirmingReset) {
+                    Button("Réinitialiser", role: .destructive) { resetProgress() }
+                    Button("Annuler", role: .cancel) {}
+                        .normalActionColor()
+                } message: {
+                    Text("test.progress.reset.message")
+                }
+                .tint(.white)
         }
     }
 
@@ -347,6 +339,13 @@ struct TestRunView: View {
                 }
                 Button("Terminer", systemImage: "checkmark") { dismiss() }
                     .normalActionColor(accent)
+
+                Button(role: .destructive) {
+                    confirmingReset = true
+                } label: {
+                    Label("test.progress.reset.deck_action", systemImage: "trash")
+                }
+                .destructiveActionColor()
             }
         }
         .navigationTitle("Résultats")
@@ -472,6 +471,9 @@ struct TestRunView: View {
         }
         if completesTest {
             recordCompletedTestSession()
+        } else {
+            persistActiveSession()
+            try? modelContext.save()
         }
 
         Task { @MainActor in
@@ -486,8 +488,10 @@ struct TestRunView: View {
         if record.isCorrect {
             card.timesCorrect += 1
         }
+        updateTestMastery(for: card)
         deck.updatedAt = .now
-        deck.lastStudyActivityAt = .now
+        deck.lastTestActivityAt = .now
+        persistActiveSession()
         try? modelContext.save()
     }
 
@@ -495,7 +499,9 @@ struct TestRunView: View {
         guard let cardID = session.overrideWrittenAnswer(questionID: record.id),
               let card = deck.cards.first(where: { $0.id == cardID }) else { return }
         card.timesCorrect += 1
+        updateTestMastery(for: card)
         deck.updatedAt = .now
+        deck.lastTestActivityAt = .now
         try? modelContext.save()
         HapticService.play(.correct)
 
@@ -505,6 +511,7 @@ struct TestRunView: View {
     }
 
     private func retryErrors() {
+        sessionNumber = deck.completedTestSessions + 1
         didRecordCompletion = false
         didCelebrate = false
         showCelebration = false
@@ -521,20 +528,50 @@ struct TestRunView: View {
         ) {
             session.retryErrors()
         }
+        deck.activeTestSessionData = nil
+        deck.lastTestActivityAt = .now
+        deck.updatedAt = .now
+        try? modelContext.save()
     }
 
     private func recordCompletedTestSession() {
         guard !didRecordCompletion else { return }
         didRecordCompletion = true
+        deck.completedTestSessions = sessionNumber
+        deck.activeTestSessionData = nil
         deck.recordCompletedSession(
             mode: .test,
             itemCount: session.answers.count,
             correctCount: session.correctCount,
             incorrectCount: session.answers.count - session.correctCount
         )
-        deck.lastStudyActivityAt = .now
+        deck.lastTestActivityAt = .now
         deck.updatedAt = .now
         try? modelContext.save()
+    }
+
+    private func persistActiveSession() {
+        let snapshot = ActiveTestSessionSnapshot(
+            deckID: deck.id,
+            sessionNumber: sessionNumber,
+            selectedTypes: selectedTypes,
+            direction: direction,
+            shuffle: shuffle,
+            starredOnly: starredOnly,
+            sessionSize: sessionSize,
+            state: session
+        )
+        deck.activeTestSessionData = try? TestSessionPersistence.encode(snapshot)
+    }
+
+    private func updateTestMastery(for card: Card) {
+        guard let isMastered = session.masteryStatus(for: card.id) else { return }
+        card.testMastered = isMastered
+    }
+
+    private func resetProgress() {
+        LibraryActions.resetTestProgress(for: deck, in: modelContext)
+        dismiss()
     }
 
     private func celebratePerfectScore() {

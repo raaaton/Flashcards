@@ -5,9 +5,42 @@ import UniformTypeIdentifiers
 
 private struct ResumableDeck: Identifiable {
     let deck: Deck
-    let snapshot: ActiveStudySessionSnapshot
+    let session: ResumableSession
 
-    var id: UUID { deck.id }
+    var id: String { "\(deck.id.uuidString)-\(session.id)" }
+}
+
+private enum ResumableSession {
+    case flashcards(ActiveStudySessionSnapshot)
+    case test(ActiveTestSessionSnapshot)
+
+    var id: String {
+        switch self {
+        case .flashcards: "flashcards"
+        case .test: "test"
+        }
+    }
+
+    var title: String {
+        switch self {
+        case .flashcards: L10n.text("Flashcards")
+        case .test: L10n.text("Test")
+        }
+    }
+
+    var currentCount: Int {
+        switch self {
+        case let .flashcards(snapshot): snapshot.state.currentIndex
+        case let .test(snapshot): snapshot.state.answers.count
+        }
+    }
+
+    var totalCount: Int {
+        switch self {
+        case let .flashcards(snapshot): snapshot.state.items.count
+        case let .test(snapshot): snapshot.state.questions.count
+        }
+    }
 }
 
 private struct FolderReorderDropDelegate: DropDelegate {
@@ -57,8 +90,7 @@ struct HomeView: View {
     @State private var createdDeckToOpen: Deck?
     @State private var hasQueuedCreatedDeck = false
     @State private var showingCreatedDeck = false
-    @State private var quickResumeDeck: Deck?
-    @State private var quickResumeSnapshot: ActiveStudySessionSnapshot?
+    @State private var quickResume: ResumableDeck?
     @State private var showingQuickResume = false
     @State private var folderOrderIDs: [UUID] = []
     @State private var folderOrderRevision = 0
@@ -135,28 +167,36 @@ struct HomeView: View {
 
     private var resumableDecks: [ResumableDeck] {
         decks
-            .compactMap { deck -> ResumableDeck? in
-                guard let data = deck.activeStudySessionData,
-                    let snapshot = StudySessionPersistence.decode(data, deckID: deck.id),
-                    snapshot.state.currentIndex > 0,
-                    snapshot.state.currentIndex < snapshot.state.items.count else {
-                    return nil
-                }
-
+            .flatMap { deck -> [ResumableDeck] in
                 let deckCardIDs = Set(deck.cards.map(\.id))
-                let remainingCardIDs = snapshot.state.items
-                    .dropFirst(snapshot.state.currentIndex)
-                    .map(\.id)
+                var sessions: [ResumableDeck] = []
 
-                guard remainingCardIDs.allSatisfy(deckCardIDs.contains) else {
-                    return nil
+                if let data = deck.activeStudySessionData,
+                   let snapshot = StudySessionPersistence.decode(data, deckID: deck.id),
+                   snapshot.state.currentIndex > 0,
+                   snapshot.state.currentIndex < snapshot.state.items.count {
+                    let remainingCardIDs = snapshot.state.items
+                        .dropFirst(snapshot.state.currentIndex)
+                        .map(\.id)
+                    if remainingCardIDs.allSatisfy(deckCardIDs.contains) {
+                        sessions.append(
+                            ResumableDeck(deck: deck, session: .flashcards(snapshot))
+                        )
+                    }
                 }
 
-                return ResumableDeck(deck: deck, snapshot: snapshot)
+                if let data = deck.activeTestSessionData,
+                   let snapshot = TestSessionPersistence.decode(data, deckID: deck.id),
+                   snapshot.state.questions.allSatisfy({ deckCardIDs.contains($0.cardID) }) {
+                    sessions.append(
+                        ResumableDeck(deck: deck, session: .test(snapshot))
+                    )
+                }
+
+                return sessions
             }
             .sorted {
-                ($0.deck.lastStudyActivityAt ?? .distantPast)
-                    > ($1.deck.lastStudyActivityAt ?? .distantPast)
+                activityDate(for: $0) > activityDate(for: $1)
             }
     }
 
@@ -181,8 +221,13 @@ struct HomeView: View {
             }
             .navigationTitle("Kavi")
             .navigationDestination(isPresented: $showingQuickResume) {
-                if let quickResumeDeck, let quickResumeSnapshot {
-                    StudyView(deck: quickResumeDeck, snapshot: quickResumeSnapshot)
+                if let quickResume {
+                    switch quickResume.session {
+                    case let .flashcards(snapshot):
+                        StudyView(deck: quickResume.deck, snapshot: snapshot)
+                    case let .test(snapshot):
+                        TestRunView(deck: quickResume.deck, snapshot: snapshot)
+                    }
                 }
             }
             .navigationDestination(isPresented: $showingCreatedDeck) {
@@ -412,10 +457,16 @@ struct HomeView: View {
                                             .lineLimit(1)
                                             .truncationMode(.tail)
 
-                                        Text(
-                                            "\(resumableDeck.snapshot.state.currentIndex) / \(resumableDeck.snapshot.state.items.count)"
-                                        )
-                                        .font(.subheadline.monospacedDigit())
+                                        HStack(spacing: 6) {
+                                            Text(resumableDeck.session.title)
+                                            Text("•")
+                                                .accessibilityHidden(true)
+                                            Text(
+                                                "\(resumableDeck.session.currentCount) / \(resumableDeck.session.totalCount)"
+                                            )
+                                            .monospacedDigit()
+                                        }
+                                        .font(.subheadline)
                                         .foregroundStyle(.secondary)
                                     }
 
@@ -433,9 +484,11 @@ struct HomeView: View {
                                 .contentShape(.rect(cornerRadius: 22, style: .continuous))
                             }
                             .buttonStyle(.plain)
-                            .accessibilityLabel("Reprendre \(resumableDeck.deck.name)")
+                            .accessibilityLabel(
+                                "Reprendre \(resumableDeck.session.title), \(resumableDeck.deck.name)"
+                            )
                             .accessibilityValue(
-                                "\(resumableDeck.snapshot.state.currentIndex) sur \(resumableDeck.snapshot.state.items.count)"
+                                "\(resumableDeck.session.currentCount) sur \(resumableDeck.session.totalCount)"
                             )
                         }
                     }
@@ -992,10 +1045,23 @@ struct HomeView: View {
     }
 
     private func resume(_ resumable: ResumableDeck) {
-        resumable.deck.lastStudyActivityAt = .now
+        switch resumable.session {
+        case .flashcards:
+            resumable.deck.lastStudyActivityAt = .now
+        case .test:
+            resumable.deck.lastTestActivityAt = .now
+        }
         try? modelContext.save()
-        quickResumeDeck = resumable.deck
-        quickResumeSnapshot = resumable.snapshot
+        quickResume = resumable
         showingQuickResume = true
+    }
+
+    private func activityDate(for resumable: ResumableDeck) -> Date {
+        return switch resumable.session {
+        case .flashcards:
+            resumable.deck.lastStudyActivityAt ?? .distantPast
+        case .test:
+            resumable.deck.lastTestActivityAt ?? .distantPast
+        }
     }
 }

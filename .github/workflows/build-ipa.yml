@@ -205,10 +205,13 @@ jobs:
                   grep -q '@State private var termOption = TermDefinitionDelimiterOption.colon' \
                     Flashcards/Views/Import/BulkImportView.swift
                   grep -q 'var activeStudySessionData: Data?' Flashcards/Models/Deck.swift
+                  grep -q 'var activeTestSessionData: Data?' Flashcards/Models/Deck.swift
+                  grep -q 'var completedTestSessions: Int = 0' Flashcards/Models/Deck.swift
                   grep -q 'var lastOpenedAt: Date?' Flashcards/Models/Deck.swift
                   grep -q 'var studyHistoryData: Data?' Flashcards/Models/Deck.swift
                   grep -q 'var isPinned: Bool = false' Flashcards/Models/Deck.swift
                   grep -q 'var isStarred: Bool = false' Flashcards/Models/Card.swift
+                  grep -q 'var testMastered: Bool = false' Flashcards/Models/Card.swift
                   grep -q 'func undoLastAnswer()' Flashcards/Services/StudySessionState.swift
                   grep -q 'StudyCardProgressSnapshot' Flashcards/Services/StudySessionState.swift
                   grep -q 'Button("study.review_mistakes"' Flashcards/Views/Study/StudyView.swift
@@ -243,6 +246,7 @@ jobs:
                     Flashcards/Views/Study/StudySetupView.swift
                   grep -q 'struct CircularSaveButton: View' Flashcards/Theme.swift
                   grep -q 'struct DeckProgressBar: View' Flashcards/Theme.swift
+                  grep -q 'struct TestProgressBar: View' Flashcards/Theme.swift
                   grep -q 'struct CardEditorSurface: View' Flashcards/Theme.swift
                   for FORM_FILE in \
                     Flashcards/Views/Library/FolderFormView.swift \
@@ -266,6 +270,8 @@ jobs:
                   grep -q 'CardEditorSurface(' Flashcards/Views/Library/CardFormView.swift
                   grep -q 'DeckProgressBar(' Flashcards/Views/Library/DeckDetailView.swift
                   grep -q 'DeckProgressBar(' Flashcards/Views/Study/StudySetupView.swift
+                  grep -q 'TestProgressBar(' Flashcards/Views/Test/TestSetupView.swift
+                  grep -q 'TestSessionPersistence.decode' Flashcards/Views/HomeView.swift
                   grep -q 'import CoreHaptics' Flashcards/Services/HapticService.swift
                   test -z "$(grep -R -l 'LabeledContent("Cartes restantes"' Flashcards || true)"
                   grep -q '\.tint(.red)' Flashcards/Views/Library/EditCardsView.swift

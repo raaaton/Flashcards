@@ -8,6 +8,7 @@ final class Card {
     var definition: String
     var position: Int
     var mastered: Bool
+    var testMastered: Bool = false
     var timesStudied: Int
     var timesCorrect: Int
     var isStarred: Bool = false
@@ -19,6 +20,7 @@ final class Card {
         self.definition = definition
         self.position = position
         mastered = false
+        testMastered = false
         timesStudied = 0
         timesCorrect = 0
         isStarred = false
