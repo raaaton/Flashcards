@@ -971,7 +971,7 @@ For drag, swipe, flip, reorder, and animated transitions:
 
 If a system API becomes unreliable on the current iOS runtime, a small custom SwiftUI interaction is acceptable, but keep it understandable and test actual runtime behavior.
 
-`EditCardsView` and `AuthoredTestsEditor` intentionally use plain lists with explicit `Theme.cardBackground` row surfaces so trailing-swipe rows remain rectangular and do not acquire delayed bottom-corner rounding. Do not restore automatic/grouped list styling without device validation.
+`EditCardsView` and `AuthoredTestsEditor` intentionally retain the native automatic grouped-list presentation so their rows appear inside inset neutral section surfaces with shared separators and rounded outer corners. Keep both editors visually aligned when changing list styling.
 
 ## 31. Performance guidance
 

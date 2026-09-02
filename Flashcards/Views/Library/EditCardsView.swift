@@ -49,7 +49,6 @@ struct EditCardsView: View {
             ForEach(orderedCards) { card in
                 cardRow(card)
                     .contentShape(.rect)
-                    .listRowBackground(Theme.cardBackground)
                     .contextMenu {
                         Button(
                             L10n.text(
@@ -86,7 +85,6 @@ struct EditCardsView: View {
             }
             .onMove(perform: reorderCards)
         }
-        .listStyle(.plain)
         .overlay {
             if orderedCards.isEmpty {
                 ContentUnavailableView(

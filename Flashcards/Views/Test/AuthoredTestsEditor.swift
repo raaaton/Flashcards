@@ -61,7 +61,6 @@ struct AuthoredTestsEditor: View {
             multipleChoiceSection
             trueFalseSection
         }
-        .listStyle(.plain)
         .navigationTitle(
             isSelecting
                 ? L10n.format(
@@ -133,7 +132,6 @@ struct AuthoredTestsEditor: View {
                     ) {
                         multipleChoiceToEdit = question
                     }
-                    .listRowBackground(Theme.cardBackground)
                     .contextMenu {
                         if !isSelecting {
                             deleteQuestionButton { removeMultipleChoice(question.id) }
@@ -167,7 +165,6 @@ struct AuthoredTestsEditor: View {
                     ) {
                         trueFalseToEdit = question
                     }
-                    .listRowBackground(Theme.cardBackground)
                     .contextMenu {
                         if !isSelecting {
                             deleteQuestionButton { removeTrueFalse(question.id) }
@@ -190,7 +187,6 @@ struct AuthoredTestsEditor: View {
     private var emptyRow: some View {
         Text("test.editor.no_questions_in_section")
             .foregroundStyle(.secondary)
-            .listRowBackground(Theme.cardBackground)
     }
 
     @ViewBuilder
