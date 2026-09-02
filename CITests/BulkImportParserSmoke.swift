@@ -365,6 +365,24 @@ enum BulkImportParserSmoke {
         precondition(ExternalAIProvider.claude.webURL.host == "claude.ai")
         precondition(ExternalAIProvider.gemini.webURL.host == "gemini.google.com")
 
+        let languageKey = "settings.language"
+        let previousLanguage = UserDefaults.standard.object(forKey: languageKey)
+        let duplicateSuffixes = [
+            "french": "copie",
+            "english": "copy",
+            "german": "Kopie",
+            "spanish": "copia"
+        ]
+        for (language, suffix) in duplicateSuffixes {
+            UserDefaults.standard.set(language, forKey: languageKey)
+            precondition(L10n.text("library.duplicate_suffix") == suffix)
+        }
+        if let previousLanguage {
+            UserDefaults.standard.set(previousLanguage, forKey: languageKey)
+        } else {
+            UserDefaults.standard.removeObject(forKey: languageKey)
+        }
+
         print("BulkImportParser smoke tests passed")
     }
 }

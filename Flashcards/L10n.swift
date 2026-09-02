@@ -51,6 +51,12 @@ enum L10n {
             "de": "Trotzdem speichern",
             "es": "Guardar de todos modos"
         ],
+        "library.duplicate_suffix": [
+            "fr": "copie",
+            "en": "copy",
+            "de": "Kopie",
+            "es": "copia"
+        ],
         "ai.creation.method.title": [
             "fr": "Comment veux-tu créer les flashcards ?",
             "en": "How do you want to create the flashcards?",

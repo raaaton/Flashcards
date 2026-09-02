@@ -4,7 +4,7 @@ import SwiftData
 @MainActor
 enum LibraryActions {
     private static func duplicateName(for name: String) -> String {
-        "\(name) — copie"
+        "\(name) — \(L10n.text("library.duplicate_suffix"))"
     }
 
     @discardableResult

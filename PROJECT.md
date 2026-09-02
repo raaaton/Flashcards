@@ -555,7 +555,7 @@ No AI state is persisted and no AI response is sent anywhere by Flashcards.
 - copy to another deck
 - card reordering
 
-Deleting source cards also deletes linked questions after confirmation. Moving source cards transfers linked questions, with an explicit confirmation before a destination using generated flashcard questions is switched to the source custom mode. Copying a card never copies its questions. Deck/folder duplication remaps card and question UUIDs. Duplicate names always use the literal, non-localized suffix `— copie`.
+Deleting source cards also deletes linked questions after confirmation. Moving source cards transfers linked questions, with an explicit confirmation before a destination using generated flashcard questions is switched to the source custom mode. Copying a card never copies its questions. Deck/folder duplication remaps card and question UUIDs. Duplicate names use a localized copy suffix in French, English, German, and Spanish.
 
 `LibraryActions` centralizes reusable mutations and normalizes positions where required.
 

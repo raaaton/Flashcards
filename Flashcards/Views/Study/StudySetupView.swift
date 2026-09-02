@@ -152,16 +152,16 @@ struct StudySetupView: View {
         .navigationTitle("")
         .navigationBarTitleDisplayMode(.inline)
         .toolbar {
-            ToolbarItem(placement: .principal) {
-                HStack(alignment: .firstTextBaseline, spacing: 8) {
-                    Text(L10n.text("study.configure_cards.title"))
-                        .font(.headline)
-                    Text(L10n.format("study.session.number", Int64(nextSessionNumber)))
-                        .font(.caption.weight(.semibold))
-                        .foregroundStyle(.secondary)
-                        .monospacedDigit()
-                }
-                .accessibilityElement(children: .combine)
+            ToolbarItem(placement: .topBarLeading) {
+                Text(L10n.text("study.configure_cards.title"))
+                    .font(.headline)
+            }
+
+            ToolbarItem(placement: .topBarTrailing) {
+                Text(L10n.format("study.session.number", Int64(nextSessionNumber)))
+                    .font(.caption.weight(.semibold))
+                    .foregroundStyle(accent)
+                    .monospacedDigit()
             }
         }
         .tint(accent)

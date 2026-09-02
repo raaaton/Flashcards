@@ -238,16 +238,16 @@ struct TestSetupView: View {
         .navigationTitle("")
         .navigationBarTitleDisplayMode(.inline)
         .toolbar {
-            ToolbarItem(placement: .principal) {
-                HStack(alignment: .firstTextBaseline, spacing: 8) {
-                    Text(L10n.text("Configurer le test"))
-                        .font(.headline)
-                    Text(L10n.format("study.session.number", Int64(nextSessionNumber)))
-                        .font(.caption.weight(.semibold))
-                        .foregroundStyle(.secondary)
-                        .monospacedDigit()
-                }
-                .accessibilityElement(children: .combine)
+            ToolbarItem(placement: .topBarLeading) {
+                Text(L10n.text("Configurer le test"))
+                    .font(.headline)
+            }
+
+            ToolbarItem(placement: .topBarTrailing) {
+                Text(L10n.format("study.session.number", Int64(nextSessionNumber)))
+                    .font(.caption.weight(.semibold))
+                    .foregroundStyle(accent)
+                    .monospacedDigit()
             }
         }
         .tint(accent)
