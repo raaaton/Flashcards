@@ -279,7 +279,8 @@ jobs:
                   test "$(grep -F -c "CURRENT_PROJECT_VERSION = ${{ steps.project_version.outputs.build }};" Flashcards.xcodeproj/project.pbxproj)" -eq 2
                   test "$(grep -F -c "MARKETING_VERSION = ${{ steps.project_version.outputs.version }};" Flashcards.xcodeproj/project.pbxproj)" -eq 2
                   test "$(grep -c 'INFOPLIST_KEY_CFBundleDisplayName = Kavi;' Flashcards.xcodeproj/project.pbxproj)" -eq 2
-                  test "$(grep -c 'INFOPLIST_KEY_LSApplicationQueriesSchemes = "chatgpt claude googlegemini";' Flashcards.xcodeproj/project.pbxproj)" -eq 2
+                  test "$(grep -c 'INFOPLIST_FILE = Flashcards/Info.plist;' Flashcards.xcodeproj/project.pbxproj)" -eq 2
+                  plutil -lint Flashcards/Info.plist
                   test "$(grep -c 'PRODUCT_NAME = Kavi;' Flashcards.xcodeproj/project.pbxproj)" -eq 2
                   test "$(grep -c 'PRODUCT_BUNDLE_IDENTIFIER = com.raton.flashcards;' Flashcards.xcodeproj/project.pbxproj)" -eq 2
                   test "$(grep -c 'SWIFT_VERSION = 6.0;' Flashcards.xcodeproj/project.pbxproj)" -eq 2
