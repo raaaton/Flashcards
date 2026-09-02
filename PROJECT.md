@@ -555,7 +555,7 @@ No AI state is persisted and no AI response is sent anywhere by Flashcards.
 - copy to another deck
 - card reordering
 
-Deleting source cards also deletes linked questions after confirmation. Moving source cards transfers linked questions, with an explicit confirmation before a destination using generated flashcard questions is switched to the source custom mode. Copying a card never copies its questions. Deck/folder duplication remaps card and question UUIDs.
+Deleting source cards also deletes linked questions after confirmation. Moving source cards transfers linked questions, with an explicit confirmation before a destination using generated flashcard questions is switched to the source custom mode. Copying a card never copies its questions. Deck/folder duplication remaps card and question UUIDs. Duplicate names always use the literal, non-localized suffix `— copie`.
 
 `LibraryActions` centralizes reusable mutations and normalizes positions where required.
 
@@ -746,7 +746,7 @@ Test answers are normalized case-insensitively, diacritic-insensitively, width-i
 
 Written answers can be manually overridden to correct when the automatic matcher is too strict. Incorrect questions can be retried through `retryErrors()`.
 
-The current source card can be edited directly from `TestRunView`, as in the Flashcards flow. Generated pending question content is refreshed in place while authored Multiple Choice / True-False wording remains fixed.
+The current Test question can be edited directly from `TestRunView` without modifying its source card or leaving the session. Authored Multiple Choice / True-False edits are also persisted back into the deck configuration; generated and written questions remain session-specific.
 
 `ActiveTestSessionSnapshot` preserves the generated questions, configuration, submitted answers, current feedback, and session number. It is stored in `activeTestSessionData`, shown in Home Resume alongside Flashcards sessions, and cleared when the Test completes or its progress is reset.
 

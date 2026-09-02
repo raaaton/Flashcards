@@ -24,8 +24,7 @@ struct TestRunView: View {
     @State private var didRecordCompletion = false
     @State private var showCelebration = false
     @State private var confirmingReset = false
-    @State private var cardToEdit: Card?
-    @State private var cardBeforeEditing: TestCardSnapshot?
+    @State private var questionToEdit: TestQuestion?
     @FocusState private var writtenFieldIsFocused: Bool
 
     init(
@@ -69,11 +68,12 @@ struct TestRunView: View {
         .toolbar {
             ToolbarItem(placement: .topBarLeading) {
                 Button { dismiss() } label: {
-                    Image(systemName: "xmark")
+                    Image(systemName: "chevron.left")
                         .neutralIconColor()
                 }
                 .tint(.white)
-                .accessibilityLabel("Quitter")
+                .accessibilityLabel("Retour")
+                .accessibilityHint("La progression déjà enregistrée sera conservée")
             }
 
             if !session.isComplete {
@@ -81,14 +81,9 @@ struct TestRunView: View {
                     Button {
                         guard feedbackIsCorrect == nil,
                               !isTransitioning,
-                              let card = currentDeckCard else { return }
+                              let question = session.currentQuestion else { return }
                         HapticService.play(.selection)
-                        cardBeforeEditing = TestCardSnapshot(
-                            id: card.id,
-                            term: card.term,
-                            definition: card.definition
-                        )
-                        cardToEdit = card
+                        questionToEdit = question
                     } label: {
                         Image(systemName: "square.and.pencil")
                             .neutralIconColor()
@@ -98,15 +93,15 @@ struct TestRunView: View {
                     .disabled(
                         feedbackIsCorrect != nil
                             || isTransitioning
-                            || currentDeckCard == nil
+                            || session.currentQuestion == nil
                     )
-                    .accessibilityLabel(L10n.text("card.edit.title"))
+                    .accessibilityLabel(L10n.text("test.question_editor.title"))
                 }
             }
         }
-        .sheet(item: $cardToEdit) { card in
-            CardFormView(deck: deck, card: card) {
-                refreshSourceCard(from: card)
+        .sheet(item: $questionToEdit) { question in
+            RuntimeTestQuestionEditor(question: question, accent: accent) { editedQuestion in
+                saveEditedQuestion(editedQuestion)
             }
         }
         .overlay {
@@ -425,7 +420,7 @@ struct TestRunView: View {
                 Button(role: .destructive) {
                     confirmingReset = true
                 } label: {
-                    Label("test.progress.reset.deck_action", systemImage: "trash")
+                    Label("test.progress.reset.deck_action", systemImage: "arrow.counterclockwise")
                 }
                 .destructiveActionColor()
             }
@@ -537,28 +532,41 @@ struct TestRunView: View {
         submit(cleanAnswer)
     }
 
-    private var currentDeckCard: Card? {
-        guard let cardID = session.currentQuestion?.cardID else { return nil }
-        return deck.cards.first(where: { $0.id == cardID })
-    }
+    private func saveEditedQuestion(_ question: TestQuestion) {
+        guard session.replaceCurrentQuestion(with: question) else { return }
 
-    private func refreshSourceCard(from card: Card) {
-        guard let previous = cardBeforeEditing, previous.id == card.id else { return }
-        let updated = TestCardSnapshot(
-            id: card.id,
-            term: card.term,
-            definition: card.definition
-        )
-        session.refreshSourceCard(
-            previous: previous,
-            updated: updated,
-            configurationMode: deck.testConfiguration.mode
-        )
-        cardBeforeEditing = nil
-        deck.updatedAt = .now
-        if session.currentIndex > 0 || !session.answers.isEmpty {
-            persistActiveSession()
+        var configuration = deck.testConfiguration
+        var configurationChanged = false
+
+        switch question.type {
+        case .multipleChoice:
+            if let index = configuration.multipleChoice.firstIndex(where: { $0.id == question.id }),
+               let correctIndex = question.choices.firstIndex(where: {
+                   answersMatch($0, question.correctAnswer)
+               }) {
+                configuration.multipleChoice[index].prompt = question.prompt
+                configuration.multipleChoice[index].choices = question.choices
+                configuration.multipleChoice[index].correctChoiceIndex = correctIndex
+                configurationChanged = true
+            }
+
+        case .trueFalse:
+            if let index = configuration.trueFalse.firstIndex(where: { $0.id == question.id }) {
+                configuration.trueFalse[index].statement = question.prompt
+                configuration.trueFalse[index].correctAnswer = question.correctAnswer == "Vrai"
+                configurationChanged = true
+            }
+
+        case .written:
+            break
         }
+
+        if configurationChanged {
+            deck.setTestConfiguration(configuration)
+        }
+        deck.updatedAt = .now
+        deck.lastTestActivityAt = .now
+        persistActiveSession()
         try? modelContext.save()
     }
 
@@ -710,5 +718,220 @@ struct TestRunView: View {
         didCelebrate = true
         HapticService.play(.completion)
         showCelebration = AppPreferences.celebrationsEnabled && !reduceMotion
+    }
+}
+
+private struct RuntimeTestQuestionEditor: View {
+    @Environment(\.dismiss) private var dismiss
+
+    let accent: Color
+    let onSave: (TestQuestion) -> Void
+
+    @State private var question: TestQuestion
+
+    init(
+        question: TestQuestion,
+        accent: Color,
+        onSave: @escaping (TestQuestion) -> Void
+    ) {
+        self.accent = accent
+        self.onSave = onSave
+        _question = State(initialValue: question)
+    }
+
+    private var validatedQuestion: TestQuestion? {
+        var result = question
+        result.prompt = AuthoredTestText.clean(question.prompt)
+        guard !result.prompt.isEmpty else { return nil }
+
+        switch result.type {
+        case .multipleChoice:
+            let choices = question.choices.map(AuthoredTestText.clean)
+            guard (2...6).contains(choices.count),
+                  choices.allSatisfy({ !$0.isEmpty }),
+                  Set(choices.map(AuthoredTestText.normalize)).count == choices.count else {
+                return nil
+            }
+            let correctMatches = choices.indices.filter {
+                AuthoredTestText.normalize(choices[$0])
+                    == AuthoredTestText.normalize(question.correctAnswer)
+            }
+            guard correctMatches.count == 1 else { return nil }
+            result.choices = choices
+            result.correctAnswer = choices[correctMatches[0]]
+            if result.referenceAnswer != nil {
+                result.referenceAnswer = result.correctAnswer
+            }
+
+        case .trueFalse:
+            guard result.correctAnswer == "Vrai" || result.correctAnswer == "Faux" else {
+                return nil
+            }
+            if question.secondaryText != nil {
+                let secondaryText = AuthoredTestText.clean(question.secondaryText ?? "")
+                guard !secondaryText.isEmpty else { return nil }
+                result.secondaryText = secondaryText
+            }
+
+        case .written:
+            result.correctAnswer = AuthoredTestText.clean(question.correctAnswer)
+            guard !result.correctAnswer.isEmpty else { return nil }
+            result.referenceAnswer = result.correctAnswer
+        }
+
+        return result
+    }
+
+    var body: some View {
+        NavigationStack {
+            Form {
+                Section {
+                    TextField("test.editor.question", text: $question.prompt, axis: .vertical)
+                        .lineLimit(2...6)
+
+                    if question.secondaryText != nil {
+                        TextField(
+                            "test.question_editor.pairing",
+                            text: Binding(
+                                get: { question.secondaryText ?? "" },
+                                set: { question.secondaryText = $0 }
+                            ),
+                            axis: .vertical
+                        )
+                        .lineLimit(2...5)
+                    }
+                }
+
+                switch question.type {
+                case .multipleChoice:
+                    Section {
+                        ForEach(question.choices.indices, id: \.self) { index in
+                            choiceRow(at: index)
+                                .swipeActions(edge: .trailing, allowsFullSwipe: true) {
+                                    if question.choices.count > 2 {
+                                        deleteChoiceButton(at: index)
+                                    }
+                                }
+                        }
+
+                        if question.choices.count < 6 {
+                            Button("test.editor.add_choice", systemImage: "plus") {
+                                question.choices.append("")
+                                HapticService.play(.selection)
+                            }
+                            .frame(maxWidth: .infinity, alignment: .leading)
+                            .contentShape(.rect)
+                            .normalActionColor()
+                        }
+                    } header: {
+                        Text("test.editor.choices")
+                    }
+
+                case .trueFalse:
+                    Section {
+                        Picker("test.editor.correct_answer", selection: $question.correctAnswer) {
+                            Text("test.false").tag("Faux")
+                            Text("test.true").tag("Vrai")
+                        }
+                        .pickerStyle(.segmented)
+                    }
+
+                case .written:
+                    Section {
+                        TextField(
+                            "test.editor.correct_answer",
+                            text: $question.correctAnswer,
+                            axis: .vertical
+                        )
+                        .lineLimit(2...5)
+                    }
+                }
+
+                if validatedQuestion == nil {
+                    Section {
+                        Text("test.editor.validation_error")
+                            .foregroundStyle(.red)
+                    }
+                }
+            }
+            .scrollDismissesKeyboard(.interactively)
+            .navigationTitle("test.question_editor.title")
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .cancellationAction) {
+                    Button("Annuler") { dismiss() }
+                        .tint(.white)
+                }
+
+                ToolbarItem(placement: .confirmationAction) {
+                    CircularSaveButton(accent: accent, isEnabled: validatedQuestion != nil) {
+                        guard let validatedQuestion else { return }
+                        onSave(validatedQuestion)
+                        dismiss()
+                    }
+                }
+            }
+        }
+    }
+
+    private func choiceRow(at index: Int) -> some View {
+        HStack(spacing: 10) {
+            Button {
+                question.correctAnswer = question.choices[index]
+            } label: {
+                Image(
+                    systemName: isCorrectChoice(at: index)
+                        ? "checkmark.circle.fill"
+                        : "circle"
+                )
+                .foregroundStyle(isCorrectChoice(at: index) ? accent : Color.secondary)
+            }
+            .buttonStyle(.plain)
+            .accessibilityLabel(
+                isCorrectChoice(at: index)
+                    ? L10n.text("test.editor.correct_choice_selected")
+                    : L10n.text("test.editor.mark_correct_choice")
+            )
+
+            TextField(
+                L10n.format("test.editor.choice", Int64(index + 1)),
+                text: Binding(
+                    get: { question.choices[index] },
+                    set: { newValue in
+                        let wasCorrect = isCorrectChoice(at: index)
+                        question.choices[index] = newValue
+                        if wasCorrect {
+                            question.correctAnswer = newValue
+                        }
+                    }
+                ),
+                axis: .vertical
+            )
+        }
+        .contentShape(.rect)
+    }
+
+    private func isCorrectChoice(at index: Int) -> Bool {
+        question.choices.indices.contains(index)
+            && AuthoredTestText.normalize(question.choices[index])
+                == AuthoredTestText.normalize(question.correctAnswer)
+    }
+
+    private func deleteChoiceButton(at index: Int) -> some View {
+        Button(role: .destructive) {
+            removeChoice(at: index)
+        } label: {
+            Label("test.editor.remove_choice", systemImage: "trash")
+        }
+    }
+
+    private func removeChoice(at index: Int) {
+        guard question.choices.indices.contains(index), question.choices.count > 2 else { return }
+        let removedCorrectChoice = isCorrectChoice(at: index)
+        question.choices.remove(at: index)
+        if removedCorrectChoice {
+            question.correctAnswer = question.choices[0]
+        }
+        HapticService.play(.selection)
     }
 }

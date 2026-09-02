@@ -495,6 +495,8 @@ Deck test modes:
 
 For authored modes, preserve per-type availability, source-card starred filtering, global 10/20/All limits, round-robin pool selection, and the no-fallback rule for Multiple Choice / True-False questions. Direction affects authored-mode written questions only.
 
+The Test-run edit control edits the current Test question, never its source card. Authored Multiple Choice / True-False changes persist to `Deck.testConfigurationData`; generated and written question edits remain scoped to the resumable session.
+
 Test resume/progress is independent from Flashcards resume/progress. Preserve `Card.testMastered`, `Deck.activeTestSessionData`, `Deck.completedTestSessions`, and `Deck.lastTestActivityAt`; multiple questions sharing a source card count once after every linked question present in the current session is correct.
 
 Preserve:

@@ -489,8 +489,8 @@ struct HomeView: View {
                                     resetProgress(for: resumableDeck)
                                 } label: {
                                     Label(
-                                        resetProgressTitle(for: resumableDeck),
-                                        systemImage: "trash"
+                                        L10n.text("Réinitialiser la progression"),
+                                        systemImage: "arrow.counterclockwise"
                                     )
                                 }
                                 .tint(.red)
@@ -1075,15 +1075,6 @@ struct HomeView: View {
             LibraryActions.resetTestProgress(for: resumable.deck, in: modelContext)
         }
         HapticService.play(.selection)
-    }
-
-    private func resetProgressTitle(for resumable: ResumableDeck) -> String {
-        switch resumable.session {
-        case .flashcards:
-            L10n.text("Réinitialiser la progression")
-        case .test:
-            L10n.text("test.progress.reset.action")
-        }
     }
 
     private func activityDate(for resumable: ResumableDeck) -> Date {

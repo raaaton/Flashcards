@@ -167,42 +167,27 @@ enum TestSessionSmoke {
         precondition(mixedAuthored.filter { $0.type == .trueFalse }.count == 1)
         precondition(mixedAuthored.first { $0.type == .trueFalse }?.referenceAnswer == nil)
 
-        let updatedFirstCard = TestCardSnapshot(
-            id: cards[0].id,
-            term: "Terme modifié",
-            definition: "Définition modifiée"
-        )
-        var authoredEditSession = TestSessionState(questions: mixedAuthored)
-        authoredEditSession.refreshSourceCard(
-            previous: cards[0],
-            updated: updatedFirstCard,
-            configurationMode: .manual
-        )
-        precondition(authoredEditSession.questions[0].prompt == "QCM 1")
-        let refreshedWritten = authoredEditSession.questions.first {
-            $0.cardID == cards[0].id && $0.type == .written
-        }
-        precondition(refreshedWritten?.prompt == updatedFirstCard.term)
-        precondition(refreshedWritten?.correctAnswer == updatedFirstCard.definition)
+        var editableSession = TestSessionState(questions: mixedAuthored)
+        var editedQuestion = mixedAuthored[0]
+        editedQuestion.prompt = "QCM modifié"
+        precondition(editableSession.replaceCurrentQuestion(with: editedQuestion))
+        precondition(editableSession.currentQuestion?.prompt == "QCM modifié")
 
-        let generatedEditQuestions = TestQuestionFactory.makeQuestions(
-            cards: cards,
-            types: [.multipleChoice],
-            count: 1,
-            direction: .termToDefinition,
-            shuffle: false
+        var invalidReplacement = editedQuestion
+        invalidReplacement.prompt = "Mauvaise identité"
+        invalidReplacement = TestQuestion(
+            id: UUID(),
+            cardID: invalidReplacement.cardID,
+            type: invalidReplacement.type,
+            prompt: invalidReplacement.prompt,
+            secondaryText: invalidReplacement.secondaryText,
+            correctAnswer: invalidReplacement.correctAnswer,
+            referenceAnswer: invalidReplacement.referenceAnswer,
+            choices: invalidReplacement.choices
         )
-        var generatedEditSession = TestSessionState(questions: generatedEditQuestions)
-        generatedEditSession.refreshSourceCard(
-            previous: cards[0],
-            updated: updatedFirstCard,
-            configurationMode: .useFlashcards
-        )
-        precondition(generatedEditSession.currentQuestion?.prompt == updatedFirstCard.term)
-        precondition(generatedEditSession.currentQuestion?.correctAnswer == updatedFirstCard.definition)
-        precondition(
-            generatedEditSession.currentQuestion?.choices.contains(updatedFirstCard.definition) == true
-        )
+        precondition(!editableSession.replaceCurrentQuestion(with: invalidReplacement))
+        editableSession.submit(answer: editedQuestion.correctAnswer)
+        precondition(!editableSession.replaceCurrentQuestion(with: editedQuestion))
 
         let authoredForward = AuthoredTestQuestionFactory.makeQuestions(
             cards: cards,

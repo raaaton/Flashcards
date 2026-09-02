@@ -108,16 +108,8 @@ struct TestSetupView: View {
     var body: some View {
         VStack(spacing: 0) {
             Form {
-                Section {
-                    Label(
-                        L10n.format("study.session.number", Int64(nextSessionNumber)),
-                        systemImage: "checklist"
-                    )
-                    .font(.title2.bold())
-                    .foregroundStyle(accent)
-                    .accessibilityAddTraits(.isHeader)
-
-                    if resumableSession != nil {
+                if resumableSession != nil {
+                    Section {
                         Text("study.session.in_progress")
                             .font(.subheadline.weight(.semibold))
                             .foregroundStyle(.secondary)
@@ -243,7 +235,21 @@ struct TestSetupView: View {
                 TestRunView(deck: deck, snapshot: launchedSession)
             }
         }
-        .navigationTitle("Configurer le test")
+        .navigationTitle("")
+        .navigationBarTitleDisplayMode(.inline)
+        .toolbar {
+            ToolbarItem(placement: .principal) {
+                HStack(alignment: .firstTextBaseline, spacing: 8) {
+                    Text(L10n.text("Configurer le test"))
+                        .font(.headline)
+                    Text(L10n.format("study.session.number", Int64(nextSessionNumber)))
+                        .font(.caption.weight(.semibold))
+                        .foregroundStyle(.secondary)
+                        .monospacedDigit()
+                }
+                .accessibilityElement(children: .combine)
+            }
+        }
         .tint(accent)
         .background {
             Color.clear

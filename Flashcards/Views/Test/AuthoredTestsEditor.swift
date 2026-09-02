@@ -64,7 +64,10 @@ struct AuthoredTestsEditor: View {
                     }
                 } label: {
                     Label("test.editor.add_question", systemImage: "plus")
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                        .contentShape(.rect)
                 }
+                .frame(maxWidth: .infinity, alignment: .leading)
                 .normalActionColor()
                 .disabled(sourceCards.isEmpty)
             } footer: {

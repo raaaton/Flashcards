@@ -61,15 +61,8 @@ struct StudySetupView: View {
     var body: some View {
         VStack(spacing: 0) {
             Form {
-                Section {
-                    Label(
-                        L10n.format("study.session.number", Int64(nextSessionNumber)),
-                        systemImage: "rectangle.stack.fill"
-                    )
-                        .font(.title2.bold())
-                        .foregroundStyle(accent)
-                        .accessibilityAddTraits(.isHeader)
-                    if resumableSession != nil {
+                if resumableSession != nil {
+                    Section {
                         Text("study.session.in_progress")
                             .font(.subheadline.weight(.semibold))
                             .foregroundStyle(.secondary)
@@ -156,7 +149,21 @@ struct StudySetupView: View {
             .padding(.horizontal)
             .padding(.vertical, 12)
         }
-        .navigationTitle("Flashcards")
+        .navigationTitle("")
+        .navigationBarTitleDisplayMode(.inline)
+        .toolbar {
+            ToolbarItem(placement: .principal) {
+                HStack(alignment: .firstTextBaseline, spacing: 8) {
+                    Text(L10n.text("study.configure_cards.title"))
+                        .font(.headline)
+                    Text(L10n.format("study.session.number", Int64(nextSessionNumber)))
+                        .font(.caption.weight(.semibold))
+                        .foregroundStyle(.secondary)
+                        .monospacedDigit()
+                }
+                .accessibilityElement(children: .combine)
+            }
+        }
         .tint(accent)
         .navigationDestination(isPresented: $showingSession) {
             if let launchedSession {

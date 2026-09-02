@@ -3,9 +3,13 @@ import SwiftData
 
 @MainActor
 enum LibraryActions {
+    private static func duplicateName(for name: String) -> String {
+        "\(name) — copie"
+    }
+
     @discardableResult
     static func duplicateDeck(_ source: Deck, in modelContext: ModelContext) -> Deck {
-        let copy = Deck(name: "\(source.name) — copie", folder: source.folder)
+        let copy = Deck(name: duplicateName(for: source.name), folder: source.folder)
         modelContext.insert(copy)
         var cardIDMap: [UUID: UUID] = [:]
 
@@ -32,7 +36,7 @@ enum LibraryActions {
     @discardableResult
     static func duplicateFolder(_ source: Folder, in modelContext: ModelContext) -> Folder {
         let copy = Folder(
-            name: "\(source.name) — copie",
+            name: duplicateName(for: source.name),
             iconName: source.iconName,
             colorHex: source.colorHex
         )

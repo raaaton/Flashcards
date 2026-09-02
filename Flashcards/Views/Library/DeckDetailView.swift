@@ -21,11 +21,11 @@ struct DeckDetailView: View {
         ScrollView {
             LazyVStack(alignment: .leading, spacing: 24) {
                 studySection
-                cardsSection
-                testsSection
                 if settings.studyHistoryEnabled && !deck.studyHistory.isEmpty {
                     studyHistorySection
                 }
+                cardsSection
+                testsSection
             }
             .padding(.horizontal)
             .padding(.top, 8)
@@ -87,7 +87,7 @@ struct DeckDetailView: View {
 
             HStack(spacing: 12) {
                 studyTile(
-                    title: "Flashcards",
+                    title: L10n.text("Cartes"),
                     systemImage: "rectangle.on.rectangle.angled"
                 ) {
                     StudySetupView(deck: deck)
@@ -163,26 +163,6 @@ struct DeckDetailView: View {
                 .font(.title2.bold())
 
             VStack(alignment: .leading, spacing: 0) {
-                if configuration.mode != .useFlashcards {
-                    NavigationLink {
-                        AuthoredTestsEditor(deck: deck)
-                    } label: {
-                        Label(
-                            L10n.text("deck.tests.edit"),
-                            systemImage: "square.and.pencil"
-                        )
-                        .font(.headline)
-                        .frame(maxWidth: .infinity, alignment: .leading)
-                        .padding(.vertical, 15)
-                        .contentShape(.rect)
-                    }
-                    .buttonStyle(.plain)
-                    .foregroundStyle(Theme.deckAccent(for: deck))
-                    .tint(Theme.deckAccent(for: deck))
-
-                    Divider()
-                }
-
                 HStack(spacing: 12) {
                     Image(systemName: "checklist")
                         .foregroundStyle(Theme.deckAccent(for: deck))
@@ -212,6 +192,24 @@ struct DeckDetailView: View {
                 .padding(.vertical, 15)
 
                 if configuration.mode != .useFlashcards {
+                    Divider()
+
+                    NavigationLink {
+                        AuthoredTestsEditor(deck: deck)
+                    } label: {
+                        Label(
+                            L10n.text("deck.tests.edit"),
+                            systemImage: "square.and.pencil"
+                        )
+                        .font(.headline)
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                        .padding(.vertical, 15)
+                        .contentShape(.rect)
+                    }
+                    .buttonStyle(.plain)
+                    .foregroundStyle(Theme.deckAccent(for: deck))
+                    .tint(Theme.deckAccent(for: deck))
+
                     ForEach(previews) { preview in
                         Divider()
 
