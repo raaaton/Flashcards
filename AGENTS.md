@@ -456,7 +456,7 @@ Other preferences:
 - shuffle
 - starred-only
 
-`StudySetupView` and `TestSetupView` render their title/session header as non-interactive `.principal` toolbar content on the same row as the native back button: the title is larger on the left and the smaller mint session number is aligned right. Keep both labels inside the shared principal layout; separate leading/trailing action items receive unwanted Liquid Glass controls.
+`StudySetupView` and `TestSetupView` render their title/session header on the same row as the native back button. The larger title uses non-interactive `.principal` content aligned left; the smaller mint session number is a non-interactive trailing indicator anchored to the native right margin. Both items hide their shared toolbar background so neither receives an unwanted Liquid Glass control.
 
 Outcomes:
 

@@ -656,7 +656,7 @@ Other options:
 - shuffle
 - starred-only
 
-The Cards and Test setup screens share a non-interactive principal navigation header on the same row as the native back button: a larger configuration title aligned left and a smaller mint session number aligned right. Both labels stay inside the shared principal layout so they remain plain text instead of Liquid Glass action controls.
+The Cards and Test setup screens share a navigation header on the same row as the native back button: a larger non-interactive principal title aligned left and a smaller mint session indicator anchored to the native right margin. Both toolbar items explicitly hide their shared background so they remain plain text instead of Liquid Glass controls.
 
 ### Session state
 

@@ -153,24 +153,23 @@ struct StudySetupView: View {
         .navigationBarTitleDisplayMode(.inline)
         .toolbar {
             ToolbarItem(placement: .principal) {
-                HStack(alignment: .firstTextBaseline, spacing: 12) {
-                    Text(L10n.text("study.configure_cards.title"))
-                        .font(.title3.weight(.bold))
-                        .lineLimit(1)
-                        .minimumScaleFactor(0.85)
-
-                    Spacer(minLength: 12)
-
-                    Text(L10n.format("study.session.number", Int64(nextSessionNumber)))
-                        .font(.subheadline.weight(.semibold))
-                        .foregroundStyle(accent)
-                        .monospacedDigit()
-                        .lineLimit(1)
-                        .fixedSize(horizontal: true, vertical: false)
-                }
-                .frame(maxWidth: .infinity)
-                .accessibilityElement(children: .combine)
+                Text(L10n.text("study.configure_cards.title"))
+                    .font(.title3.weight(.bold))
+                    .lineLimit(1)
+                    .minimumScaleFactor(0.85)
+                    .frame(maxWidth: .infinity, alignment: .leading)
             }
+            .sharedBackgroundVisibility(.hidden)
+
+            ToolbarItem(placement: .topBarTrailing) {
+                Text(L10n.format("study.session.number", Int64(nextSessionNumber)))
+                    .font(.subheadline.weight(.semibold))
+                    .foregroundStyle(accent)
+                    .monospacedDigit()
+                    .lineLimit(1)
+                    .fixedSize(horizontal: true, vertical: false)
+            }
+            .sharedBackgroundVisibility(.hidden)
         }
         .tint(accent)
         .navigationDestination(isPresented: $showingSession) {
