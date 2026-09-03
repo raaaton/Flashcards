@@ -656,7 +656,7 @@ Other options:
 - shuffle
 - starred-only
 
-The Cards and Test setup screens share a plain text header above their forms: a larger configuration title aligned left and a smaller mint session number aligned right. These labels are content, not Liquid Glass toolbar controls.
+The Cards and Test setup screens share a non-interactive principal navigation header on the same row as the native back button: a larger configuration title aligned left and a smaller mint session number aligned right. Both labels stay inside the shared principal layout so they remain plain text instead of Liquid Glass action controls.
 
 ### Session state
 

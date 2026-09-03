@@ -456,7 +456,7 @@ Other preferences:
 - shuffle
 - starred-only
 
-`StudySetupView` and `TestSetupView` render their title/session header as plain content above the form, not as toolbar items: the title is larger on the left and the smaller mint session number is aligned right. Do not wrap these labels in Liquid Glass controls.
+`StudySetupView` and `TestSetupView` render their title/session header as non-interactive `.principal` toolbar content on the same row as the native back button: the title is larger on the left and the smaller mint session number is aligned right. Keep both labels inside the shared principal layout; separate leading/trailing action items receive unwanted Liquid Glass controls.
 
 Outcomes:
 
