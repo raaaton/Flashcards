@@ -106,114 +106,113 @@ struct TestSetupView: View {
     private var accent: Color { Theme.deckAccent(for: deck) }
 
     var body: some View {
-        VStack(spacing: 0) {
-            Form {
-                if resumableSession != nil {
-                    Section {
-                        Text("study.session.in_progress")
-                            .font(.subheadline.weight(.semibold))
-                            .foregroundStyle(.secondary)
-                    }
-                }
-
+        Form {
+            if resumableSession != nil {
                 Section {
-                    ForEach(TestQuestionType.allCases) { type in
-                        Toggle(isOn: typeBinding(type)) {
-                            HStack(spacing: 4) {
-                                Text(type.title)
-                                if configuration.mode != .useFlashcards {
-                                    Text("(\(availability.count(for: type)))")
-                                        .foregroundStyle(.secondary)
-                                        .monospacedDigit()
-                                }
-                            }
-                        }
-                        .disabled(resumableSession != nil || !isTypeAvailable(type))
-                    }
-                } header: {
-                    Text("Types de questions")
-                } footer: {
-                    if selectedTypes.isEmpty {
-                        Text("Sélectionnez au moins un type de question.")
-                    }
-                }
-
-                if configuration.mode == .useFlashcards || selectedTypes.contains(.written) {
-                    Section {
-                        LabeledContent("Sens") {
-                            StudyDirectionMenu(selection: $direction, accent: accent)
-                                .onChange(of: direction) { _, newValue in
-                                    guard resumableSession == nil else { return }
-                                    AppPreferences.studyDirection = newValue
-                                }
-                        }
-                    } header: {
-                        Text("Sens")
-                    } footer: {
-                        if configuration.mode != .useFlashcards {
-                            Text("test.authored.direction_note")
-                        }
-                    }
-                    .disabled(resumableSession != nil)
-                }
-
-                Section("Options") {
-                    Toggle("Mélanger", isOn: $shuffle)
-                        .onChange(of: shuffle) { _, newValue in
-                            guard resumableSession == nil else { return }
-                            AppPreferences.studyShuffle = newValue
-                        }
-                    Toggle("study.starred_only", isOn: $starredOnly)
-                        .onChange(of: starredOnly) { _, newValue in
-                            guard resumableSession == nil else { return }
-                            AppPreferences.studyStarredOnly = newValue
-                            normalizeSelectedTypes()
-                        }
-                }
-                .disabled(resumableSession != nil)
-
-                Section("session.size.title") {
-                    Picker("session.size.title", selection: $sessionSize) {
-                        ForEach(SessionSize.allCases) { size in
-                            Text(size.title).tag(size)
-                        }
-                    }
-                    .pickerStyle(.segmented)
-                    LabeledContent("Test prévu", value: L10n.questions(effectiveCount))
-                }
-                .disabled(resumableSession != nil)
-
-                if starredOnly && !hasStarredCards && resumableSession == nil {
-                    Section {
-                        Label("study.no_starred", systemImage: "star.slash")
-                            .foregroundStyle(.secondary)
-                    }
-                }
-
-                Section {
-                    TestProgressBar(
-                        deckName: deck.name,
-                        masteredCount: testMasteredCount,
-                        totalCount: deck.cards.count,
-                        accent: accent
-                    )
-                }
-
-                Section {
-                    Button(role: .destructive) {
-                        confirmingReset = true
-                    } label: {
-                        Label("test.progress.reset.action", systemImage: "arrow.counterclockwise")
-                    }
-                    .destructiveActionColor()
-                    .disabled(
-                        deck.completedTestSessions == 0
-                            && deck.cards.allSatisfy { !$0.testMastered }
-                            && resumableSession == nil
-                    )
+                    Text("study.session.in_progress")
+                        .font(.subheadline.weight(.semibold))
+                        .foregroundStyle(.secondary)
                 }
             }
 
+            Section {
+                ForEach(TestQuestionType.allCases) { type in
+                    Toggle(isOn: typeBinding(type)) {
+                        HStack(spacing: 4) {
+                            Text(type.title)
+                            if configuration.mode != .useFlashcards {
+                                Text("(\(availability.count(for: type)))")
+                                    .foregroundStyle(.secondary)
+                                    .monospacedDigit()
+                            }
+                        }
+                    }
+                    .disabled(resumableSession != nil || !isTypeAvailable(type))
+                }
+            } header: {
+                Text("Types de questions")
+            } footer: {
+                if selectedTypes.isEmpty {
+                    Text("Sélectionnez au moins un type de question.")
+                }
+            }
+
+            if configuration.mode == .useFlashcards || selectedTypes.contains(.written) {
+                Section {
+                    LabeledContent("Sens") {
+                        StudyDirectionMenu(selection: $direction, accent: accent)
+                            .onChange(of: direction) { _, newValue in
+                                guard resumableSession == nil else { return }
+                                AppPreferences.studyDirection = newValue
+                            }
+                    }
+                } header: {
+                    Text("Sens")
+                } footer: {
+                    if configuration.mode != .useFlashcards {
+                        Text("test.authored.direction_note")
+                    }
+                }
+                .disabled(resumableSession != nil)
+            }
+
+            Section("Options") {
+                Toggle("Mélanger", isOn: $shuffle)
+                    .onChange(of: shuffle) { _, newValue in
+                        guard resumableSession == nil else { return }
+                        AppPreferences.studyShuffle = newValue
+                    }
+                Toggle("study.starred_only", isOn: $starredOnly)
+                    .onChange(of: starredOnly) { _, newValue in
+                        guard resumableSession == nil else { return }
+                        AppPreferences.studyStarredOnly = newValue
+                        normalizeSelectedTypes()
+                    }
+            }
+            .disabled(resumableSession != nil)
+
+            Section("session.size.title") {
+                Picker("session.size.title", selection: $sessionSize) {
+                    ForEach(SessionSize.allCases) { size in
+                        Text(size.title).tag(size)
+                    }
+                }
+                .pickerStyle(.segmented)
+                LabeledContent("Test prévu", value: L10n.questions(effectiveCount))
+            }
+            .disabled(resumableSession != nil)
+
+            if starredOnly && !hasStarredCards && resumableSession == nil {
+                Section {
+                    Label("study.no_starred", systemImage: "star.slash")
+                        .foregroundStyle(.secondary)
+                }
+            }
+
+            Section {
+                TestProgressBar(
+                    deckName: deck.name,
+                    masteredCount: testMasteredCount,
+                    totalCount: deck.cards.count,
+                    accent: accent
+                )
+            }
+
+            Section {
+                Button(role: .destructive) {
+                    confirmingReset = true
+                } label: {
+                    Label("test.progress.reset.action", systemImage: "arrow.counterclockwise")
+                }
+                .destructiveActionColor()
+                .disabled(
+                    deck.completedTestSessions == 0
+                        && deck.cards.allSatisfy { !$0.testMastered }
+                        && resumableSession == nil
+                )
+            }
+        }
+        .safeAreaInset(edge: .bottom, spacing: 0) {
             PrimaryStartButton(
                 title: resumableSession == nil ? "common.start" : "study.resume",
                 isEnabled: canStart,
@@ -229,6 +228,7 @@ struct TestSetupView: View {
             }
             .padding(.horizontal)
             .padding(.vertical, 12)
+            .background(Color.clear)
         }
         .navigationDestination(isPresented: $showingTest) {
             if let launchedSession {

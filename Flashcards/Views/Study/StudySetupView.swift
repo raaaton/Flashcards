@@ -59,80 +59,79 @@ struct StudySetupView: View {
     private var accent: Color { Theme.deckAccent(for: deck) }
 
     var body: some View {
-        VStack(spacing: 0) {
-            Form {
-                if resumableSession != nil {
-                    Section {
-                        Text("study.session.in_progress")
-                            .font(.subheadline.weight(.semibold))
-                            .foregroundStyle(.secondary)
-                    }
-                }
-
-                Section("Sens") {
-                    LabeledContent("Sens") {
-                        StudyDirectionMenu(selection: $direction, accent: accent)
-                            .onChange(of: direction) { _, newValue in
-                                guard resumableSession == nil else { return }
-                                AppPreferences.studyDirection = newValue
-                            }
-                    }
-                }
-                .disabled(resumableSession != nil)
-
-                Section("Options") {
-                    Toggle("Mélanger", isOn: $shuffle)
-                        .onChange(of: shuffle) { _, newValue in
-                            guard resumableSession == nil else { return }
-                            AppPreferences.studyShuffle = newValue
-                        }
-
-                    Toggle("study.starred_only", isOn: $starredOnly)
-                        .onChange(of: starredOnly) { _, newValue in
-                            guard resumableSession == nil else { return }
-                            AppPreferences.studyStarredOnly = newValue
-                        }
-
-                    Picker("session.size.title", selection: $sessionSize) {
-                        ForEach(SessionSize.allCases) { size in
-                            Text(size.title).tag(size)
-                        }
-                    }
-                    .pickerStyle(.segmented)
-                }
-                .disabled(resumableSession != nil)
-
-                if starredOnly && !hasStarredCards && resumableSession == nil {
-                    Section {
-                        Label("study.no_starred", systemImage: "star.slash")
-                            .foregroundStyle(.secondary)
-                    }
-                }
-
+        Form {
+            if resumableSession != nil {
                 Section {
-                    DeckProgressBar(
-                        deckName: deck.name,
-                        masteredCount: masteredCount,
-                        totalCount: deck.cards.count,
-                        accent: accent
-                    )
-                }
-
-                Section {
-                    Button(role: .destructive) {
-                        confirmingReset = true
-                    } label: {
-                        Label("Réinitialiser la progression", systemImage: "arrow.counterclockwise")
-                    }
-                    .destructiveActionColor()
-                    .disabled(
-                        deck.completedStudySessions == 0
-                            && deck.cards.allSatisfy { !$0.mastered }
-                            && resumableSession == nil
-                    )
+                    Text("study.session.in_progress")
+                        .font(.subheadline.weight(.semibold))
+                        .foregroundStyle(.secondary)
                 }
             }
 
+            Section("Sens") {
+                LabeledContent("Sens") {
+                    StudyDirectionMenu(selection: $direction, accent: accent)
+                        .onChange(of: direction) { _, newValue in
+                            guard resumableSession == nil else { return }
+                            AppPreferences.studyDirection = newValue
+                        }
+                }
+            }
+            .disabled(resumableSession != nil)
+
+            Section("Options") {
+                Toggle("Mélanger", isOn: $shuffle)
+                    .onChange(of: shuffle) { _, newValue in
+                        guard resumableSession == nil else { return }
+                        AppPreferences.studyShuffle = newValue
+                    }
+
+                Toggle("study.starred_only", isOn: $starredOnly)
+                    .onChange(of: starredOnly) { _, newValue in
+                        guard resumableSession == nil else { return }
+                        AppPreferences.studyStarredOnly = newValue
+                    }
+
+                Picker("session.size.title", selection: $sessionSize) {
+                    ForEach(SessionSize.allCases) { size in
+                        Text(size.title).tag(size)
+                    }
+                }
+                .pickerStyle(.segmented)
+            }
+            .disabled(resumableSession != nil)
+
+            if starredOnly && !hasStarredCards && resumableSession == nil {
+                Section {
+                    Label("study.no_starred", systemImage: "star.slash")
+                        .foregroundStyle(.secondary)
+                }
+            }
+
+            Section {
+                DeckProgressBar(
+                    deckName: deck.name,
+                    masteredCount: masteredCount,
+                    totalCount: deck.cards.count,
+                    accent: accent
+                )
+            }
+
+            Section {
+                Button(role: .destructive) {
+                    confirmingReset = true
+                } label: {
+                    Label("Réinitialiser la progression", systemImage: "arrow.counterclockwise")
+                }
+                .destructiveActionColor()
+                .disabled(
+                    deck.completedStudySessions == 0
+                        && deck.cards.allSatisfy { !$0.mastered }
+                        && resumableSession == nil
+                )
+            }
+        }
+        .safeAreaInset(edge: .bottom, spacing: 0) {
             PrimaryStartButton(
                 title: resumableSession == nil ? "common.start" : "study.resume",
                 isEnabled: canStart,
@@ -148,6 +147,7 @@ struct StudySetupView: View {
             }
             .padding(.horizontal)
             .padding(.vertical, 12)
+            .background(Color.clear)
         }
         .navigationTitle("")
         .navigationBarTitleDisplayMode(.inline)
